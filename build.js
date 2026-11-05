@@ -358,6 +358,28 @@ ${css}
         </div>
     </div>
 
+    <!-- MODAL: TEACH ATTACK (PARTY CREATURE SELECTION) -->
+    <div id="modal-teach-attack" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 760px;">
+            <div class="modal-header">
+                <h3>📖 Enseñar Ataque a Criatura</h3>
+                <button class="modal-close-btn" onclick="UI.hideTeachAttackModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="teach-attack-move-info"></div>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0;">
+                    Selecciona a qué criatura de tu equipo deseas enseñarle este movimiento:
+                </p>
+                <div id="teach-attack-party-grid" class="teach-party-grid"></div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+                    <button class="btn-action" onclick="UI.hideTeachAttackModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: RIVER SHOP (Rule 16: exactly 8 cards) -->
     <div id="modal-shop" class="modal-backdrop">
         <div class="modal-dialog" style="max-width: 960px;">

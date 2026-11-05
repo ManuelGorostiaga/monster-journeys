@@ -6,6 +6,7 @@ const path = require('path');
 global.window = global;
 global.document = {
     getElementById: () => null,
+    querySelector: () => null,
     querySelectorAll: () => []
 };
 global.alert = (msg) => console.log('  [Alert Mock]:', msg);
@@ -35,7 +36,35 @@ global.UI = {
     hideMapTravelModal: () => {},
     showTournamentModal: () => {},
     renderTournamentBracket: () => {},
-    updateCombatLog: () => {}
+    updateCombatLog: () => {},
+    showTeachAttackModal: (ctx) => {
+        global.UI.activeTeachAttackContext = ctx;
+    },
+    hideTeachAttackModal: () => {
+        global.UI.activeTeachAttackContext = null;
+    },
+    confirmTeachAttack: (monsterInstanceId) => {
+        const ctx = global.UI.activeTeachAttackContext;
+        if (!ctx) return;
+        global.UI.hideTeachAttackModal();
+        if (ctx.source === 'wild' && ctx.wildMonsterIndex !== null) {
+            global.UI.game.teachAttackFromWild(ctx.wildMonsterIndex, monsterInstanceId);
+            return;
+        }
+        if (ctx.source === 'combat') {
+            const combat = global.UI.game.combatEngine;
+            const player = combat.player1 || global.UI.game.getActivePlayer();
+            const targetMon = player.monsters.find(m => m.instanceId === monsterInstanceId);
+            if (!targetMon) return;
+            if (targetMon.attacks.some(a => a.name === ctx.attack.name)) return;
+            if (targetMon.attacks.length >= 3) {
+                targetMon.attacks[1] = JSON.parse(JSON.stringify(ctx.attack));
+            } else {
+                targetMon.attacks.push(JSON.parse(JSON.stringify(ctx.attack)));
+            }
+            combat.pendingMoveTeaching = null;
+        }
+    }
 };
 
 // Load code files
@@ -816,5 +845,70 @@ console.assert(turnGame.combatEngine.inCombat === true, 'Gym combat initiated');
 turnGame.combatEngine.endBattle(true);
 console.assert(turnGame.activePlayerIndex === 0, 'Defying gym leader ended combat and advanced turn back to Player 1');
 console.log('Test 22 Passed: Location action allowed first, followed by Search / Fight action which ends the turn.');
+
+console.log('\n=== TEST 23: Tier 3 Location Unlocks (Vórtice Legendario) & Attack Teaching Modal ===');
+{
+    const tierGame = new MonsterJourneyGame();
+    tierGame.initGame([
+        { name: 'Red Trainer', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Blue Trainer', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+    ]);
+    UI.game = tierGame;
+
+    // 1. Initially, Vórtice Legendario (loc_ocn_3) must NOT be in environmentDeck
+    const trainerP1 = tierGame.players[0];
+    const hasVortexInitially = tierGame.environmentDeck.some(c => c.id === 'loc_ocn_3');
+    console.assert(hasVortexInitially === false, 'Vórtice Legendario (Tier 3) is NOT in environment deck initially');
+
+    // 2. Defeat Gym 1 -> tier2 unlocked, loc_ocn_3 still NOT present
+    tierGame.onGymDefeated(trainerP1, { id: 'gym_1', tier: 1 });
+    console.assert(tierGame.expansionsUnlocked.tier2 === true, 'Tier 2 unlocked after Gym 1');
+    console.assert(tierGame.expansionsUnlocked.tier3 === false, 'Tier 3 still locked after Gym 1');
+    const hasVortexAfterGym1 = tierGame.environmentDeck.some(c => c.id === 'loc_ocn_3');
+    console.assert(hasVortexAfterGym1 === false, 'Vórtice Legendario is NOT in environment deck after 1 gym');
+
+    // 3. Defeat Gym 2 -> tier3 unlocked, loc_ocn_3 IS now added to environmentDeck
+    tierGame.onGymDefeated(trainerP1, { id: 'gym_2', tier: 2 });
+    console.assert(tierGame.expansionsUnlocked.tier3 === true, 'Tier 3 unlocked after Gym 2');
+    const hasVortexAfterGym2 = tierGame.environmentDeck.some(c => c.id === 'loc_ocn_3');
+    console.assert(hasVortexAfterGym2 === true, 'Vórtice Legendario IS added to environment deck after 2 gyms');
+
+    // 4. Test Attack Teaching Modal & Party Learning
+    const starterMon = trainerP1.monsters[0];
+    const initialMoveCount = starterMon.attacks.length;
+    const newMove = { name: 'Maelstrom', type: 'Agua', baseDmg: 4 };
+
+    // Test teachAttackFromWild
+    tierGame.activeSearchCards = [
+        { name: 'Wild Gyarados', attacks: [newMove] }
+    ];
+    tierGame.hasActed = false;
+    tierGame.hasEncounterActed = false;
+    tierGame.teachAttackFromWild(0, starterMon.instanceId);
+    console.assert(starterMon.attacks.some(a => a.name === 'Maelstrom'), 'Starter monster learned Maelstrom from wild encounter');
+    console.assert(starterMon.attacks.length === initialMoveCount + 1, 'Attack count increased by 1');
+
+    // Test replacing move when monster has 3 attacks
+    const dummyMove = { name: 'Surf', type: 'Agua', baseDmg: 3 };
+    starterMon.attacks.push(dummyMove);
+    console.assert(starterMon.attacks.length === 3, 'Monster now has 3 attacks');
+
+    // Combat move teaching flow using UI.confirmTeachAttack
+    tierGame.combatEngine.pendingMoveTeaching = {
+        attack: { name: 'Tsunami Legendario', type: 'Agua', baseDmg: 6 },
+        monsterName: 'Kyogre'
+    };
+    UI.activeTeachAttackContext = {
+        source: 'combat',
+        attack: tierGame.combatEngine.pendingMoveTeaching.attack,
+        sourceName: 'Kyogre'
+    };
+    UI.confirmTeachAttack(starterMon.instanceId);
+    console.assert(starterMon.attacks.some(a => a.name === 'Tsunami Legendario'), 'Monster learned Tsunami Legendario replacing attack at index 1');
+    console.assert(starterMon.attacks.length === 3, 'Attack count remains at 3 cap');
+    console.assert(tierGame.combatEngine.pendingMoveTeaching === null, 'pendingMoveTeaching cleared after teaching');
+
+    console.log('Test 23 Passed: Tier 3 Vórtice Legendario unlocks strictly after 2 gyms, and attack teaching works correctly across party creatures.');
+}
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

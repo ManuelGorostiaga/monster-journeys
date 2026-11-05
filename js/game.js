@@ -145,7 +145,9 @@ class MonsterJourneyGame {
     }
 
     initEnvironmentDeck() {
-        this.environmentDeck = [...LOCATION_CARDS_DATABASE].sort(() => Math.random() - 0.5);
+        const isTier3Unlocked = Boolean(this.expansionsUnlocked && this.expansionsUnlocked.tier3);
+        const available = LOCATION_CARDS_DATABASE.filter(c => (c.tier || 1) <= (isTier3Unlocked ? 3 : 1));
+        this.environmentDeck = [...available].sort(() => Math.random() - 0.5);
         this.environmentDiscard = [];
     }
 
@@ -163,8 +165,9 @@ class MonsterJourneyGame {
     drawEnvironmentCard() {
         if (this.environmentDeck.length === 0) {
             if (this.environmentDiscard.length === 0) {
-                // Re-clone database if everything was placed/discarded
-                this.environmentDeck = [...LOCATION_CARDS_DATABASE].sort(() => Math.random() - 0.5);
+                const isTier3Unlocked = Boolean(this.expansionsUnlocked && this.expansionsUnlocked.tier3);
+                const available = LOCATION_CARDS_DATABASE.filter(c => (c.tier || 1) <= (isTier3Unlocked ? 3 : 1));
+                this.environmentDeck = [...available].sort(() => Math.random() - 0.5);
             } else {
                 this.environmentDeck = [...this.environmentDiscard].sort(() => Math.random() - 0.5);
                 this.environmentDiscard = [];
@@ -1019,6 +1022,7 @@ class MonsterJourneyGame {
         this.activeSearchCards = null;
 
         if (window.UI) {
+            if (typeof UI.hideTeachAttackModal === 'function') UI.hideTeachAttackModal();
             UI.hideSearchModal();
             UI.renderAll();
         }
@@ -1055,6 +1059,7 @@ class MonsterJourneyGame {
         this.activeSearchCards = null;
 
         if (window.UI) {
+            if (typeof UI.hideTeachAttackModal === 'function') UI.hideTeachAttackModal();
             UI.hideSearchModal();
             UI.renderAll();
         }
@@ -1256,8 +1261,15 @@ class MonsterJourneyGame {
                     this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
                 }
             });
+
+            const t3Locations = LOCATION_CARDS_DATABASE.filter(c => (c.tier || 1) === 3);
+            t3Locations.forEach(loc => {
+                this.environmentDeck.push(JSON.parse(JSON.stringify(loc)), JSON.parse(JSON.stringify(loc)));
+            });
+            this.environmentDeck.sort(() => Math.random() - 0.5);
+
             if (window.UI) {
-                UI.logGame(`📦 ¡EXPANSIÓN DESBLOQUEADA: **${t3.name}**! Nuevas criaturas de Tier 3 añadidas.`);
+                UI.logGame(`📦 ¡EXPANSIÓN DESBLOQUEADA: **${t3.name}**! Nuevas criaturas de Tier 3 y el **Vórtice Legendario** han aparecido.`);
                 UI.showNotification(t3.name, t3.desc);
             }
         }

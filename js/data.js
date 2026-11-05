@@ -1615,6 +1615,7 @@ const LOCATION_CARDS_DATABASE = [
         name: 'Vórtice Legendario',
         biome: 'saltwater',
         icon: '🌀',
+        tier: 3,
         flavor: 'Remolino colosal donde duermen las mayores bestias del océano.',
         locationAction: {
             name: 'Invocación Mítica',
@@ -1645,7 +1646,7 @@ const EXPANSION_DECKS = {
         id: 'tier3',
         name: 'Expansión Tier 3: Poder Titánico',
         unlockAtGymsCount: 2,
-        desc: 'Desbloqueada tras derrotar el 2do Gimnasio. Introduce criaturas y cartas de Tier 3.',
+        desc: 'Desbloqueada tras derrotar el 2do Gimnasio. Introduce criaturas de Tier 3 y el Vórtice Legendario.',
         monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 3)
     },
     tier4: {

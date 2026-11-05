@@ -502,7 +502,7 @@ const UI = {
                     <div class="location-hand-card" style="border-color: ${biome.color}; cursor: pointer;" onclick="UI.confirmPlaceLocationHand(${idx}, '${targetNode.id}')">
                         <div class="location-card-banner" style="background: ${biome.color};">
                             <span>${biome.icon} ${biome.name}</span>
-                            <span>#${idx + 1}</span>
+                            ${card.tier && card.tier > 1 ? `<span style="background: #9333ea; color: #fff; padding: 1px 6px; border-radius: 4px; font-weight: bold; font-size: 0.65rem;">Tier ${card.tier}</span>` : `<span>#${idx + 1}</span>`}
                         </div>
                         <div class="location-card-art">${card.icon || biome.icon}</div>
                         <div class="location-card-title">${card.name}</div>
@@ -930,7 +930,7 @@ const UI = {
                         <div class="location-hand-card" style="border-color: ${biome.color};">
                             <div class="location-card-banner" style="background: ${biome.color};">
                                 <span>${biome.icon} ${biome.name}</span>
-                                <span>#${idx + 1}</span>
+                                ${card.tier && card.tier > 1 ? `<span style="background: #9333ea; color: #fff; padding: 1px 6px; border-radius: 4px; font-weight: bold; font-size: 0.65rem;">Tier ${card.tier}</span>` : `<span>#${idx + 1}</span>`}
                             </div>
                             <div class="location-card-art">${card.icon || biome.icon}</div>
                             <div class="location-card-title">${card.name}</div>
@@ -1207,17 +1207,155 @@ const UI = {
         const wildMon = (this.activeSearchData && this.activeSearchData.cards && this.activeSearchData.cards[monsterIndex]) || (this.game.activeSearchCards && this.game.activeSearchCards[monsterIndex]);
         if (!wildMon) return;
 
-        let msg = `¿A qué criatura de tu equipo deseas enseñarle "${wildMon.attacks[0].name}" (${wildMon.attacks[0].type}, ${wildMon.attacks[0].baseDmg} daño)?\n\n`;
-        player.monsters.forEach((m, i) => {
-            msg += `${i + 1}. ${m.name} (Ataques: ${m.attacks.map(a => a.name).join(', ')})\n`;
+        this.showTeachAttackModal({
+            source: 'wild',
+            attack: wildMon.attacks[0],
+            wildMonsterIndex: monsterIndex,
+            sourceName: `${wildMon.name} (Salvaje Tier ${wildMon.captureTier})`
         });
+    },
 
-        const choice = prompt(msg, '1');
-        if (choice) {
-            const idx = parseInt(choice, 10) - 1;
-            if (idx >= 0 && idx < player.monsters.length) {
-                this.game.teachAttackFromWild(monsterIndex, player.monsters[idx].instanceId);
+    showTeachAttackModal({ source, attack, wildMonsterIndex = null, sourceName = '' }) {
+        this.activeTeachAttackContext = { source, attack, wildMonsterIndex, sourceName };
+        const modal = document.getElementById('modal-teach-attack');
+        if (!modal) {
+            const player = this.game.getActivePlayer();
+            if (player && player.monsters.length > 0) {
+                if (source === 'wild' && wildMonsterIndex !== null) {
+                    this.game.teachAttackFromWild(wildMonsterIndex, player.monsters[0].instanceId);
+                } else if (source === 'combat') {
+                    this.confirmTeachAttack(player.monsters[0].instanceId);
+                }
             }
+            return;
+        }
+
+        const typeColor = TYPE_COLORS[attack.type] || '#3b82f6';
+        const dmgDisplay = attack.effect === 'speed_damage' ? 'Velocidad' : attack.effect === 'fixed_damage' ? `${attack.fixedDmg} Fijo` : `${attack.baseDmg} daño`;
+
+        const bannerEl = document.getElementById('teach-attack-move-info');
+        if (bannerEl) {
+            bannerEl.innerHTML = `
+                <div class="teach-attack-banner">
+                    <div class="teach-attack-banner-top">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="color: #fff; font-size: 1.1rem;">${attack.name}</strong>
+                            <span class="type-pill" style="background: ${typeColor};">${attack.type}</span>
+                        </div>
+                        <div style="font-weight: 800; color: #fbbf24; font-size: 0.95rem;">💥 ${dmgDisplay}</div>
+                    </div>
+                    ${attack.desc ? `<div style="font-size: 0.8rem; color: #fde047;">${attack.desc}</div>` : ''}
+                    <div style="font-size: 0.75rem; color: #94a3b8;">${sourceName ? `Origen: <strong>${sourceName}</strong>` : ''}</div>
+                </div>
+            `;
+        }
+
+        const partyGrid = document.getElementById('teach-attack-party-grid');
+        const activePlayer = (this.game.combatEngine && this.game.combatEngine.player1) || this.game.getActivePlayer();
+        if (partyGrid) {
+            partyGrid.innerHTML = activePlayer.monsters.map((monster, i) => {
+                const monTypeColor = TYPE_COLORS[monster.type] || '#4caf50';
+                const alreadyKnows = monster.attacks.some(a => a.name === attack.name);
+                const isFull = monster.attacks.length >= 3;
+                const isBattleParty = (i < 3);
+
+                return `
+                    <div class="teach-party-card ${alreadyKnows ? 'cannot-teach' : ''}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #94a3b8;">
+                            <span>${isBattleParty ? `⚔️ Puesto ${i + 1} (Combate)` : '📦 Puesto 4 (Reserva)'}</span>
+                            <span class="tier-pill" style="font-size: 0.65rem;">Tier ${monster.captureTier}</span>
+                        </div>
+
+                        <div class="teach-party-header">
+                            <div class="teach-party-avatar" style="border-color: ${monTypeColor};">${monster.icon}</div>
+                            <div class="teach-party-info">
+                                <div class="teach-party-name">${monster.name}</div>
+                                <div class="teach-party-meta">
+                                    <span class="type-pill" style="background: ${monTypeColor}; font-size: 0.65rem;">${monster.type}</span>
+                                    <span style="font-size: 0.75rem; color: #34d399;">❤️ ${monster.hp}/${monster.maxHp} HP</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="teach-party-attacks">
+                            <div style="font-weight: bold; color: #94a3b8; font-size: 0.68rem; text-transform: uppercase;">
+                                Ataques actuales (${monster.attacks.length}/3):
+                            </div>
+                            ${monster.attacks.map((a, aIdx) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: #f1f5f9; ${isFull && aIdx === 1 ? 'color: #fca5a5; font-style: italic;' : ''}">
+                                        ${aIdx + 1}. ${a.name} ${isFull && aIdx === 1 ? '(se reemplazará)' : ''}
+                                    </span>
+                                    <span style="color: #38bdf8; font-size: 0.7rem;">${a.effect === 'speed_damage' ? 'Vel' : a.effect === 'fixed_damage' ? `${a.fixedDmg} Fijo` : `${a.baseDmg} dmg`}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div style="margin-top: 4px;">
+                            ${alreadyKnows ? `
+                                <button class="btn-action" style="width: 100%; justify-content: center; background: #334155; border-color: #475569; opacity: 0.6; cursor: not-allowed;" disabled>
+                                    ❌ Ya conoce este ataque
+                                </button>
+                            ` : isFull ? `
+                                <button class="btn-action" style="width: 100%; justify-content: center; background: linear-gradient(180deg, #f59e0b, #d97706); border-color: #fbbf24; font-weight: bold;"
+                                        onclick="UI.confirmTeachAttack('${monster.instanceId}')">
+                                    🔄 Enseñar y Reemplazar
+                                </button>
+                            ` : `
+                                <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center; font-weight: bold;"
+                                        onclick="UI.confirmTeachAttack('${monster.instanceId}')">
+                                    📖 Enseñar a ${monster.name}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    hideTeachAttackModal() {
+        const modal = document.getElementById('modal-teach-attack');
+        if (modal) modal.classList.remove('open');
+        this.activeTeachAttackContext = null;
+    },
+
+    confirmTeachAttack(monsterInstanceId) {
+        const ctx = this.activeTeachAttackContext;
+        if (!ctx) return;
+
+        this.hideTeachAttackModal();
+
+        if (ctx.source === 'wild' && ctx.wildMonsterIndex !== null) {
+            this.game.teachAttackFromWild(ctx.wildMonsterIndex, monsterInstanceId);
+            return;
+        }
+
+        if (ctx.source === 'combat') {
+            const combat = this.game.combatEngine;
+            const player = combat.player1 || this.game.players.find(p => p.monsters.some(m => m.instanceId === monsterInstanceId)) || this.game.getActivePlayer();
+            const targetMon = player ? player.monsters.find(m => m.instanceId === monsterInstanceId) : null;
+            if (!targetMon) return;
+
+            if (targetMon.attacks.some(a => a.name === ctx.attack.name)) {
+                alert(`${targetMon.name} ya conoce ese movimiento.`);
+                return;
+            }
+
+            if (targetMon.attacks.length >= 3) {
+                targetMon.attacks[1] = JSON.parse(JSON.stringify(ctx.attack));
+            } else {
+                targetMon.attacks.push(JSON.parse(JSON.stringify(ctx.attack)));
+            }
+
+            SoundFX.victory();
+            this.logGame(`📖 ¡${targetMon.name} aprendió el ataque **${ctx.attack.name}**!`);
+            combat.pendingMoveTeaching = null;
+            const resultMoveSec = typeof document.querySelector === 'function' ? document.querySelector('.result-move-teaching') : null;
+            if (resultMoveSec) resultMoveSec.style.display = 'none';
+            this.renderAll();
         }
     },
 
@@ -1505,28 +1643,13 @@ const UI = {
         const combat = this.game.combatEngine;
         if (!combat.pendingMoveTeaching) return;
         const move = combat.pendingMoveTeaching.attack;
-        const player = combat.player1;
+        const opponentName = combat.pendingMoveTeaching.monsterName || 'Rival derrotado';
 
-        let msg = `¿A qué criatura deseas enseñarle "${move.name}" (${move.type} — ${move.baseDmg} daño)?\n`;
-        player.monsters.forEach((m, idx) => {
-            msg += `${idx + 1}. ${m.name} (Ataques: ${m.attacks.map(a => a.name).join(', ')})\n`;
+        this.showTeachAttackModal({
+            source: 'combat',
+            attack: move,
+            sourceName: `${opponentName} (Derrotado en Combate)`
         });
-
-        const choice = prompt(msg, '1');
-        if (choice) {
-            const idx = parseInt(choice, 10) - 1;
-            if (idx >= 0 && idx < player.monsters.length) {
-                const targetMon = player.monsters[idx];
-                if (targetMon.attacks.length >= 3) {
-                    targetMon.attacks[1] = JSON.parse(JSON.stringify(move));
-                } else {
-                    targetMon.attacks.push(JSON.parse(JSON.stringify(move)));
-                }
-                alert(`¡${targetMon.name} aprendió ${move.name}!`);
-                combat.pendingMoveTeaching = null;
-                this.renderPlayerBoard();
-            }
-        }
     },
 
     // Tournament Modal (Rule 28)
@@ -1842,7 +1965,7 @@ const UI = {
                     <div class="codex-area-card" style="border-color: ${biome.color};">
                         <div class="codex-area-banner" style="background: ${biome.color};">
                             <span>${biome.icon} ${biome.name}</span>
-                            ${area.gym ? `<span style="background: #000; padding: 1px 6px; border-radius: 4px; color: #fbbf24;">Gimnasio T${area.gym.tier}</span>` : ''}
+                            ${area.gym ? `<span style="background: #000; padding: 1px 6px; border-radius: 4px; color: #fbbf24;">Gimnasio T${area.gym.tier}</span>` : area.tier && area.tier > 1 ? `<span style="background: #9333ea; color: #fff; padding: 1px 6px; border-radius: 4px; font-weight: bold;">Área Tier ${area.tier}</span>` : ''}
                         </div>
                         <div class="codex-area-body">
                             <div style="font-size: 1.8rem; text-align: center;">${area.icon || biome.icon}</div>
