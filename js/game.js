@@ -7,7 +7,7 @@ class MonsterJourneyGame {
         this.players = [];
         this.activePlayerIndex = 0;
         this.currentRound = 1;
-        this.maxRounds = 20;
+        this.maxRounds = 10;
 
         // Turn state
         this.hasMoved = false;
@@ -126,6 +126,7 @@ class MonsterJourneyGame {
                 storageMonsters: [],
                 inventory: startingItems, // Hand of item cards
                 locationHand: [], // Hand of location cards (up to 5)
+                draftOnDraw: false,
                 temporaryModifiers: {
                     searchBonus: 0,
                     captureTierBonus: 0
@@ -157,9 +158,19 @@ class MonsterJourneyGame {
 
     getPlacementLuckReward(node) {
         const connCount = node && node.connections ? node.connections.length : 0;
-        if (connCount === 1) return 3;
-        if (connCount <= 3) return 2;
-        return 1;
+        if (connCount === 1) return 1;
+        return 0;
+    }
+
+    toggleDraftOnDraw(player = null) {
+        const p = player || this.getActivePlayer();
+        p.draftOnDraw = !p.draftOnDraw;
+        SoundFX.step();
+        if (window.UI) {
+            UI.logGame(`🍀 ${p.name} ${p.draftOnDraw ? 'activó' : 'desactivó'} el reemplazo: Draftear 3 cartas por 1 🍀 al robar.`);
+            UI.renderAll();
+        }
+        return p.draftOnDraw;
     }
 
     drawEnvironmentCard() {
@@ -177,6 +188,17 @@ class MonsterJourneyGame {
     }
 
     refillLocationHand(player) {
+        if (player.locationHand.length < 5 && player.draftOnDraw) {
+            if (player.luck >= 1) {
+                this.draftLocationCard(player, () => {
+                    this.refillLocationHand(player);
+                });
+                return;
+            } else if (window.UI) {
+                UI.logGame(`⚠️ ${player.name} no tiene suficiente Suerte 🍀 para draftear. Robando 1 carta normal.`);
+            }
+        }
+
         while (player.locationHand.length < 5) {
             const card = this.drawEnvironmentCard();
             if (!card) break;
@@ -184,10 +206,38 @@ class MonsterJourneyGame {
         }
     }
 
-    // Requirement 3: Spend 1 luck to draft 3 cards instead of drawing 1
-    draftLocationCard(player) {
+    drawLocationCard(player = null) {
+        const p = player || this.getActivePlayer();
+        if (p.locationHand.length >= 5) {
+            alert('Mano completa (máximo 5 cartas de localización).');
+            return false;
+        }
+        if (p.draftOnDraw) {
+            if (p.luck >= 1) {
+                this.draftLocationCard(p);
+                return true;
+            } else if (window.UI) {
+                UI.logGame(`⚠️ ${p.name} no tiene suficiente Suerte 🍀 para draftear. Robando 1 carta normal.`);
+            }
+        }
+        const card = this.drawEnvironmentCard();
+        if (card) {
+            p.locationHand.push(card);
+            SoundFX.step();
+            if (window.UI) {
+                UI.logGame(`🃏 ${p.name} robó 1 carta de localización: **${card.name}**.`);
+                UI.renderAll();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Spend 1 luck to draft 3 cards instead of drawing 1
+    draftLocationCard(player, onFinish = null) {
         if (player.luck < 1) {
             alert('¡Necesitas al menos 1 Punto de Suerte 🍀 para draftear cartas de localización!');
+            if (onFinish) onFinish();
             return;
         }
 
@@ -201,7 +251,10 @@ class MonsterJourneyGame {
             if (c) draftPicks.push(c);
         }
 
-        if (draftPicks.length === 0) return;
+        if (draftPicks.length === 0) {
+            if (onFinish) onFinish();
+            return;
+        }
 
         if (window.UI) {
             UI.showDraftLocationModal({
@@ -215,6 +268,7 @@ class MonsterJourneyGame {
                     }
                     UI.logGame(`🍀 ${player.name} gastó 1 Suerte y drafteó **${selectedCard.name}**.`);
                     UI.renderAll();
+                    if (onFinish) onFinish();
                 }
             });
         }
@@ -447,7 +501,7 @@ class MonsterJourneyGame {
         SoundFX.step();
 
         if (player.inventory.some(i => i.id === 'item_utl_3')) {
-            player.coins += 2;
+            player.coins += 1;
             SoundFX.coin();
         }
 
@@ -455,7 +509,8 @@ class MonsterJourneyGame {
 
         if (window.UI) {
             const connCount = targetNode.connections ? targetNode.connections.length : 0;
-            UI.logGame(`🗺️ ${player.name} descubrió **${card.name}** en ${targetNode.name} (${connCount} conexi${connCount === 1 ? 'ón' : 'ones'}) y ganó **+${luckReward} Suerte 🍀**.`);
+            const luckText = luckReward > 0 ? ` y ganó **+${luckReward} Suerte 🍀**` : '';
+            UI.logGame(`🗺️ ${player.name} descubrió **${card.name}** en ${targetNode.name} (${connCount} conexi${connCount === 1 ? 'ón' : 'ones'})${luckText}.`);
             UI.renderAll();
         }
         return true;
@@ -515,14 +570,15 @@ class MonsterJourneyGame {
         SoundFX.victory();
 
         if (player.inventory.some(i => i.id === 'item_utl_3')) {
-            player.coins += 2;
+            player.coins += 1;
             SoundFX.coin();
         }
 
         const leader = (cityCard.gym && cityCard.gym.leaderName) || cityCard.leaderName || 'Líder de Gimnasio';
         if (window.UI) {
             const connCount = targetNode.connections ? targetNode.connections.length : 0;
-            UI.logGame(`🏛️ ¡${player.name} fundó la ciudad de **${cityCard.name}** en ${targetNode.name} (${connCount} conexiones) y ganó **+${cityLuckReward} Suerte 🍀**! Alberga el Gimnasio de ${leader}.`);
+            const cityLuckText = cityLuckReward > 0 ? ` y ganó **+${cityLuckReward} Suerte 🍀**` : '';
+            UI.logGame(`🏛️ ¡${player.name} fundó la ciudad de **${cityCard.name}** en ${targetNode.name} (${connCount} conexiones)${cityLuckText}! Alberga el Gimnasio de ${leader}.`);
             UI.renderAll();
         }
         return true;
@@ -590,6 +646,14 @@ class MonsterJourneyGame {
             return;
         }
 
+        if (!cardWithAction.usedByPlayerIds) {
+            cardWithAction.usedByPlayerIds = [];
+        }
+        if (cardWithAction.usedByPlayerIds.includes(player.id)) {
+            alert(`Ya has utilizado esta localización (${cardWithAction.name}). Cada jugador solo puede usarla una vez.`);
+            return;
+        }
+
         const action = cardWithAction.locationAction;
 
         if (action.type === 'trade') {
@@ -611,6 +675,7 @@ class MonsterJourneyGame {
             player.luck -= costLuck;
             player.coins += gainCoins;
             player.luck += gainLuck;
+            cardWithAction.usedByPlayerIds.push(player.id);
             this.hasLocationActed = true;
             this.hasActed = true;
             SoundFX.coin();
@@ -626,6 +691,7 @@ class MonsterJourneyGame {
             if (cardWithAction.id === 'loc_start_town' || cardWithAction.isStart || (cardWithAction.id && cardWithAction.id.startsWith('loc_start'))) {
                 player.monsters.forEach(m => m.hp = m.maxHp);
                 player.luck += 1;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
@@ -634,6 +700,7 @@ class MonsterJourneyGame {
                 const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
                 if (berry) player.inventory.push(JSON.parse(JSON.stringify(berry)));
                 player.luck += 1;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.coin();
@@ -667,6 +734,7 @@ class MonsterJourneyGame {
                 const c2 = this.drawEnvironmentCard();
                 if (c1) player.locationHand.push(c1);
                 if (c2) player.locationHand.push(c2);
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.step();
@@ -677,13 +745,15 @@ class MonsterJourneyGame {
                     return;
                 }
                 player.luck -= 1;
-                player.coins += 7;
+                player.coins += 2;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.coin();
-                if (window.UI) UI.logGame(`⛏️ ${player.name} excavó en Cueva de los Fósiles: Gastó 1 Suerte y halló 7 Monedas 🪙.`);
+                if (window.UI) UI.logGame(`⛏️ ${player.name} excavó en Cueva de los Fósiles: Gastó 1 Suerte y halló 2 Monedas 🪙.`);
             } else if (cardWithAction.id === 'loc_pln_2') {
                 this.mobileShopDiscountActive = true;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 if (window.UI) {
                     UI.showShopModal();
                     UI.logGame(`⛺ ${player.name} visitó la Feria Ambulante con descuento de 1 moneda!`);
@@ -697,17 +767,19 @@ class MonsterJourneyGame {
                     return;
                 }
                 player.luck -= 1;
-                player.coins += 6;
+                player.coins += 2;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
-                if (window.UI) UI.logGame(`⚔️ ${player.name} triunfó en Llanura de Duelos: Gastó 1 Suerte y ganó 6 Monedas 🪙.`);
+                if (window.UI) UI.logGame(`⚔️ ${player.name} triunfó en Llanura de Duelos: Gastó 1 Suerte y ganó 2 Monedas 🪙.`);
             } else if (cardWithAction.id === 'loc_frw_1') {
-                player.luck += 2;
+                player.luck += 1;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
-                if (window.UI) UI.logGame(`🏞️ ${player.name} recibió el Bautismo Fluvial en Cascada Cristalina: +2 Suerte 🍀.`);
+                if (window.UI) UI.logGame(`🏞️ ${player.name} recibió el Bautismo Fluvial en Cascada Cristalina: +1 Suerte 🍀.`);
             } else if (cardWithAction.id === 'loc_frw_2') {
                 if (window.UI && typeof window.UI.showMapTravelModal === 'function') {
                     window.UI.showMapTravelModal();
@@ -729,24 +801,27 @@ class MonsterJourneyGame {
                 const c2 = this.drawEnvironmentCard();
                 if (c1) player.locationHand.push(c1);
                 if (c2) player.locationHand.push(c2);
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.step();
                 if (window.UI) UI.logGame(`🪷 ${player.name} halló Paz Interior en Laguna de los Lotos y robó 2 cartas de localización.`);
             } else if (cardWithAction.id === 'loc_ocn_2') {
-                player.coins += 5;
+                player.coins += 2;
                 const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
                 if (berry) player.inventory.push(JSON.parse(JSON.stringify(berry)));
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.coin();
-                if (window.UI) UI.logGame(`🏴‍☠️ ${player.name} saqueó el Navío Naufragado: Encontró 5 Monedas y 1 Baya Aranja.`);
+                if (window.UI) UI.logGame(`🏴‍☠️ ${player.name} saqueó el Navío Naufragado: Encontró 2 Monedas y 1 Baya Aranja.`);
             } else if (cardWithAction.id === 'loc_ocn_3') {
                 if (player.luck < 2) {
                     alert('Requiere 2 Suerte 🍀.');
                     return;
                 }
                 player.luck -= 2;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.searchLegendaryMonsters();
                 return;
@@ -756,11 +831,13 @@ class MonsterJourneyGame {
                 if (c1) player.locationHand.push(c1);
                 if (c2) player.locationHand.push(c2);
                 player.luck += 1;
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🔥 ${player.name} rindió tributo en Altar de la Flama: Robó 2 cartas de localización y ganó +1 Suerte 🍀.`);
             } else {
+                cardWithAction.usedByPlayerIds.push(player.id);
                 this.hasLocationActed = true;
                 this.hasActed = true;
                 if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${cardWithAction.name}**.`);
@@ -779,6 +856,17 @@ class MonsterJourneyGame {
         if (player.luck < 1) {
             alert('Requiere al menos 1 Punto de Suerte 🍀.');
             return;
+        }
+
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const card = node && node.cards ? node.cards.find(c => c.id === 'loc_for_3') : null;
+        if (card) {
+            if (!card.usedByPlayerIds) card.usedByPlayerIds = [];
+            if (card.usedByPlayerIds.includes(player.id)) {
+                alert(`Ya has utilizado esta localización (${card.name}).`);
+                return;
+            }
+            card.usedByPlayerIds.push(player.id);
         }
 
         const attacksPool = (typeof ANCESTRAL_ATTACKS !== 'undefined' ? ANCESTRAL_ATTACKS : window.ANCESTRAL_ATTACKS) || [];
@@ -816,17 +904,28 @@ class MonsterJourneyGame {
             return;
         }
 
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const card = node && node.cards ? node.cards.find(c => c.id === 'loc_for_4') : null;
+        if (card) {
+            if (!card.usedByPlayerIds) card.usedByPlayerIds = [];
+            if (card.usedByPlayerIds.includes(player.id)) {
+                alert(`Ya has utilizado esta localización (${card.name}).`);
+                return;
+            }
+            card.usedByPlayerIds.push(player.id);
+        }
+
         const monster = player.monsters.find(m => m.instanceId === monsterInstanceId) || player.monsters[0];
         if (!monster) return;
 
         monster.maxHp += 1;
         monster.hp += 1;
-        player.coins += 2;
+        player.coins += 1;
         this.hasLocationActed = true;
         this.hasActed = true;
         SoundFX.victory();
         if (window.UI) {
-            UI.logGame(`⛩️ ¡${player.name} recibió la Bendición del Druida! ${monster.name} gana +1 PS Máximo permanente y +2 Monedas 🪙.`);
+            UI.logGame(`⛩️ ¡${player.name} recibió la Bendición del Druida! ${monster.name} gana +1 PS Máximo permanente y +1 Moneda 🪙.`);
             UI.renderAll();
         }
     }
@@ -848,6 +947,16 @@ class MonsterJourneyGame {
         if (currentNode && currentNode.id === targetNode.id) {
             alert('Ya te encuentras en este nodo.');
             return false;
+        }
+
+        const card = currentNode && currentNode.cards ? currentNode.cards.find(c => c.id === 'loc_frw_2') : null;
+        if (card) {
+            if (!card.usedByPlayerIds) card.usedByPlayerIds = [];
+            if (card.usedByPlayerIds.includes(player.id)) {
+                alert(`Ya has utilizado esta localización (${card.name}).`);
+                return false;
+            }
+            card.usedByPlayerIds.push(player.id);
         }
 
         player.currentNodeId = targetNode.id;
@@ -1332,19 +1441,19 @@ class MonsterJourneyGame {
             SoundFX.step();
         } else if (ability.id === 'fire') {
             player.monsters.forEach(m => m.hp = Math.min(m.maxHp, m.hp + 3));
-            player.coins += 2;
+            player.coins += 1;
             this.hasActed = true;
-            if (window.UI) UI.logGame(`🔥 ${monster.name} activa **Calor de Campamento**: Curó 3 HP a todos y generó 2 monedas.`);
+            if (window.UI) UI.logGame(`🔥 ${monster.name} activa **Calor de Campamento**: Curó 3 HP a todos y generó 1 moneda.`);
             SoundFX.coin();
         } else if (ability.id === 'electric') {
-            player.coins += 3;
+            player.coins += 1;
             this.hasActed = true;
-            if (window.UI) UI.logGame(`⚡ ${monster.name} activa **Sobrecarga**: Ganaste 3 monedas.`);
+            if (window.UI) UI.logGame(`⚡ ${monster.name} activa **Sobrecarga**: Ganaste 1 moneda.`);
             SoundFX.coin();
         } else if (ability.id === 'rock') {
-            player.coins += 2;
+            player.coins += 1;
             this.hasActed = true;
-            if (window.UI) UI.logGame(`🪨 ${monster.name} activa **Romperrocas**: Hallaste 2 monedas.`);
+            if (window.UI) UI.logGame(`🪨 ${monster.name} activa **Romperrocas**: Hallaste 1 moneda.`);
             SoundFX.coin();
         } else if (ability.id === 'ground') {
             this.movementPoints += 1;

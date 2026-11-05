@@ -294,6 +294,16 @@ const UI = {
                         <div class="node-cards-row">
                             ${node.cards.map((card) => {
                                 const biome = BIOMES[card.biome] || BIOMES.city;
+                                const usedDots = (card.usedByPlayerIds && card.usedByPlayerIds.length > 0) ? `
+                                    <div class="card-used-dots">
+                                        ${card.usedByPlayerIds.map(pid => {
+                                            const pl = this.game.players.find(p => p.id === pid);
+                                            const color = pl ? pl.color : '#e53935';
+                                            const name = pl ? pl.name : pid;
+                                            return `<span class="location-used-dot" style="background-color: ${color};" title="Utilizada por ${name}"></span>`;
+                                        }).join('')}
+                                    </div>
+                                ` : '';
                                 return `
                                     <div class="node-mini-card" style="border-top: 3px solid ${biome.color};"
                                          onclick="event.stopPropagation(); UI.onMiniCardClicked('${node.id}', '${card.id}')">
@@ -301,6 +311,7 @@ const UI = {
                                         <div class="mini-card-title">${card.name}</div>
                                         ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
                                         ${card.locationAction ? `<div class="mini-card-action">🔄</div>` : ''}
+                                        ${usedDots}
                                     </div>
                                 `;
                             }).join('')}
@@ -498,6 +509,16 @@ const UI = {
             // Option 2: Cards from Location Hand
             player.locationHand.forEach((card, idx) => {
                 const biome = BIOMES[card.biome] || BIOMES.forest;
+                const usedDots = (card.usedByPlayerIds && card.usedByPlayerIds.length > 0) ? `
+                    <div class="card-used-dots" style="position: static; justify-content: center; margin: 4px 0; transform: none;">
+                        ${card.usedByPlayerIds.map(pid => {
+                            const pl = this.game.players.find(p => p.id === pid);
+                            const color = pl ? pl.color : '#e53935';
+                            const name = pl ? pl.name : pid;
+                            return `<span class="location-used-dot" style="background-color: ${color};" title="Utilizada por ${name}"></span>`;
+                        }).join('')}
+                    </div>
+                ` : '';
                 html += `
                     <div class="location-hand-card" style="border-color: ${biome.color}; cursor: pointer;" onclick="UI.confirmPlaceLocationHand(${idx}, '${targetNode.id}')">
                         <div class="location-card-banner" style="background: ${biome.color};">
@@ -509,6 +530,7 @@ const UI = {
                         <div class="location-card-action-box">
                             <strong>${card.locationAction ? card.locationAction.name : 'Exploración'}</strong>
                             ${card.locationAction ? card.locationAction.desc : card.flavor}
+                            ${usedDots}
                         </div>
                         <div class="location-card-bottom">
                             <button class="btn-place-loc">🗺️ Colocar (+${luckReward} 🍀)</button>
@@ -568,16 +590,35 @@ const UI = {
                         ${costs.length > 0 ? `Paga: ${costs.join(', ')} → ` : ''}Recibe: ${gains.join(', ')}
                     </div>`;
                 }
+                const usedByMe = Boolean(card.usedByPlayerIds && card.usedByPlayerIds.includes(activePlayer.id));
+                const usedDots = (card.usedByPlayerIds && card.usedByPlayerIds.length > 0) ? `
+                    <div class="card-used-dots" style="position: static; justify-content: center; margin: 6px 0; transform: none;">
+                        ${card.usedByPlayerIds.map(pid => {
+                            const pl = this.game.players.find(p => p.id === pid);
+                            const color = pl ? pl.color : '#e53935';
+                            const name = pl ? pl.name : pid;
+                            return `<span class="location-used-dot" style="background-color: ${color};" title="Utilizada por ${name}"></span>`;
+                        }).join('')}
+                    </div>
+                ` : '';
+
                 return `
-                    <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 8px; border: 1.5px solid ${biome.color}; text-align: center; margin-bottom: 12px;">
+                    <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 8px; border: 1.5px solid ${biome.color}; text-align: center; margin-bottom: 12px; position: relative;">
                         <div style="font-size: 2rem; margin-bottom: 4px;">${card.icon || biome.icon}</div>
                         <h4 style="color: #fff; font-size: 1.05rem; margin-bottom: 2px;">${card.name}</h4>
                         <div style="color: var(--accent-gold); font-weight: bold; font-size: 0.95rem; margin-bottom: 4px;">🔄 ${card.locationAction.name}</div>
                         <p style="color: #cbd5e1; font-size: 0.88rem; margin-bottom: 8px;">${card.locationAction.desc}</p>
                         ${costGainHtml}
-                        <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="UI.confirmExecuteLocationAction('${card.id}')">
-                            ⚡ Activar ${card.locationAction.name}
-                        </button>
+                        ${usedDots}
+                        ${usedByMe ? `
+                            <button class="btn-action" style="width: 100%; justify-content: center; background: #374151; color: #94a3b8; cursor: not-allowed;" disabled>
+                                ✅ Ya utilizada por ti
+                            </button>
+                        ` : `
+                            <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="UI.confirmExecuteLocationAction('${card.id}')">
+                                ⚡ Activar ${card.locationAction.name}
+                            </button>
+                        `}
                     </div>
                 `;
             }).join('');
@@ -876,6 +917,18 @@ const UI = {
         const luckEl = document.getElementById('board-luck-val');
         if (luckEl) luckEl.textContent = `${player.luck || 0} 🍀`;
 
+        const draftToggleBtn = document.getElementById('btn-toggle-draft-draw');
+        if (draftToggleBtn) {
+            draftToggleBtn.className = `draft-toggle-btn ${player.draftOnDraw ? 'active' : ''}`;
+            draftToggleBtn.innerHTML = `🍀 Drafteo al robar: <strong>${player.draftOnDraw ? 'ON' : 'OFF'}</strong> (1 🍀)`;
+        }
+
+        const drawLocBtn = document.getElementById('btn-draw-location');
+        if (drawLocBtn) {
+            drawLocBtn.disabled = (player.locationHand.length >= 5);
+            drawLocBtn.innerHTML = `🃏 Robar Carta (${player.locationHand.length}/5)`;
+        }
+
         // Badges: 3 of 4 needed to qualify!
         const badgesContainer = document.getElementById('board-badges-list');
         if (badgesContainer) {
@@ -938,6 +991,16 @@ const UI = {
                                 <strong>${card.locationAction ? card.locationAction.name : 'Exploración'}</strong>
                                 ${card.locationAction ? card.locationAction.desc : card.flavor}
                             </div>
+                            ${(card.usedByPlayerIds && card.usedByPlayerIds.length > 0) ? `
+                                <div class="card-used-dots" style="position: static; justify-content: center; margin-top: 4px; transform: none;">
+                                    ${card.usedByPlayerIds.map(pid => {
+                                        const pl = this.game.players.find(p => p.id === pid);
+                                        const color = pl ? pl.color : '#e53935';
+                                        const name = pl ? pl.name : pid;
+                                        return `<span class="location-used-dot" style="background-color: ${color};" title="Utilizada por ${name}"></span>`;
+                                    }).join('')}
+                                </div>
+                            ` : ''}
                             <div class="location-card-bottom">
                                 <span style="font-size: 0.65rem; color: #94a3b8; text-align: center; display: block;">
                                     Haz clic en casillero adyacente del mapa

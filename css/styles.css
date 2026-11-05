@@ -473,6 +473,55 @@ main.main-workspace {
     font-size: 0.65rem;
 }
 
+/* Card Used Dots (Single-use tracker per player) */
+.card-used-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+}
+
+.location-used-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    display: inline-block;
+}
+
+/* Draft Replacement Toggle Button */
+.draft-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 14px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1.5px solid #475569;
+}
+
+.draft-toggle-btn:hover {
+    border-color: #34d399;
+    color: #f1f5f9;
+}
+
+.draft-toggle-btn.active {
+    background: linear-gradient(135deg, #065f46, #047857);
+    color: #ecfdf5;
+    border-color: #34d399;
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
+}
+
 .node-empty-discoverable, .discoverable-slot {
     border: 2px dashed #34d399 !important;
     background: rgba(52, 211, 153, 0.08) !important;

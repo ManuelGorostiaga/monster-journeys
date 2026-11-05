@@ -12,11 +12,10 @@ class CardMap {
             icon: '🏡',
             isStart: true,
             hasShop: true,
-            flavor: 'Acogedora villa natal donde los aspirantes a campeones inician su odisea.',
             locationAction: {
                 name: 'Descanso en Casa',
                 type: 'special',
-                desc: 'Cura por completo a todo tu equipo y recupera +1 Suerte 🍀 gratis.'
+                desc: 'Cura equipo al 100%, +1 🍀'
             }
         };
     }

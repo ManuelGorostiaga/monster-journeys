@@ -720,15 +720,15 @@ class CombatEngine {
         this.isProcessing = false;
         this.log(`🏁 FIN DEL COMBATE: ${playerWon ? `¡VICTORIA para ${this.player1.name}!` : `¡${this.player1.name} ha sido derrotado!`}`);
 
-        let rewardCoins = 6;
+        let rewardCoins = 2;
         if (this.gymData) {
             rewardCoins = this.gymData.rewardCoins;
         }
 
         const hasAmulet = this.player1.inventory && this.player1.inventory.some(i => i.id === 'item_utl_5');
         if (hasAmulet) {
-            rewardCoins += 3;
-            this.log(`🪙 Moneda Amuleto otorga +3 monedas extras.`);
+            rewardCoins += 1;
+            this.log(`🪙 Moneda Amuleto otorga +1 moneda extra.`);
         }
 
         this.player1.coins += rewardCoins;

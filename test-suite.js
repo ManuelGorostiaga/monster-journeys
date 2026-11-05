@@ -615,34 +615,44 @@ const prevCoins = dPlayer.coins;
 dGame.executeLocationAction('loc_for_4');
 console.assert(monToTeach.maxHp === prevMaxHp + 1, `Max HP increased by 1: ${monToTeach.maxHp}`);
 console.assert(monToTeach.hp === prevHp + 1, `Current HP increased by 1: ${monToTeach.hp}`);
-console.assert(dPlayer.coins === prevCoins + 2, `Coins increased by 2: ${dPlayer.coins}`);
+console.assert(dPlayer.coins === prevCoins + 1, `Coins increased by 1: ${dPlayer.coins}`);
 console.assert(dGame.hasActed === true, 'hasActed marked true after Card 2 action');
 
-// Test Card 2 Action execution by index 1
+// Test Player 2 executing actions on the same hub node (single-use per player)
+const dPlayer2 = dGame.players[1];
+dGame.activePlayerIndex = 1;
+dPlayer2.currentNodeId = 'node_w_cross';
 dGame.hasActed = false;
-const prevMaxHp2 = monToTeach.maxHp;
+dGame.hasLocationActed = false;
+const monToTeach2 = dPlayer2.monsters[0];
+const prevMaxHp2 = monToTeach2.maxHp;
 dGame.executeLocationAction(1);
-console.assert(monToTeach.maxHp === prevMaxHp2 + 1, `Max HP increased by 1 on index call: ${monToTeach.maxHp}`);
+console.assert(monToTeach2.maxHp === prevMaxHp2 + 1, `Max HP increased by 1 on index call for Player 2: ${monToTeach2.maxHp}`);
 
-// Direct Enseñanza Ancestral test with chosen attack index
+// Direct Enseñanza Ancestral test with chosen attack index for Player 2
 dGame.hasActed = false;
-dPlayer.luck = 3;
+dGame.hasLocationActed = false;
+dPlayer2.luck = 3;
 const chosenAtk = ANCESTRAL_ATTACKS[3];
-dGame.executeAncestralTeaching(3, monToTeach.instanceId);
-console.assert(dPlayer.luck === 2, `Luck spent for direct teaching: ${dPlayer.luck}`);
-console.assert(monToTeach.attacks.some(a => a.name === chosenAtk.name), `Monster learned ${chosenAtk.name}`);
+dGame.executeAncestralTeaching(3, monToTeach2.instanceId);
+console.assert(dPlayer2.luck === 2, `Luck spent for direct teaching: ${dPlayer2.luck}`);
+console.assert(monToTeach2.attacks.some(a => a.name === chosenAtk.name), `Monster learned ${chosenAtk.name}`);
+
+// Reset active player to dPlayer
+dGame.activePlayerIndex = 0;
 
 // Test additional updated special location actions
-// Cascada Cristalina (+2 Luck)
+// Cascada Cristalina (+1 Luck)
 const cardWaterfall = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_frw_1');
 dGame.cardMap.placeCardOnNode('node_s_valley', cardWaterfall);
 dGame.hasMoved = false;
 dGame.movementPoints = 1;
 dGame.movePlayerToNode('node_s_valley');
 dGame.hasActed = false;
+dGame.hasLocationActed = false;
 const prevLuckWaterfall = dPlayer.luck;
 dGame.executeLocationAction('loc_frw_1');
-console.assert(dPlayer.luck === prevLuckWaterfall + 2, `Cascada Cristalina granted +2 luck: ${dPlayer.luck}`);
+console.assert(dPlayer.luck === prevLuckWaterfall + 1, `Cascada Cristalina granted +1 luck: ${dPlayer.luck}`);
 
 // Altar de la Flama (draw 2 environment cards + 1 luck)
 const cardFlama = CITIES_DATABASE.find(c => c.id === 'city_flama');
@@ -764,18 +774,18 @@ const routeNode = travelGame.cardMap.getNode('node_w_route'); // 2 connections
 const bayNode = travelGame.cardMap.getNode('node_nw_bay'); // 3 connections
 const crossNode = travelGame.cardMap.getNode('node_w_cross'); // 4 connections
 
-console.assert(travelGame.getPlacementLuckReward(secretNode) === 3, '1-connection node awards +3 Luck');
-console.assert(travelGame.getPlacementLuckReward(routeNode) === 2, '2-connection node awards +2 Luck');
-console.assert(travelGame.getPlacementLuckReward(bayNode) === 2, '3-connection node awards +2 Luck');
-console.assert(travelGame.getPlacementLuckReward(crossNode) === 1, '4-connection node awards +1 Luck');
+console.assert(travelGame.getPlacementLuckReward(secretNode) === 1, '1-connection node awards +1 Luck');
+console.assert(travelGame.getPlacementLuckReward(routeNode) === 0, '2-connection node awards 0 Luck');
+console.assert(travelGame.getPlacementLuckReward(bayNode) === 0, '3-connection node awards 0 Luck');
+console.assert(travelGame.getPlacementLuckReward(crossNode) === 0, '4-connection node awards 0 Luck');
 
-// Test placing on 1-connection secret node gives +3 luck
+// Test placing on 1-connection secret node gives +1 luck
 const startLuck = travelPlayer.luck;
 const secretCard = travelPlayer.locationHand[0];
 travelGame.hasMoved = false;
 travelGame.movementPoints = 1;
 travelGame.placeLocationCardAndMove(0, 'node_sw_secret');
-console.assert(travelPlayer.luck === startLuck + 3, `Placing on 1-connection dead-end awarded +3 luck: got ${travelPlayer.luck}`);
+console.assert(travelPlayer.luck === startLuck + 1, `Placing on 1-connection dead-end awarded +1 luck: got ${travelPlayer.luck}`);
 console.assert(travelPlayer.currentNodeId === 'node_sw_secret', 'Player moved to secret node');
 
 // 2. Map Travel Ability: Muelle del Pescador (loc_frw_2: Travesía en Barca)
@@ -794,7 +804,7 @@ console.assert(travelPlayer.currentNodeId === 'node_ne', 'Player teleported acro
 console.assert(travelGame.hasActed === true, 'Travel consumed the player action');
 console.assert(travelGame.hasMoved === true, 'Travel marked player as moved');
 
-console.log('Test 21 Passed: Connection-based luck rewards (+3, +2, +1) and Muelle del Pescador map travel function accurately.');
+console.log('Test 21 Passed: Connection-based luck rewards (+1 on 1 connection, 0 otherwise) and Muelle del Pescador map travel function accurately.');
 
 console.log('\n=== TEST 22: Turn Flow - Location Action Then Wild Search / Defy Leader Ends Turn ===');
 const turnGame = new MonsterJourneyGame();
@@ -909,6 +919,88 @@ console.log('\n=== TEST 23: Tier 3 Location Unlocks (Vórtice Legendario) & Atta
     console.assert(tierGame.combatEngine.pendingMoveTeaching === null, 'pendingMoveTeaching cleared after teaching');
 
     console.log('Test 23 Passed: Tier 3 Vórtice Legendario unlocks strictly after 2 gyms, and attack teaching works correctly across party creatures.');
+}
+
+console.log('\n=== TEST 24: Economy Rebalance, 10 Rounds Limit, Draft Toggle, Single-Use Location Tracking ===');
+{
+    const rebalanceGame = new MonsterJourneyGame();
+    rebalanceGame.initGame([
+        { name: 'Alice', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Bob', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+    ]);
+    UI.game = rebalanceGame;
+
+    // 1. Game round limit
+    console.assert(rebalanceGame.maxRounds === 10, 'Game max rounds is 10 instead of 20');
+
+    // 2. Victory payout rebalance: standard battle awards 2 coins (not 6)
+    const pAlice = rebalanceGame.players[0];
+    const initialCoins = pAlice.coins;
+    rebalanceGame.combatEngine.player1 = pAlice;
+    rebalanceGame.combatEngine.inCombat = true;
+    rebalanceGame.combatEngine.isGymBattle = false;
+    rebalanceGame.combatEngine.gymCard = null;
+    rebalanceGame.combatEngine.endBattle(true);
+    console.assert(pAlice.coins === initialCoins + 2, `Standard battle gives 2 coins: got ${pAlice.coins - initialCoins}`);
+
+    // 3. Draft replacement toggle
+    console.assert(pAlice.draftOnDraw === false, 'Draft replacement initially off');
+    rebalanceGame.toggleDraftOnDraw(pAlice);
+    console.assert(pAlice.draftOnDraw === true, 'Draft replacement toggled to true');
+
+    // Drawing with toggle ON spends 1 luck and drafts 3 cards
+    pAlice.luck = 3;
+    pAlice.locationHand.pop(); // hand count now 4
+    const draftLuckBefore = pAlice.luck;
+    let modalDraftTriggered = false;
+    UI.showDraftLocationModal = ({ player, cards, onSelect }) => {
+        modalDraftTriggered = true;
+        console.assert(cards.length === 3, 'Draft revealed 3 cards');
+        onSelect(cards[0], cards.slice(1));
+    };
+    rebalanceGame.drawLocationCard(pAlice);
+    console.assert(modalDraftTriggered === true, 'Draft modal triggered on draw when toggle ON');
+    console.assert(pAlice.luck === draftLuckBefore - 1, 'Drafting consumed 1 luck');
+    console.assert(pAlice.locationHand.length === 5, 'Hand filled to 5');
+
+    // 4. Single-Use Locations with Player Tracking
+    const berryCard = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_1');
+    rebalanceGame.cardMap.placeCardOnNode('node_s_valley', berryCard);
+    pAlice.currentNodeId = 'node_s_valley';
+    rebalanceGame.hasLocationActed = false;
+    rebalanceGame.hasActed = false;
+
+    // Alice uses the location
+    rebalanceGame.executeLocationAction();
+    console.assert(berryCard.usedByPlayerIds.includes(pAlice.id), 'Alice ID stored in usedByPlayerIds');
+
+    // Alice attempts to use it again on her next turn: should be blocked
+    rebalanceGame.hasLocationActed = false;
+    rebalanceGame.hasActed = false;
+    let aliceBlocked = false;
+    global.alert = (msg) => { aliceBlocked = true; };
+    rebalanceGame.executeLocationAction();
+    console.assert(aliceBlocked === true, 'Alice cannot use the same location card a second time');
+
+    // Bob can still use it once!
+    const pBob = rebalanceGame.players[1];
+    pBob.currentNodeId = 'node_s_valley';
+    rebalanceGame.activePlayerIndex = 1;
+    rebalanceGame.hasLocationActed = false;
+    rebalanceGame.hasActed = false;
+    let bobBlocked = false;
+    global.alert = (msg) => { bobBlocked = true; };
+    rebalanceGame.executeLocationAction();
+    console.assert(bobBlocked === false, 'Bob can use the location card once');
+    console.assert(berryCard.usedByPlayerIds.includes(pBob.id), 'Bob ID also recorded in usedByPlayerIds');
+
+    // Bob attempts second use: blocked
+    rebalanceGame.hasLocationActed = false;
+    rebalanceGame.hasActed = false;
+    rebalanceGame.executeLocationAction();
+    console.assert(bobBlocked === true, 'Bob is blocked from using it a second time');
+
+    console.log('Test 24 Passed: Economy (2 coins per win), 10 rounds max, draft toggle replacement, and single-use locations with player dot tracking verified.');
 }
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

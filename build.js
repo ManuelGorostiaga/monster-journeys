@@ -27,7 +27,7 @@ ${css}
             <h1 class="app-title">🃏 Monster Journeys</h1>
             <div class="round-tracker">
                 <span>Ronda:</span>
-                <strong id="display-round">1 / 20</strong>
+                <strong id="display-round">1 / 10</strong>
             </div>
         </div>
 
@@ -137,8 +137,8 @@ ${css}
                         <span class="resource-label">Puntos de Suerte</span>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span id="board-luck-val" class="resource-value luck-val">3 🍀</span>
-                            <button class="btn-action-small" style="width: auto; padding: 2px 8px; background: #065f46; border-color: #34d399;" onclick="UI.game.draftLocationCard(UI.game.getActivePlayer())">
-                                + Draftear (1🍀)
+                            <button id="btn-toggle-draft-draw" class="draft-toggle-btn" onclick="UI.game.toggleDraftOnDraw()">
+                                🍀 Drafteo al robar: <strong>OFF</strong> (1 🍀)
                             </button>
                         </div>
                     </div>
@@ -156,9 +156,9 @@ ${css}
                     <div class="section-title-tag">
                         <span>🗺️ Mano de Exploración (Cartas de Entorno en Mano - Robas hasta 5):</span>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn-action-small" style="width: auto; background: #065f46; border-color: #34d399;" onclick="UI.game.draftLocationCard(UI.game.getActivePlayer())">
-                            🍀 Draftear 3 Cartas (1 Suerte)
+                    <div style="display: flex; gap: 8px; align-items: center;" id="location-hand-header-controls">
+                        <button id="btn-draw-location" class="btn-action-small" onclick="UI.game.drawLocationCard()">
+                            🃏 Robar Carta
                         </button>
                     </div>
                 </div>
@@ -518,7 +518,7 @@ ${css}
                     <li><strong>Mapa de Región Estilo Pokémon:</strong> Mapa con nodos y rutas interconectadas. Los jugadores inician en diferentes esquinas del mapa (SO, NE, NO, SE). La mayoría de nodos alojan 1 carta de entorno, mientras que los grandes cruces (hubs) alojan hasta 2 cartas.</li>
                     <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador en cualquier nodo conectado. La tienda solo es accesible desde Ciudades.</li>
                     <li><strong>Objetos Equipados:</strong> Máximo un objeto equipado por monstruo.</li>
-                    <li><strong>Sistema de Suerte:</strong> Los puntos de Suerte 🍀 permiten sumar +1 al dado en combate, draftear 3 cartas de entorno en vez de robar 1, o redibujar los 3 monstruos salvajes vistos.</li>
+                    <li><strong>Sistema de Suerte:</strong> Los puntos de Suerte 🍀 permiten sumar +1 al dado en combate, draftear 3 cartas de entorno en vez de robar 1 (con el reemplazo activado), o redibujar los 3 monstruos salvajes vistos. Colocar una carta en una ubicación de 1 sola conexión otorga +1 Suerte.</li>
                     <li><strong>Enseñar Ataques:</strong> Al encontrar un monstruo salvaje, puedes elegir capturarlo o que enseñe su técnica de ataque a cualquier criatura de tu equipo.</li>
                     <li><strong>Recuperación:</strong> Los monstruos recuperan toda su salud tras una pelea.</li>
                     <li><strong>Recompensa de Derrota:</strong> Al perder una pelea, obtienes dinero de todas maneras como si hubieras ganado.</li>
@@ -528,7 +528,7 @@ ${css}
                     <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
                     <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas con tirada de dados de ataque.</li>
                     <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, y derrotar al 2do gimnasio añade Tier 3. Hay 3 tiers en total (1, 2 y 3).</li>
-                    <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 20 rondas) activa el Gran Torneo Final!</li>
+                    <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 10 rondas) activa el Gran Torneo Final!</li>
                 </ol>
             </div>
         </div>
