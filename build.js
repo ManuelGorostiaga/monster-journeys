@@ -337,18 +337,23 @@ ${css}
         <div class="modal-dialog" style="max-width: 860px;">
             <div class="modal-header">
                 <h3>🔍 Mazo de Encuentro Salvaje (Miras 3 cartas)</h3>
-                <button class="modal-close-btn" onclick="UI.hideSearchModal()">✕</button>
+                <button class="modal-close-btn" onclick="UI.closeSearchModal()">✕</button>
             </div>
             <div class="modal-body">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0;">
-                        Elige una criatura para <strong>Capturar</strong> o <strong>Aprender su Ataque</strong>:
+                        Elige una criatura para <strong>Capturar</strong> o <strong>Aprender su Ataque</strong> (concluye tu turno):
                     </p>
                     <button id="btn-search-redraw" class="btn-action btn-action-luck">
                         🍀 Redibujar Monstruos (1 Suerte)
                     </button>
                 </div>
                 <div id="search-cards-grid" class="search-cards-grid"></div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+                    <button id="btn-search-skip" class="btn-action" style="background: #334155; border-color: #64748b;" onclick="UI.closeSearchModal()">
+                        ⏭️ Pasar encuentro y terminar turno
+                    </button>
+                </div>
             </div>
         </div>
     </div>

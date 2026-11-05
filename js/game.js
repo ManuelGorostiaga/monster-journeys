@@ -11,7 +11,9 @@ class MonsterJourneyGame {
 
         // Turn state
         this.hasMoved = false;
-        this.hasActed = false;
+        this._hasActed = false;
+        this.hasLocationActed = false;
+        this.hasEncounterActed = false;
         this.movementPoints = 1;
 
         // River Shop of 8 items without duplicates
@@ -43,12 +45,26 @@ class MonsterJourneyGame {
         this.isGameOver = false;
     }
 
+    get hasActed() {
+        return this._hasActed;
+    }
+
+    set hasActed(val) {
+        this._hasActed = Boolean(val);
+        if (!val) {
+            this.hasLocationActed = false;
+            this.hasEncounterActed = false;
+        }
+    }
+
     initGame(playerConfigs) {
         this.players = [];
         this.currentRound = 1;
         this.activePlayerIndex = 0;
         this.hasMoved = false;
         this.hasActed = false;
+        this.hasLocationActed = false;
+        this.hasEncounterActed = false;
         this.movementPoints = 1;
         this.isGameOver = false;
         this.totalGymsDefeated = 0;
@@ -284,6 +300,8 @@ class MonsterJourneyGame {
         const player = this.getActivePlayer();
         this.hasMoved = false;
         this.hasActed = false;
+        this.hasLocationActed = false;
+        this.hasEncounterActed = false;
         this.movementPoints = 1;
         this.mobileShopDiscountActive = false;
 
@@ -540,8 +558,8 @@ class MonsterJourneyGame {
     // Requirement 4: Execute Location Action (resource trade or special action)
     executeLocationAction(cardIdOrIndex = null) {
         const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
+        if (this.hasLocationActed) {
+            alert('Ya has tomado la acción de localización en este turno.');
             return;
         }
 
@@ -590,6 +608,7 @@ class MonsterJourneyGame {
             player.luck -= costLuck;
             player.coins += gainCoins;
             player.luck += gainLuck;
+            this.hasLocationActed = true;
             this.hasActed = true;
             SoundFX.coin();
 
@@ -604,6 +623,7 @@ class MonsterJourneyGame {
             if (cardWithAction.id === 'loc_start_town' || cardWithAction.isStart || (cardWithAction.id && cardWithAction.id.startsWith('loc_start'))) {
                 player.monsters.forEach(m => m.hp = m.maxHp);
                 player.luck += 1;
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🏡 ${player.name} descansó en Casa: Curó a su equipo y obtuvo +1 Suerte 🍀.`);
@@ -611,6 +631,7 @@ class MonsterJourneyGame {
                 const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
                 if (berry) player.inventory.push(JSON.parse(JSON.stringify(berry)));
                 player.luck += 1;
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.coin();
                 if (window.UI) UI.logGame(`🫐 ${player.name} cosechó en Bosque de las Bayas: Obtuvo 1 Baya Aranja y +1 Suerte 🍀.`);
@@ -643,6 +664,7 @@ class MonsterJourneyGame {
                 const c2 = this.drawEnvironmentCard();
                 if (c1) player.locationHand.push(c1);
                 if (c2) player.locationHand.push(c2);
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.step();
                 if (window.UI) UI.logGame(`🦅 ${player.name} oteó el horizonte en Nido del Águila y robó 2 cartas de localización extra.`);
@@ -653,6 +675,7 @@ class MonsterJourneyGame {
                 }
                 player.luck -= 1;
                 player.coins += 7;
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.coin();
                 if (window.UI) UI.logGame(`⛏️ ${player.name} excavó en Cueva de los Fósiles: Gastó 1 Suerte y halló 7 Monedas 🪙.`);
@@ -662,6 +685,7 @@ class MonsterJourneyGame {
                     UI.showShopModal();
                     UI.logGame(`⛺ ${player.name} visitó la Feria Ambulante con descuento de 1 moneda!`);
                 }
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 return;
             } else if (cardWithAction.id === 'loc_pln_4') {
@@ -671,11 +695,13 @@ class MonsterJourneyGame {
                 }
                 player.luck -= 1;
                 player.coins += 6;
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`⚔️ ${player.name} triunfó en Llanura de Duelos: Gastó 1 Suerte y ganó 6 Monedas 🪙.`);
             } else if (cardWithAction.id === 'loc_frw_1') {
                 player.luck += 2;
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🏞️ ${player.name} recibió el Bautismo Fluvial en Cascada Cristalina: +2 Suerte 🍀.`);
@@ -700,6 +726,7 @@ class MonsterJourneyGame {
                 const c2 = this.drawEnvironmentCard();
                 if (c1) player.locationHand.push(c1);
                 if (c2) player.locationHand.push(c2);
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.step();
                 if (window.UI) UI.logGame(`🪷 ${player.name} halló Paz Interior en Laguna de los Lotos y robó 2 cartas de localización.`);
@@ -707,6 +734,7 @@ class MonsterJourneyGame {
                 player.coins += 5;
                 const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
                 if (berry) player.inventory.push(JSON.parse(JSON.stringify(berry)));
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.coin();
                 if (window.UI) UI.logGame(`🏴‍☠️ ${player.name} saqueó el Navío Naufragado: Encontró 5 Monedas y 1 Baya Aranja.`);
@@ -716,6 +744,7 @@ class MonsterJourneyGame {
                     return;
                 }
                 player.luck -= 2;
+                this.hasLocationActed = true;
                 this.searchLegendaryMonsters();
                 return;
             } else if (cardWithAction.id === 'city_flama') {
@@ -724,10 +753,12 @@ class MonsterJourneyGame {
                 if (c1) player.locationHand.push(c1);
                 if (c2) player.locationHand.push(c2);
                 player.luck += 1;
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🔥 ${player.name} rindió tributo en Altar de la Flama: Robó 2 cartas de localización y ganó +1 Suerte 🍀.`);
             } else {
+                this.hasLocationActed = true;
                 this.hasActed = true;
                 if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${cardWithAction.name}**.`);
             }
@@ -738,8 +769,8 @@ class MonsterJourneyGame {
 
     executeAncestralTeaching(attackIndex, monsterInstanceId) {
         const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
+        if (this.hasLocationActed) {
+            alert('Ya has tomado la acción de localización en este turno.');
             return;
         }
         if (player.luck < 1) {
@@ -766,6 +797,7 @@ class MonsterJourneyGame {
             monster.attacks.push(JSON.parse(JSON.stringify(attack)));
         }
 
+        this.hasLocationActed = true;
         this.hasActed = true;
         SoundFX.victory();
         if (window.UI) {
@@ -776,8 +808,8 @@ class MonsterJourneyGame {
 
     executeDruidBlessing(monsterInstanceId) {
         const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
+        if (this.hasLocationActed) {
+            alert('Ya has tomado la acción de localización en este turno.');
             return;
         }
 
@@ -787,6 +819,7 @@ class MonsterJourneyGame {
         monster.maxHp += 1;
         monster.hp += 1;
         player.coins += 2;
+        this.hasLocationActed = true;
         this.hasActed = true;
         SoundFX.victory();
         if (window.UI) {
@@ -797,8 +830,8 @@ class MonsterJourneyGame {
 
     executeMapTravel(targetNodeId) {
         const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
+        if (this.hasLocationActed) {
+            alert('Ya has tomado la acción de localización en este turno.');
             return false;
         }
 
@@ -818,11 +851,12 @@ class MonsterJourneyGame {
         player.x = targetNode.gridX;
         player.y = targetNode.gridY;
         this.hasMoved = true;
+        this.hasLocationActed = true;
         this.hasActed = true;
         SoundFX.victory();
 
         if (window.UI) {
-            UI.hideMapTravelModal();
+            if (typeof UI.hideMapTravelModal === 'function') UI.hideMapTravelModal();
             UI.logGame(`⛵ ${player.name} usó **Travesía en Barca** desde ${currentNode ? currentNode.name : 'su posición'} hasta **${targetNode.name}**.`);
             UI.renderAll();
         }
@@ -836,6 +870,8 @@ class MonsterJourneyGame {
         const drawnCards = [...legendaries].sort(() => Math.random() - 0.5).slice(0, 3).map(m => this.instantiateMonster(m));
 
         this.activeSearchCards = drawnCards;
+        this.hasEncounterActed = true;
+        this.hasActed = true;
         SoundFX.victory();
 
         if (window.UI) {
@@ -867,8 +903,8 @@ class MonsterJourneyGame {
 
     searchMonsters() {
         const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
+        if (this.hasEncounterActed) {
+            alert('Ya has realizado tu búsqueda o combate en este turno.');
             return;
         }
 
@@ -979,12 +1015,15 @@ class MonsterJourneyGame {
         }
 
         this.hasActed = true;
+        this.hasEncounterActed = true;
         this.activeSearchCards = null;
 
         if (window.UI) {
             UI.hideSearchModal();
             UI.renderAll();
         }
+
+        this.endTurn();
     }
 
     teachAttackFromWild(monsterIndex, targetMonsterInstanceId) {
@@ -1012,12 +1051,31 @@ class MonsterJourneyGame {
         if (window.UI) UI.logGame(`📖 ¡${targetMon.name} aprendió el ataque **${attackToTeach.name}** de ${wildMon.name}!`);
 
         this.hasActed = true;
+        this.hasEncounterActed = true;
         this.activeSearchCards = null;
 
         if (window.UI) {
             UI.hideSearchModal();
             UI.renderAll();
         }
+
+        this.endTurn();
+    }
+
+    dismissSearchEncounter() {
+        if (!this.activeSearchCards) return;
+        const player = this.getActivePlayer();
+        this.activeSearchCards = null;
+        this.hasActed = true;
+        this.hasEncounterActed = true;
+
+        if (window.UI) {
+            UI.hideSearchModal();
+            UI.logGame(`${player.name} concluyó la búsqueda de criaturas y terminó su turno.`);
+            UI.renderAll();
+        }
+
+        this.endTurn();
     }
 
     buyShopItem(itemIndex) {
@@ -1119,8 +1177,8 @@ class MonsterJourneyGame {
     // Challenge Gym in current City node
     challengeGym() {
         const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
+        if (this.hasEncounterActed) {
+            alert('Ya has realizado tu combate en este turno.');
             return;
         }
 
@@ -1140,12 +1198,14 @@ class MonsterJourneyGame {
         }
 
         this.hasActed = true;
+        this.hasEncounterActed = true;
         this.combatEngine.startBattle({
             type: 'gym',
             player1: player,
             gym: gym,
             onEnd: (won) => {
                 if (window.UI) UI.renderAll();
+                this.endTurn();
             }
         });
     }
@@ -1291,6 +1351,7 @@ class MonsterJourneyGame {
     }
 
     endTurn() {
+        if (this.isGameOver) return;
         this.activePlayerIndex++;
         if (this.activePlayerIndex >= this.players.length) {
             this.activePlayerIndex = 0;

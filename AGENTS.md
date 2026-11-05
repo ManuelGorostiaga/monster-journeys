@@ -71,19 +71,18 @@ python -m http.server 3030 --directory c:\Dev\monster-journeys
 ```
 Open `http://localhost:3030/` in browser.
 
-### 4. Deploying to Production (Vercel)
-Deploy directly to Vercel production:
+### 4. Deploying to Production (GitHub & Vercel)
+Always push changes to GitHub to trigger the automated Vercel production build:
 ```powershell
-npx vercel deploy c:\Dev\monster-journeys --prod --yes
-```
-Verify deployment:
-```powershell
-npx vercel curl https://monster-journeys.vercel.app
+git add .
+git commit -m "feat/fix: description"
+git push origin main
 ```
 
 ---
 
 ## Agent Guidelines & Rules for Future Sessions
+- **Always Push to GitHub (Vercel CI/CD)**: Always commit and push changes to GitHub (`git push origin main`) to trigger the Vercel production build after modifications.
 - **Single-page Bundling**: Always edit files inside `js/`, `css/styles.css`, or `test-suite.js`, and run `node build.js` to compile into `index.html`.
 - **Fail Fast**: Never use silent null guards or empty swallow catches. Throw loud errors if game state is invalid.
 - **No Docstrings / Comments**: Do not write explanatory docstrings or documentation comments in code; write clean, self-descriptive code.

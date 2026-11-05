@@ -147,8 +147,16 @@ const UI = {
 
         const actStatusEl = document.getElementById('status-action');
         if (actStatusEl) {
-            actStatusEl.textContent = this.game.hasActed ? 'Acción: Agotada' : 'Acción: Disponible';
-            actStatusEl.className = this.game.hasActed ? 'status-pill tag-disabled' : 'status-pill tag-primary';
+            if (this.game.hasEncounterActed) {
+                actStatusEl.textContent = 'Acción: Agotada';
+                actStatusEl.className = 'status-pill tag-disabled';
+            } else if (this.game.hasLocationActed) {
+                actStatusEl.textContent = 'Búsqueda / Combate: Disponible';
+                actStatusEl.className = 'status-pill tag-primary';
+            } else {
+                actStatusEl.textContent = 'Acciones: Disponibles';
+                actStatusEl.className = 'status-pill tag-primary';
+            }
         }
     },
 
@@ -789,13 +797,13 @@ const UI = {
         const hasLocAction = actionCards.length > 0;
 
         if (btnSearch) {
-            btnSearch.disabled = this.game.hasActed || isCity || !currentCard;
-            btnSearch.title = isCity ? 'No hay monstruos salvajes en Ciudades' : 'Buscar monstruos salvajes en este bioma';
+            btnSearch.disabled = this.game.hasEncounterActed || isCity || !currentCard;
+            btnSearch.title = isCity ? 'No hay monstruos salvajes en Ciudades' : 'Buscar monstruos salvajes (concluye el turno)';
         }
 
         if (btnGym) {
             btnGym.style.display = hasGym ? 'flex' : 'none';
-            btnGym.disabled = this.game.hasActed || (hasGym && activePlayer.badges.includes(gymCard.gym.tier));
+            btnGym.disabled = this.game.hasEncounterActed || (hasGym && activePlayer.badges.includes(gymCard.gym.tier));
             if (hasGym) {
                 btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${gymCard.gym.tier})`;
             }
@@ -808,14 +816,14 @@ const UI = {
         }
 
         if (btnLocAction) {
-            btnLocAction.disabled = this.game.hasActed || !hasLocAction;
+            btnLocAction.disabled = this.game.hasLocationActed || !hasLocAction;
             if (hasLocAction) {
                 if (actionCards.length === 1) {
                     btnLocAction.innerHTML = `🔄 ${actionCards[0].locationAction.name}`;
                 } else {
                     btnLocAction.innerHTML = `🔄 Acciones de Zona (${actionCards.length})`;
                 }
-                btnLocAction.title = actionCards.map(c => `${c.name}: ${c.locationAction.name}`).join(' | ');
+                btnLocAction.title = this.game.hasLocationActed ? 'Acción de lugar ya realizada en este turno' : actionCards.map(c => `${c.name}: ${c.locationAction.name}`).join(' | ');
             } else {
                 btnLocAction.innerHTML = `🔄 Acción de Lugar`;
                 btnLocAction.title = 'No hay acciones disponibles en esta localización';
@@ -1184,6 +1192,14 @@ const UI = {
     hideSearchModal() {
         const modal = document.getElementById('modal-search');
         if (modal) modal.classList.remove('open');
+    },
+
+    closeSearchModal() {
+        if (this.game && this.game.activeSearchCards) {
+            this.game.dismissSearchEncounter();
+        } else {
+            this.hideSearchModal();
+        }
     },
 
     promptTeachAttack(monsterIndex) {

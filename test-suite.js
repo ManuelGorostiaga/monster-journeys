@@ -26,10 +26,13 @@ global.UI = {
     },
     showSearchModal: () => {},
     hideSearchModal: () => {},
+    closeSearchModal: () => {},
     showShopModal: () => {},
     renderShopModal: () => {},
     showCityTravelModal: () => {},
     hideCityTravelModal: () => {},
+    showMapTravelModal: () => {},
+    hideMapTravelModal: () => {},
     showTournamentModal: () => {},
     renderTournamentBracket: () => {},
     updateCombatLog: () => {}
@@ -245,6 +248,7 @@ console.assert(allAreasCount === 22, `Codex has 22 areas/cities (4 gym cities + 
 console.log('Test 12 Passed: Codex contains all monsters, attacks, items, and areas.');
 
 console.log('\n=== TEST 13: Teach Attack from Wild Monster ===');
+game.isGameOver = false;
 const teachTestPlayer = game.getActivePlayer();
 const starterMon = teachTestPlayer.monsters[0];
 const initialAttacksCount = starterMon.attacks.length;
@@ -252,14 +256,15 @@ const testWild = game.instantiateMonster(MONSTERS_DATABASE[12]);
 game.activeSearchCards = [testWild];
 game.teachAttackFromWild(0, starterMon.instanceId);
 console.assert(starterMon.attacks.some(a => a.name === testWild.attacks[0].name), 'Monster learned wild attack');
-console.assert(game.hasActed === true, 'Teaching attack consumed turn action');
+console.assert(game.activePlayerIndex === 1, 'Teaching wild attack ended turn and advanced to next player');
 console.log('Test 13 Passed: Teaching wild monster attack directly works without gym badges.');
 
 console.log('\n=== TEST 14: Treasure Magnet (+1 Coin Every Turn) ===');
-teachTestPlayer.inventory.push(ITEMS_DATABASE.find(i => i.id === 'item_utl_8'));
-const coinsBeforeTurn = teachTestPlayer.coins;
+const activeMagnetPlayer = game.getActivePlayer();
+activeMagnetPlayer.inventory.push(ITEMS_DATABASE.find(i => i.id === 'item_utl_8'));
+const coinsBeforeTurn = activeMagnetPlayer.coins;
 game.startTurn();
-console.assert(teachTestPlayer.coins === coinsBeforeTurn + 1, 'Treasure magnet granted +1 gold coin at turn start');
+console.assert(activeMagnetPlayer.coins === coinsBeforeTurn + 1, 'Treasure magnet granted +1 gold coin at turn start');
 console.log('Test 14 Passed: Treasure Magnet grants +1 gold coin every single turn.');
 
 console.log('\n=== TEST 15: Pokemon Node Map & 2-Card Hubs ===');
@@ -761,5 +766,55 @@ console.assert(travelGame.hasActed === true, 'Travel consumed the player action'
 console.assert(travelGame.hasMoved === true, 'Travel marked player as moved');
 
 console.log('Test 21 Passed: Connection-based luck rewards (+3, +2, +1) and Muelle del Pescador map travel function accurately.');
+
+console.log('\n=== TEST 22: Turn Flow - Location Action Then Wild Search / Defy Leader Ends Turn ===');
+const turnGame = new MonsterJourneyGame();
+turnGame.initGame([
+    { name: 'Red Tester', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+    { name: 'Blue Tester', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+]);
+UI.game = turnGame;
+const p1Turn = turnGame.players[0];
+console.assert(turnGame.activePlayerIndex === 0, 'Starts with Player 1 active');
+
+// 1. Place a location card with an action connected to starting node
+const berryForest = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_1');
+turnGame.cardMap.placeCardOnNode('node_w_cross', berryForest);
+turnGame.movePlayerToNode('node_w_cross');
+console.assert(p1Turn.currentNodeId === 'node_w_cross', 'Player 1 moved to Bosque de las Bayas');
+
+// 2. Player 1 executes location action first
+console.assert(turnGame.hasLocationActed === false, 'Location action not taken yet');
+console.assert(turnGame.hasEncounterActed === false, 'Encounter action not taken yet');
+const initialBerries = p1Turn.inventory.filter(i => i.id === 'item_cmb_7').length;
+turnGame.executeLocationAction();
+console.assert(turnGame.hasLocationActed === true, 'Location action marked as taken');
+console.assert(p1Turn.inventory.filter(i => i.id === 'item_cmb_7').length === initialBerries + 1, 'Player received Oran Berry from location action');
+
+// Cannot take location action a second time in same turn
+let blockedSecondAction = false;
+global.alert = () => { blockedSecondAction = true; };
+turnGame.executeLocationAction();
+console.assert(blockedSecondAction === true, 'Second location action in same turn blocked');
+
+// 3. Player CAN still do Search for Pokemon after taking location action!
+console.assert(turnGame.hasEncounterActed === false, 'Encounter action still available after location action');
+turnGame.searchMonsters();
+console.assert(turnGame.activeSearchCards !== null && turnGame.activeSearchCards.length >= 3, 'Wild search allowed after taking location action');
+
+// 4. Concluding the search action ends the turn
+p1Turn.inventory.push(ITEMS_DATABASE.find(i => i.id === 'item_cap_4')); // Masterball to guarantee capture
+turnGame.captureMonster(0);
+console.assert(turnGame.activePlayerIndex === 1, 'Capturing wild monster ended turn and advanced to Player 2');
+
+// 5. Test Gym Defiance on Player 2's turn ends the turn
+const p2Turn = turnGame.players[1];
+console.assert(turnGame.activePlayerIndex === 1, 'Player 2 is active');
+UI.showCombatResultModal = ({ onContinue }) => { if (onContinue) onContinue(); };
+turnGame.challengeGym();
+console.assert(turnGame.combatEngine.inCombat === true, 'Gym combat initiated');
+turnGame.combatEngine.endBattle(true);
+console.assert(turnGame.activePlayerIndex === 0, 'Defying gym leader ended combat and advanced turn back to Player 1');
+console.log('Test 22 Passed: Location action allowed first, followed by Search / Fight action which ends the turn.');
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');
