@@ -2,8 +2,21 @@
 
 Prototipo jugable en HTML5 / JavaScript / CSS para testear todas las mecánicas del juego de mesa estilo *Sinnoh Journeys*.
 
+- **Jugar Online (Producción)**: [https://monster-journeys.vercel.app](https://monster-journeys.vercel.app)
+- **Repositorio**: [https://github.com/ManuelGorostiaga/monster-journeys](https://github.com/ManuelGorostiaga/monster-journeys)
+
 ## Cómo Ejecutar
 Abre `index.html` directamente en tu navegador (Google Chrome, Microsoft Edge, Firefox). No requiere servidores externos ni dependencias.
+
+Para recompilar el juego tras hacer cambios en los módulos:
+```bash
+node build.js
+```
+
+Para correr la suite de tests automatizados:
+```bash
+node test-suite.js
+```
 
 ## Características Implementadas
 1. **Soporte de 1 a 4 Jugadores (Modo Solitario / Hotseat):** Configura de 1 a 4 jugadores y contrólalos todos tú mismo para probar el equilibrio del juego.
