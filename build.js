@@ -211,10 +211,10 @@ ${css}
                 <button class="modal-close-btn" onclick="UI.hideCodexModal()">✕</button>
             </div>
             <div class="codex-tabs-bar">
-                <button class="codex-tab-btn active" data-tab="monsters" onclick="UI.setCodexTab('monsters')">👾 Monstruos (32)</button>
+                <button class="codex-tab-btn active" data-tab="monsters" onclick="UI.setCodexTab('monsters')">👾 Monstruos (50)</button>
                 <button class="codex-tab-btn" data-tab="attacks" onclick="UI.setCodexTab('attacks')">⚔️ Ataques</button>
                 <button class="codex-tab-btn" data-tab="items" onclick="UI.setCodexTab('items')">🎒 Objetos (20)</button>
-                <button class="codex-tab-btn" data-tab="areas" onclick="UI.setCodexTab('areas')">🗺️ Áreas y Ciudades (23)</button>
+                <button class="codex-tab-btn" data-tab="areas" onclick="UI.setCodexTab('areas')">🗺️ Áreas y Ciudades (22)</button>
             </div>
             <div class="modal-body">
                 <div class="codex-controls-row">
@@ -259,6 +259,60 @@ ${css}
                         Cancelar
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ANCESTRAL TEACHING (loc_for_3) -->
+    <div id="modal-ancestral-teaching" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 680px;">
+            <div class="modal-header">
+                <h3>📖 Enseñanza Ancestral (Gasta 1 Suerte 🍀)</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('modal-ancestral-teaching').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px;">
+                    Elige una técnica elemental básica para enseñar a cualquiera de tus criaturas:
+                </p>
+                <div id="ancestral-attacks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-bottom: 12px;"></div>
+                <div id="ancestral-monster-target">
+                    <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px;">
+                        Selecciona el monstruo de tu equipo que aprenderá el ataque:
+                    </p>
+                    <div id="ancestral-monster-choices" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DRUID BLESSING (loc_for_4) -->
+    <div id="modal-druid-blessing" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>✨ Bendición del Druida (+1 PS Máximo y +2 🪙)</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('modal-druid-blessing').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">
+                    Los antiguos espíritus del santuario bendicen a tu equipo. Selecciona a qué criatura otorgar el incremento permanente de salud máxima (+1 PS Max):
+                </p>
+                <div id="druid-blessing-choices" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MAP TRAVEL (loc_frw_2: Travesía en Barca) -->
+    <div id="modal-map-travel" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>⛵ Travesía en Barca: Elige tu destino</h3>
+                <button class="modal-close-btn" onclick="UI.hideMapTravelModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">
+                    El barquero del Muelle te transportará por las corrientes navegables a cualquier nodo descubierto del mapa:
+                </p>
+                <div id="map-travel-nodes-list" class="travel-cities-list"></div>
             </div>
         </div>
     </div>

@@ -21,12 +21,29 @@ class CardMap {
         };
     }
 
+    getCityCard(index) {
+        const pool = (typeof CITIES_DATABASE !== 'undefined' ? CITIES_DATABASE : (typeof window !== 'undefined' ? window.CITIES_DATABASE : null)) || [];
+        if (pool[index]) {
+            const copy = JSON.parse(JSON.stringify(pool[index]));
+            copy.isStart = true;
+            copy.hasShop = true;
+            return copy;
+        }
+        return {
+            id: `city_${index + 1}`,
+            name: `Ciudad ${index + 1}`,
+            biome: 'city',
+            isStart: true,
+            hasShop: true
+        };
+    }
+
     initRegionMap() {
         this.nodes = {
-            // --- CORNER 1: SOUTHEAST (Player 1 Start) ---
+            // --- CORNER 1: SOUTHWEST (Player 1 Start) ---
             node_sw: {
                 id: 'node_sw',
-                name: 'Pueblo Hoja',
+                name: 'Ciudad Hoja',
                 x: 250,
                 y: 730,
                 gridX: 0,
@@ -35,7 +52,7 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_w_cross', 'node_s_valley', 'node_w_route', 'node_sw_secret'],
-                cards: [this.createStartingTownCard('Pueblo Hoja', 'loc_start_sw')]
+                cards: [this.getCityCard(0)]
             },
             node_sw_secret: {
                 id: 'node_sw_secret',
@@ -53,7 +70,7 @@ class CardMap {
             // --- CORNER 2: NORTHEAST (Player 2 Start) ---
             node_ne: {
                 id: 'node_ne',
-                name: 'Pueblo Brisa',
+                name: 'Ciudad Puerto',
                 x: 1170,
                 y: 250,
                 gridX: 6,
@@ -62,13 +79,13 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_n_route', 'node_ne_plateau'],
-                cards: [this.createStartingTownCard('Pueblo Brisa', 'loc_start_ne')]
+                cards: [this.getCityCard(2)]
             },
 
             // --- CORNER 3: NORTHWEST (Player 3 Start) ---
             node_nw: {
                 id: 'node_nw',
-                name: 'Pueblo Puerto',
+                name: 'Ciudad Pico',
                 x: 250,
                 y: 250,
                 gridX: 0,
@@ -77,13 +94,13 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_n_route', 'node_nw_bay'],
-                cards: [this.createStartingTownCard('Pueblo Puerto', 'loc_start_nw')]
+                cards: [this.getCityCard(1)]
             },
 
             // --- CORNER 4: SOUTHEAST (Player 4 Start) ---
             node_se: {
                 id: 'node_se',
-                name: 'Pueblo Alba',
+                name: 'Ciudad Flama',
                 x: 1170,
                 y: 730,
                 gridX: 6,
@@ -92,7 +109,7 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_se_cross', 'node_e_coast'],
-                cards: [this.createStartingTownCard('Pueblo Alba', 'loc_start_se')]
+                cards: [this.getCityCard(3)]
             },
 
             // --- 2-CARD HUBS / CROSSROADS ---

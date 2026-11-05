@@ -71,8 +71,9 @@ console.assert(p1.x === 0 && p1.y === 0, 'Player starts at (0, 0)');
 console.assert(p1.luck === 3, 'Red starts with 3 luck');
 console.assert(p2.luck === 4, 'Blue starts with 4 luck');
 console.assert(p1.locationHand.length === 5, 'Player holds 5 location cards in hand');
-console.assert(game.citiesDeck.length === 4, 'Cities deck holds 4 gym cities');
-console.log('Test 2 Passed: Players initialized with luck and 5 location cards.');
+const cornerCheck = [game.cardMap.getNode('node_sw'), game.cardMap.getNode('node_nw'), game.cardMap.getNode('node_ne'), game.cardMap.getNode('node_se')];
+console.assert(cornerCheck.every(n => n.card && n.card.gym), '4 corner starting nodes hold the 4 gym cities');
+console.log('Test 2 Passed: Players initialized with luck, 5 location cards, and 4 corner gym cities.');
 
 console.log('\n=== TEST 3: Placing Location Card & Hand Refill ===');
 const initialHandCount = p1.locationHand.length;
@@ -85,23 +86,26 @@ console.assert(p1.locationHand.length === 5, 'Player hand refilled back to 5');
 console.assert(game.cardMap.hasCard(1, 0) === true, 'CardMap now has card at (1, 0)');
 console.log('Test 3 Passed: Card placed, player moved, and hand refilled to 5.');
 
-console.log('\n=== TEST 4: Placing City from Cities Deck ===');
-game.hasMoved = false; // reset for test
-const cityToPlace = game.citiesDeck[0];
-console.log(`Placing top of Cities Deck: ${cityToPlace.name} at (1, 1)`);
-const cityPlaceSuccess = game.placeCityCardAndMove(1, 1);
-console.assert(cityPlaceSuccess === true, 'Successfully placed city');
-console.assert(p1.x === 1 && p1.y === 1, 'Player moved to (1, 1)');
-console.assert(game.citiesDeck.length === 3, 'Cities deck now has 3 cities remaining');
-console.log('Test 4 Passed: Top of Cities Deck placed and player moved.');
+console.log('\n=== TEST 4: The 4 Gym Cities Replaced Starting Towns at Corners ===');
+const swNode = game.cardMap.getNode('node_sw');
+const nwNode = game.cardMap.getNode('node_nw');
+const neNode = game.cardMap.getNode('node_ne');
+const seNode = game.cardMap.getNode('node_se');
+console.assert(swNode.card.id === 'city_hoja' && swNode.card.gym.tier === 1, 'SW Corner is Ciudad Hoja (Tier 1 Gym)');
+console.assert(nwNode.card.id === 'city_pico' && nwNode.card.gym.tier === 2, 'NW Corner is Ciudad Pico (Tier 2 Gym)');
+console.assert(neNode.card.id === 'city_puerto' && neNode.card.gym.tier === 3, 'NE Corner is Ciudad Puerto (Tier 3 Gym)');
+console.assert(seNode.card.id === 'city_flama' && seNode.card.gym.tier === 3, 'SE Corner is Ciudad Flama (Tier 3 Gym)');
+console.assert(swNode.card.hasShop === true, 'Gym cities have shop access');
+console.log('Test 4 Passed: 4 gym cities replace starting towns on all 4 corners.');
 
 console.log('\n=== TEST 5: Shop Restriction (City vs Wild) ===');
-console.log('p1 at:', p1.x, p1.y, 'node biome:', game.cardMap.getNode(p1.x, p1.y).card.biome);
-console.assert(game.canAccessShop() === true, 'Shop accessible in city');
-// Move to non-city
 game.hasMoved = false;
-const moved = game.movePlayerToNode(1, 0);
-console.log('Moved to (1,0):', moved, 'p1 at:', p1.x, p1.y, 'node biome:', game.cardMap.getNode(p1.x, p1.y).card.biome, 'canShop:', game.canAccessShop(), 'hasShop:', game.cardMap.getNode(p1.x, p1.y).card.hasShop, 'mobileDiscount:', game.mobileShopDiscountActive);
+game.movePlayerToNode('node_sw');
+console.assert(game.canAccessShop() === true, 'Shop accessible in city');
+
+// Move to non-city (node_w_cross)
+game.hasMoved = false;
+const moved = game.movePlayerToNode('node_w_cross');
 console.assert(game.canAccessShop() === false, 'Shop NOT accessible in non-city');
 console.log('Test 5 Passed: Shop access is strictly restricted to Cities.');
 
@@ -141,7 +145,7 @@ console.assert(uniqueIds.size === 8, 'All 8 items in river shop are unique');
 
 // Move to city to buy
 game.hasMoved = false;
-game.movePlayerToNode(1, 1); // City
+game.movePlayerToNode('node_sw'); // Ciudad Hoja (City)
 p1.coins = 50;
 const itemToBuy = game.shopRiver[0];
 game.buyShopItem(0);
@@ -150,10 +154,10 @@ const uniqueIdsAfter = new Set(game.shopRiver.map(i => i.id));
 console.assert(uniqueIdsAfter.size === 8, 'River shop still has 8 unique items after replenishment');
 console.log('Test 8 Passed: River shop maintains 8 unique cards.');
 
-console.log('\n=== TEST 9: Expansion Decks & 3-Tiers Progression ===');
+console.log('\n=== TEST 9: Expansion Decks & 4-Tiers Progression ===');
 console.assert(game.expansionsUnlocked.tier2 === false, 'Tier 2 locked before gyms');
 console.assert(game.expansionsUnlocked.tier3 === false, 'Tier 3 locked before gyms');
-console.assert(game.expansionsUnlocked.tier4 === undefined, 'Tier 4 does not exist');
+console.assert(game.expansionsUnlocked.tier4 === false, 'Tier 4 locked before 3 gyms');
 
 const initialDeckTiers = Object.values(game.biomeDecks).flat().map(m => m.captureTier);
 console.assert(initialDeckTiers.every(t => t === 1), 'All cards in initial biome decks are Tier 1');
@@ -171,12 +175,13 @@ console.assert(game.expansionsUnlocked.tier3 === true, 'Tier 3 unlocked after Gy
 
 const afterGym2Tiers = Object.values(game.biomeDecks).flat().map(m => m.captureTier);
 console.assert(afterGym2Tiers.some(t => t === 3), 'Tier 3 cards now present in biome decks');
-console.assert(afterGym2Tiers.every(t => t <= 3), 'All cards in deck are at most Tier 3 (3 tiers total)');
+console.assert(afterGym2Tiers.every(t => t <= 3), 'All cards in deck before Gym 3 are at most Tier 3');
 
 game.onGymDefeated(p1, { tier: 3, badgeName: 'Medalla Marea', rewardCoins: 16, rewardLuck: 2 });
 console.assert(p1.badges.length === 3, 'Player has 3 badges');
+console.assert(game.expansionsUnlocked.tier4 === true, 'Tier 4 Legendaries unlocked after Gym 3');
 console.assert(game.tournamentEngine.active === true, 'Grand Tournament triggered after defeating 3 gyms!');
-console.log('Test 9 Passed: Higher tier cards strictly unlock after Gym 1 and Gym 2; total 3 tiers.');
+console.log('Test 9 Passed: Higher tier cards strictly unlock after Gym 1, Gym 2, and Gym 3; total 4 tiers.');
 
 console.log('\n=== TEST 10: Combat with Luck Boost ===');
 const combat = game.combatEngine;
@@ -233,10 +238,10 @@ console.log('\n=== TEST 12: Codex Data & Filtering ===');
 require('./js/ui.js');
 UI.game = game;
 console.log('Monsters count:', MONSTERS_DATABASE.length, 'Items count:', ITEMS_DATABASE.length);
-console.assert(MONSTERS_DATABASE.length === 40, 'Codex has 40 monsters');
+console.assert(MONSTERS_DATABASE.length === 50, `Codex has 50 monsters (including 10 T4 Legendaries), got ${MONSTERS_DATABASE.length}`);
 console.assert(ITEMS_DATABASE.length === 20, 'Codex has 20 items');
-const allAreasCount = 1 + CITIES_DATABASE.length + LOCATION_CARDS_DATABASE.length;
-console.assert(allAreasCount === 23, 'Codex has 23 areas/cities');
+const allAreasCount = CITIES_DATABASE.length + LOCATION_CARDS_DATABASE.length;
+console.assert(allAreasCount === 22, `Codex has 22 areas/cities (4 gym cities + 18 locations), got ${allAreasCount}`);
 console.log('Test 12 Passed: Codex contains all monsters, attacks, items, and areas.');
 
 console.log('\n=== TEST 13: Teach Attack from Wild Monster ===');
@@ -535,5 +540,226 @@ console.assert(sashMon.hp === 1, `Cinta Focus should allow surviving lethal dama
 console.assert(sashMon.focusSashUsed === true, 'Cinta Focus should be marked as used');
 
 console.log('Test 17 Passed: All 20 items and running shoes (Zapatillas / Botas Ligeras) verified and functioning correctly.');
+
+console.log('\n=== TEST 18: Double Area Multi-Action Execution & Forest Sanctuary / Ancestral Teaching ===');
+const dGame = new MonsterJourneyGame();
+dGame.initGame([
+    { name: 'Red Tester', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+    { name: 'Blue Tester', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+]);
+UI.game = dGame;
+const dPlayer = dGame.players[0];
+const multiHubNode = dGame.cardMap.getNode('node_w_cross');
+console.assert(multiHubNode.maxCards === 2, `Hub node supports maxCards: 2, got ${multiHubNode.maxCards}`);
+
+const cardAncestral = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_3');
+const cardDruid = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_4');
+dGame.cardMap.placeCardOnNode('node_w_cross', cardAncestral);
+dGame.cardMap.placeCardOnNode('node_w_cross', cardDruid);
+console.assert(multiHubNode.cards.length === 2, `Hub node contains 2 cards, got ${multiHubNode.cards.length}`);
+console.assert(multiHubNode.cards[0].id === 'loc_for_3', 'Card 0 is Bosque de los Ancestros');
+console.assert(multiHubNode.cards[1].id === 'loc_for_4', 'Card 1 is Santuario del Druida');
+
+dGame.movePlayerToNode('node_w_cross');
+console.assert(dPlayer.currentNodeId === 'node_w_cross', 'Player moved to hub node');
+
+// Test Card 1 Action execution by ID: Bosque de los Ancestros (Enseñanza Ancestral)
+dPlayer.luck = 3;
+dGame.hasActed = false;
+const monToTeach = dPlayer.monsters[0];
+const prevAttacksCount = monToTeach.attacks.length;
+dGame.executeLocationAction('loc_for_3');
+console.assert(dPlayer.luck === 2, `Luck should decrease by 1, got ${dPlayer.luck}`);
+console.assert(monToTeach.attacks.length === prevAttacksCount + 1, 'Target monster learned ancestral attack');
+console.assert(dGame.hasActed === true, 'hasActed marked true after Card 1 action');
+
+// Test Card 2 Action execution by ID: Santuario del Druida (Bendición del Druida)
+dGame.hasActed = false;
+const prevMaxHp = monToTeach.maxHp;
+const prevHp = monToTeach.hp;
+const prevCoins = dPlayer.coins;
+dGame.executeLocationAction('loc_for_4');
+console.assert(monToTeach.maxHp === prevMaxHp + 1, `Max HP increased by 1: ${monToTeach.maxHp}`);
+console.assert(monToTeach.hp === prevHp + 1, `Current HP increased by 1: ${monToTeach.hp}`);
+console.assert(dPlayer.coins === prevCoins + 2, `Coins increased by 2: ${dPlayer.coins}`);
+console.assert(dGame.hasActed === true, 'hasActed marked true after Card 2 action');
+
+// Test Card 2 Action execution by index 1
+dGame.hasActed = false;
+const prevMaxHp2 = monToTeach.maxHp;
+dGame.executeLocationAction(1);
+console.assert(monToTeach.maxHp === prevMaxHp2 + 1, `Max HP increased by 1 on index call: ${monToTeach.maxHp}`);
+
+// Direct Enseñanza Ancestral test with chosen attack index
+dGame.hasActed = false;
+dPlayer.luck = 3;
+const chosenAtk = ANCESTRAL_ATTACKS[3];
+dGame.executeAncestralTeaching(3, monToTeach.instanceId);
+console.assert(dPlayer.luck === 2, `Luck spent for direct teaching: ${dPlayer.luck}`);
+console.assert(monToTeach.attacks.some(a => a.name === chosenAtk.name), `Monster learned ${chosenAtk.name}`);
+
+// Test additional updated special location actions
+// Cascada Cristalina (+2 Luck)
+const cardWaterfall = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_frw_1');
+dGame.cardMap.placeCardOnNode('node_s_valley', cardWaterfall);
+dGame.hasMoved = false;
+dGame.movementPoints = 1;
+dGame.movePlayerToNode('node_s_valley');
+dGame.hasActed = false;
+const prevLuckWaterfall = dPlayer.luck;
+dGame.executeLocationAction('loc_frw_1');
+console.assert(dPlayer.luck === prevLuckWaterfall + 2, `Cascada Cristalina granted +2 luck: ${dPlayer.luck}`);
+
+// Altar de la Flama (draw 2 environment cards + 1 luck)
+const cardFlama = CITIES_DATABASE.find(c => c.id === 'city_flama');
+dGame.cardMap.placeCardOnNode('node_s_abyss', cardFlama);
+dGame.hasMoved = false;
+dGame.movementPoints = 1;
+dGame.movePlayerToNode('node_s_abyss');
+dGame.hasActed = false;
+const prevHandSize = dPlayer.locationHand.length;
+const prevLuckFlama = dPlayer.luck;
+dGame.executeLocationAction('city_flama');
+console.assert(dPlayer.locationHand.length === prevHandSize + 2, `Altar de la Flama drew 2 cards: ${dPlayer.locationHand.length}`);
+console.assert(dPlayer.luck === prevLuckFlama + 1, `Altar de la Flama granted +1 luck: ${dPlayer.luck}`);
+
+console.log('Test 18 Passed: Double area multi-card action execution, Enseñanza Ancestral, and Santuario del Druida work seamlessly.');
+
+console.log('\n=== TEST 19: Overworld Abilities (Excavación & Vuelo Rápido) ===');
+const owGame = new MonsterJourneyGame();
+owGame.initGame([
+    { name: 'Red Explorer', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+]);
+UI.game = owGame;
+const owPlayer = owGame.players[0];
+
+// 1. Ground Ability ("Excavación")
+const groundMonData = MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_3');
+const groundMon = owGame.instantiateMonster(groundMonData);
+owPlayer.monsters.push(groundMon);
+
+owGame.hasActed = false;
+owGame.movementPoints = 0;
+owGame.hasMoved = true;
+owGame.useOverworldAbility(groundMon.instanceId);
+console.assert(owGame.movementPoints === 1, `Excavación granted 1 movement point, got ${owGame.movementPoints}`);
+console.assert(owGame.hasMoved === false, 'Excavación reset hasMoved to allow movement');
+console.assert(owGame.hasActed === true, 'Excavación consumed the action');
+
+// 2. Flying Ability ("Vuelo Rápido")
+const flyingMonData = MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_2');
+const flyingMon = owGame.instantiateMonster(flyingMonData);
+owPlayer.monsters.push(flyingMon);
+
+// Move player to wild node
+owGame.cardMap.placeCardOnNode('node_w_route', LOCATION_CARDS_DATABASE[0]);
+owGame.hasMoved = false;
+owGame.movementPoints = 1;
+owGame.movePlayerToNode('node_w_route');
+console.assert(owPlayer.currentNodeId === 'node_w_route', 'Player is stationed on wild route');
+
+// Normal city travel must fail from wild route
+owGame.hasActed = false;
+const failNormalTravel = owGame.fastTravelToCity('node_ne', false);
+console.assert(failNormalTravel === false, 'Normal travel from wild route rejected');
+
+// Flight ability travel must succeed from wild route
+const flightTravelSuccess = owGame.fastTravelToCity('node_ne', true);
+console.assert(flightTravelSuccess === true, 'Vuelo Rápido enables flight from wild route to city');
+console.assert(owPlayer.currentNodeId === 'node_ne', 'Player teleported to destination city');
+console.assert(owGame.hasActed === true, 'Flight consumed the action');
+console.assert(owGame.hasMoved === true, 'Flight marked player as moved');
+
+console.log('Test 19 Passed: Overworld abilities (Excavación + Vuelo Rápido) function properly across map.');
+
+console.log('\n=== TEST 20: Tier 4 Legendary Monsters (1 per Type) & Masterball Suprema ===');
+const t4Monsters = MONSTERS_DATABASE.filter(m => m.captureTier === 4);
+console.assert(t4Monsters.length === 10, `There must be exactly 10 Tier 4 Legendaries, got ${t4Monsters.length}`);
+
+const requiredTypes = ['Planta', 'Fuego', 'Agua', 'Eléctrico', 'Tierra', 'Volador', 'Roca', 'Bicho', 'Dragón', 'Hielo'];
+requiredTypes.forEach(type => {
+    const matching = t4Monsters.filter(m => m.type === type);
+    console.assert(matching.length === 1, `Exactly 1 Tier 4 Legendary for type ${type}, got ${matching.length}`);
+    console.assert(matching[0].isLegendary === true, `${matching[0].name} is marked as isLegendary`);
+    console.assert(matching[0].hp >= 24, `${matching[0].name} has legendary health (24+), got ${matching[0].hp}`);
+    console.assert(matching[0].attacks[0].baseDmg >= 8, `${matching[0].name} attack has high base damage (8+), got ${matching[0].attacks[0].baseDmg}`);
+});
+
+const masterball = ITEMS_DATABASE.find(i => i.id === 'item_cap_4');
+console.assert(masterball !== null && masterball.tier === 4, `Masterball Suprema must be Tier 4 tool, got tier: ${masterball?.tier}`);
+
+console.assert(EXPANSION_DECKS.tier4 !== undefined, 'EXPANSION_DECKS contains tier4');
+console.assert(EXPANSION_DECKS.tier4.monsters.length === 10, `EXPANSION_DECKS.tier4 holds 10 legendary monsters, got ${EXPANSION_DECKS.tier4.monsters.length}`);
+
+// Test capturing a Tier 4 Legendary
+const capGame = new MonsterJourneyGame();
+capGame.initGame([
+    { name: 'Red Hunter', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+]);
+const capPlayer = capGame.players[0];
+const targetLegendary = capGame.instantiateMonster(t4Monsters[0]);
+capGame.activeSearchCards = [targetLegendary];
+
+// Attempt with Tier 1 Pokeball should fail
+let alertTriggered = false;
+global.alert = () => { alertTriggered = true; };
+capGame.captureMonster(0);
+console.assert(alertTriggered === true, 'Capturing T4 legendary with Pokeball Tier 1 was rejected');
+console.assert(capPlayer.monsters.length === 1, 'Player did not capture legendary without proper tool');
+
+// Give player Masterball Suprema (Tier 4) and capture
+capPlayer.inventory.push(JSON.parse(JSON.stringify(masterball)));
+alertTriggered = false;
+capGame.hasActed = false;
+capGame.activeSearchCards = [targetLegendary];
+capGame.captureMonster(0);
+console.assert(capPlayer.monsters.some(m => m.id === targetLegendary.id), 'Successfully captured T4 legendary with Masterball Suprema');
+console.log('Test 20 Passed: Tier 4 Legendaries (10 types), Masterball Suprema, and capture mechanics verified.');
+
+console.log('\n=== TEST 21: Location Travel (Travesía en Barca) & Connection-Based Placement Luck ===');
+const travelGame = new MonsterJourneyGame();
+travelGame.initGame([
+    { name: 'Red Sailor', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+]);
+UI.game = travelGame;
+const travelPlayer = travelGame.players[0];
+
+// 1. Connection-Based Luck Rewards
+const secretNode = travelGame.cardMap.getNode('node_sw_secret'); // 1 connection
+const routeNode = travelGame.cardMap.getNode('node_w_route'); // 2 connections
+const bayNode = travelGame.cardMap.getNode('node_nw_bay'); // 3 connections
+const crossNode = travelGame.cardMap.getNode('node_w_cross'); // 4 connections
+
+console.assert(travelGame.getPlacementLuckReward(secretNode) === 3, '1-connection node awards +3 Luck');
+console.assert(travelGame.getPlacementLuckReward(routeNode) === 2, '2-connection node awards +2 Luck');
+console.assert(travelGame.getPlacementLuckReward(bayNode) === 2, '3-connection node awards +2 Luck');
+console.assert(travelGame.getPlacementLuckReward(crossNode) === 1, '4-connection node awards +1 Luck');
+
+// Test placing on 1-connection secret node gives +3 luck
+const startLuck = travelPlayer.luck;
+const secretCard = travelPlayer.locationHand[0];
+travelGame.hasMoved = false;
+travelGame.movementPoints = 1;
+travelGame.placeLocationCardAndMove(0, 'node_sw_secret');
+console.assert(travelPlayer.luck === startLuck + 3, `Placing on 1-connection dead-end awarded +3 luck: got ${travelPlayer.luck}`);
+console.assert(travelPlayer.currentNodeId === 'node_sw_secret', 'Player moved to secret node');
+
+// 2. Map Travel Ability: Muelle del Pescador (loc_frw_2: Travesía en Barca)
+const dockCard = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_frw_2');
+travelGame.cardMap.placeCardOnNode('node_s_valley', dockCard);
+travelGame.hasMoved = false;
+travelGame.movementPoints = 2;
+travelGame.movePlayerToNode('node_s_valley');
+console.assert(travelPlayer.currentNodeId === 'node_s_valley', 'Player arrived at Muelle del Pescador');
+
+// Activate Travesía en Barca to travel across the map to Ciudad Puerto (node_ne)
+travelGame.hasActed = false;
+const travelRes = travelGame.executeMapTravel('node_ne');
+console.assert(travelRes === true, 'Travesía en Barca succeeded');
+console.assert(travelPlayer.currentNodeId === 'node_ne', 'Player teleported across map to node_ne');
+console.assert(travelGame.hasActed === true, 'Travel consumed the player action');
+console.assert(travelGame.hasMoved === true, 'Travel marked player as moved');
+
+console.log('Test 21 Passed: Connection-based luck rewards (+3, +2, +1) and Muelle del Pescador map travel function accurately.');
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

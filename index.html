@@ -2250,10 +2250,10 @@ main.main-workspace {
                 <button class="modal-close-btn" onclick="UI.hideCodexModal()">✕</button>
             </div>
             <div class="codex-tabs-bar">
-                <button class="codex-tab-btn active" data-tab="monsters" onclick="UI.setCodexTab('monsters')">👾 Monstruos (32)</button>
+                <button class="codex-tab-btn active" data-tab="monsters" onclick="UI.setCodexTab('monsters')">👾 Monstruos (50)</button>
                 <button class="codex-tab-btn" data-tab="attacks" onclick="UI.setCodexTab('attacks')">⚔️ Ataques</button>
                 <button class="codex-tab-btn" data-tab="items" onclick="UI.setCodexTab('items')">🎒 Objetos (20)</button>
-                <button class="codex-tab-btn" data-tab="areas" onclick="UI.setCodexTab('areas')">🗺️ Áreas y Ciudades (23)</button>
+                <button class="codex-tab-btn" data-tab="areas" onclick="UI.setCodexTab('areas')">🗺️ Áreas y Ciudades (22)</button>
             </div>
             <div class="modal-body">
                 <div class="codex-controls-row">
@@ -2298,6 +2298,60 @@ main.main-workspace {
                         Cancelar
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ANCESTRAL TEACHING (loc_for_3) -->
+    <div id="modal-ancestral-teaching" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 680px;">
+            <div class="modal-header">
+                <h3>📖 Enseñanza Ancestral (Gasta 1 Suerte 🍀)</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('modal-ancestral-teaching').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px;">
+                    Elige una técnica elemental básica para enseñar a cualquiera de tus criaturas:
+                </p>
+                <div id="ancestral-attacks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-bottom: 12px;"></div>
+                <div id="ancestral-monster-target">
+                    <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px;">
+                        Selecciona el monstruo de tu equipo que aprenderá el ataque:
+                    </p>
+                    <div id="ancestral-monster-choices" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DRUID BLESSING (loc_for_4) -->
+    <div id="modal-druid-blessing" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>✨ Bendición del Druida (+1 PS Máximo y +2 🪙)</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('modal-druid-blessing').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">
+                    Los antiguos espíritus del santuario bendicen a tu equipo. Selecciona a qué criatura otorgar el incremento permanente de salud máxima (+1 PS Max):
+                </p>
+                <div id="druid-blessing-choices" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MAP TRAVEL (loc_frw_2: Travesía en Barca) -->
+    <div id="modal-map-travel" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>⛵ Travesía en Barca: Elige tu destino</h3>
+                <button class="modal-close-btn" onclick="UI.hideMapTravelModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">
+                    El barquero del Muelle te transportará por las corrientes navegables a cualquier nodo descubierto del mapa:
+                </p>
+                <div id="map-travel-nodes-list" class="travel-cities-list"></div>
             </div>
         </div>
     </div>
@@ -3420,6 +3474,178 @@ const MONSTERS_DATABASE = [
         attacks: [
             { name: 'Furia Dragón', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🎯 Inflige 6 puntos de daño fijo garantizado sin tirada de dados.' }
         ]
+    },
+
+    // --- TIER 4: CRIATURAS LEGENDARIAS (1 por cada tipo) ---
+    {
+        id: 'mon_leg_grass',
+        name: 'Yggdrassor',
+        biome: 'forest',
+        type: 'Planta',
+        weakness: 'Fuego',
+        hp: 26,
+        maxHp: 26,
+        speed: 7,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.grass,
+        icon: '🌳',
+        attacks: [
+            { name: 'Ira de Gaia', type: 'Planta', baseDmg: 8, diceCount: 2, hits: 2, effect: 'multi_hit', desc: '🌿 Azote titánico ancestral que impacta 2 veces consecutivas.' }
+        ]
+    },
+    {
+        id: 'mon_leg_bug',
+        name: 'Soberanocoris',
+        biome: 'forest',
+        type: 'Bicho',
+        weakness: 'Fuego',
+        hp: 25,
+        maxHp: 25,
+        speed: 9,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.bug,
+        icon: '👑',
+        attacks: [
+            { name: 'Enjambre Apocalíptico', type: 'Bicho', baseDmg: 9, diceCount: 2, effect: 'poison', desc: '☠️ Horda colosal que inflige daño masivo y envenena (-1 HP/turno).' }
+        ]
+    },
+    {
+        id: 'mon_leg_rock',
+        name: 'Geotitán',
+        biome: 'mountain',
+        type: 'Roca',
+        weakness: 'Agua',
+        hp: 28,
+        maxHp: 28,
+        speed: 4,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.rock,
+        icon: '🗿',
+        attacks: [
+            { name: 'Cataclismo Pétreo', type: 'Roca', baseDmg: 9, diceCount: 2, effect: 'shield_next', desc: '🛡️ Derrumbe de monolitos que prepara un escudo protector de 4.' }
+        ]
+    },
+    {
+        id: 'mon_leg_ground',
+        name: 'Terragón',
+        biome: 'mountain',
+        type: 'Tierra',
+        weakness: 'Planta',
+        hp: 27,
+        maxHp: 27,
+        speed: 5,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.ground,
+        icon: '🦣',
+        attacks: [
+            { name: 'Fisura Devastadora', type: 'Tierra', baseDmg: 9, diceCount: 2, fixedDmg: 10, effect: 'fixed_damage', desc: '💥 Quiebra la corteza terrestre infligiendo 10 daño fijo garantizado.' }
+        ]
+    },
+    {
+        id: 'mon_leg_flying',
+        name: 'Aethelgard',
+        biome: 'mountain',
+        type: 'Volador',
+        weakness: 'Eléctrico',
+        hp: 24,
+        maxHp: 24,
+        speed: 11,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.flying,
+        icon: '🦅',
+        attacks: [
+            { name: 'Tornado del Juicio', type: 'Volador', baseDmg: 9, diceCount: 2, effect: 'force_switch', desc: '🌪️ Vórtice huracanado que expulsa a la criatura rival del combate.' }
+        ]
+    },
+    {
+        id: 'mon_leg_ice',
+        name: 'Glaciodón',
+        biome: 'mountain',
+        type: 'Hielo',
+        weakness: 'Fuego',
+        hp: 26,
+        maxHp: 26,
+        speed: 6,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.water,
+        icon: '❄️',
+        attacks: [
+            { name: 'Cero Absoluto', type: 'Hielo', baseDmg: 9, diceCount: 2, effect: 'paralyze', desc: '❄️ Congelación suprema que reduce la velocidad rival a 0.' }
+        ]
+    },
+    {
+        id: 'mon_leg_electric',
+        name: 'Fulgoraptor',
+        biome: 'plains',
+        type: 'Eléctrico',
+        weakness: 'Tierra',
+        hp: 24,
+        maxHp: 24,
+        speed: 12,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.electric,
+        icon: '⚡',
+        attacks: [
+            { name: 'Juicio del Rayo', type: 'Eléctrico', baseDmg: 8, diceCount: 2, effect: 'speed_damage', desc: '⚡ Descarga cataclísmica cuyo daño base escala con la Velocidad.' }
+        ]
+    },
+    {
+        id: 'mon_leg_fire',
+        name: 'Piroclasto',
+        biome: 'plains',
+        type: 'Fuego',
+        weakness: 'Agua',
+        hp: 26,
+        maxHp: 26,
+        speed: 9,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.fire,
+        icon: '🔥',
+        attacks: [
+            { name: 'Llama del Fin', type: 'Fuego', baseDmg: 9, diceCount: 2, effect: 'charge_next', desc: '🔥 Calcinación suprema que potencia el siguiente ataque con +4 de daño.' }
+        ]
+    },
+    {
+        id: 'mon_leg_water',
+        name: 'Hydragón Marino',
+        biome: 'freshwater',
+        type: 'Agua',
+        weakness: 'Eléctrico',
+        hp: 28,
+        maxHp: 28,
+        speed: 8,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.water,
+        icon: '🐉',
+        attacks: [
+            { name: 'Tsunami Celestial', type: 'Agua', baseDmg: 9, diceCount: 2, effect: 'drowsy', desc: '🌊 Ola titánica que deja aturdido al rival (+1 daño recibido).' }
+        ]
+    },
+    {
+        id: 'mon_leg_dragon',
+        name: 'Bahamut Abisal',
+        biome: 'saltwater',
+        type: 'Dragón',
+        weakness: 'Hielo',
+        hp: 27,
+        maxHp: 27,
+        speed: 10,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.flying,
+        icon: '🌀',
+        attacks: [
+            { name: 'Cometa Ancestral', type: 'Dragón', baseDmg: 10, diceCount: 2, effect: null, desc: '☄️ Impacto estelar supremo con devastadora potencia directa.' }
+        ]
     }
 ];
 
@@ -3456,10 +3682,10 @@ const ITEMS_DATABASE = [
         id: 'item_cap_4',
         name: 'Masterball Suprema',
         category: 'capture',
-        tier: 3,
+        tier: 4,
         cost: 22,
         icon: '🟣',
-        desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 3).'
+        desc: 'Permite capturar cualquier criatura salvaje, incluyendo Legendarios de Tier 4.'
     },
 
     // --- OBJETOS DE COMBATE ---
@@ -3795,7 +4021,7 @@ const CITIES_DATABASE = [
         locationAction: {
             name: 'Altar de la Flama',
             type: 'special',
-            desc: 'Roba 2 cartas de localización extra y cura a todo tu equipo.'
+            desc: 'Roba 2 cartas de localización extra y gana +1 Suerte 🍀.'
         }
     }
 ];
@@ -3852,9 +4078,9 @@ const LOCATION_CARDS_DATABASE = [
         icon: '⛩️',
         flavor: 'Un círculo de piedras mágicas que revitaliza a los viajeros.',
         locationAction: {
-            name: 'Bendición Verde',
+            name: 'Bendición del Druida',
             type: 'special',
-            desc: 'Restaura toda la salud de tu equipo y gana +2 Monedas.'
+            desc: 'Bendice a una criatura de tu equipo con +1 PS Máximo permanente y gana +2 Monedas 🪙.'
         }
     },
 
@@ -3911,8 +4137,10 @@ const LOCATION_CARDS_DATABASE = [
         flavor: 'Caverna profunda donde yacen vestigios de gigantes del pasado.',
         locationAction: {
             name: 'Excavación Rara',
-            type: 'special',
-            desc: 'Gasta 1 Suerte 🍀 → Recibe 7 Monedas de oro.'
+            type: 'trade',
+            costLuck: 1,
+            gainCoins: 7,
+            desc: 'Gasta 1 Suerte 🍀 → Recibe 7 Monedas de oro 🪙.'
         }
     },
 
@@ -3985,7 +4213,7 @@ const LOCATION_CARDS_DATABASE = [
         locationAction: {
             name: 'Bautismo Fluvial',
             type: 'special',
-            desc: 'Cura todos los puntos de vida (HP) de tus monstruos y gana +1 Suerte 🍀.'
+            desc: 'Purifica el espíritu de tus criaturas: gana +2 Puntos de Suerte 🍀.'
         }
     },
     {
@@ -3994,13 +4222,11 @@ const LOCATION_CARDS_DATABASE = [
         name: 'Muelle del Pescador',
         biome: 'freshwater',
         icon: '🎣',
-        flavor: 'Viejo embarcadero de madera donde se congregan pescadores sabios.',
+        flavor: 'Viejo embarcadero de madera donde se congregan barqueros y pescadores expertos.',
         locationAction: {
-            name: 'Pesca Milagrosa',
-            type: 'trade',
-            costCoins: 3,
-            gainLuck: 1,
-            desc: 'Paga 3 Monedas 🪙 → Gana 1 Suerte 🍀.'
+            name: 'Travesía en Barca',
+            type: 'special',
+            desc: 'Sube a una barca y viaja inmediatamente a cualquier otro nodo descubierto del mapa.'
         }
     },
     {
@@ -4056,9 +4282,18 @@ const LOCATION_CARDS_DATABASE = [
         locationAction: {
             name: 'Invocación Mítica',
             type: 'special',
-            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 3)!'
+            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 4)!'
         }
     }
+];
+
+const ANCESTRAL_ATTACKS = [
+    { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base Planta de 3 de daño.' },
+    { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base Fuego de 3 de daño.' },
+    { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base Agua de 3 de daño.' },
+    { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ 2 de daño y paraliza al rival (Velocidad pasa a 0).' },
+    { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ 2 de daño y reduce en 2 el próximo golpe recibido.' },
+    { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ 2 de daño y envenena al rival (-1 HP/turno).' }
 ];
 
 const EXPANSION_DECKS = {
@@ -4071,10 +4306,17 @@ const EXPANSION_DECKS = {
     },
     tier3: {
         id: 'tier3',
-        name: 'Expansión Tier 3: Poder Titánico y Legendario',
+        name: 'Expansión Tier 3: Poder Titánico',
         unlockAtGymsCount: 2,
         desc: 'Desbloqueada tras derrotar el 2do Gimnasio. Introduce criaturas y cartas de Tier 3.',
         monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 3)
+    },
+    tier4: {
+        id: 'tier4',
+        name: 'Expansión Tier 4: Leyendas Ancestrales',
+        unlockAtGymsCount: 3,
+        desc: 'Desbloqueada tras derrotar el 3er Gimnasio. Despierta a las criaturas Legendarias de Tier 4.',
+        monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 4)
     }
 };
 
@@ -4092,6 +4334,7 @@ window.CITIES_DATABASE = CITIES_DATABASE;
 window.LOCATION_CARDS_DATABASE = LOCATION_CARDS_DATABASE;
 window.EXPANSION_DECKS = EXPANSION_DECKS;
 window.GYMS_DATABASE = CITIES_DATABASE;
+window.ANCESTRAL_ATTACKS = ANCESTRAL_ATTACKS;
 class CardMap {
     constructor() {
         this.nodes = {};
@@ -4115,12 +4358,29 @@ class CardMap {
         };
     }
 
+    getCityCard(index) {
+        const pool = (typeof CITIES_DATABASE !== 'undefined' ? CITIES_DATABASE : (typeof window !== 'undefined' ? window.CITIES_DATABASE : null)) || [];
+        if (pool[index]) {
+            const copy = JSON.parse(JSON.stringify(pool[index]));
+            copy.isStart = true;
+            copy.hasShop = true;
+            return copy;
+        }
+        return {
+            id: `city_${index + 1}`,
+            name: `Ciudad ${index + 1}`,
+            biome: 'city',
+            isStart: true,
+            hasShop: true
+        };
+    }
+
     initRegionMap() {
         this.nodes = {
-            // --- CORNER 1: SOUTHEAST (Player 1 Start) ---
+            // --- CORNER 1: SOUTHWEST (Player 1 Start) ---
             node_sw: {
                 id: 'node_sw',
-                name: 'Pueblo Hoja',
+                name: 'Ciudad Hoja',
                 x: 250,
                 y: 730,
                 gridX: 0,
@@ -4129,7 +4389,7 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_w_cross', 'node_s_valley', 'node_w_route', 'node_sw_secret'],
-                cards: [this.createStartingTownCard('Pueblo Hoja', 'loc_start_sw')]
+                cards: [this.getCityCard(0)]
             },
             node_sw_secret: {
                 id: 'node_sw_secret',
@@ -4147,7 +4407,7 @@ class CardMap {
             // --- CORNER 2: NORTHEAST (Player 2 Start) ---
             node_ne: {
                 id: 'node_ne',
-                name: 'Pueblo Brisa',
+                name: 'Ciudad Puerto',
                 x: 1170,
                 y: 250,
                 gridX: 6,
@@ -4156,13 +4416,13 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_n_route', 'node_ne_plateau'],
-                cards: [this.createStartingTownCard('Pueblo Brisa', 'loc_start_ne')]
+                cards: [this.getCityCard(2)]
             },
 
             // --- CORNER 3: NORTHWEST (Player 3 Start) ---
             node_nw: {
                 id: 'node_nw',
-                name: 'Pueblo Puerto',
+                name: 'Ciudad Pico',
                 x: 250,
                 y: 250,
                 gridX: 0,
@@ -4171,13 +4431,13 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_n_route', 'node_nw_bay'],
-                cards: [this.createStartingTownCard('Pueblo Puerto', 'loc_start_nw')]
+                cards: [this.getCityCard(1)]
             },
 
             // --- CORNER 4: SOUTHEAST (Player 4 Start) ---
             node_se: {
                 id: 'node_se',
-                name: 'Pueblo Alba',
+                name: 'Ciudad Flama',
                 x: 1170,
                 y: 730,
                 gridX: 6,
@@ -4186,7 +4446,7 @@ class CardMap {
                 isStart: true,
                 maxCards: 1,
                 connections: ['node_se_cross', 'node_e_coast'],
-                cards: [this.createStartingTownCard('Pueblo Alba', 'loc_start_se')]
+                cards: [this.getCityCard(3)]
             },
 
             // --- 2-CARD HUBS / CROSSROADS ---
@@ -5599,7 +5859,7 @@ class MonsterJourneyGame {
         this.isGameOver = false;
         this.totalGymsDefeated = 0;
         this.defeatedGymTiers = new Set();
-        this.expansionsUnlocked = { tier2: false, tier3: false };
+        this.expansionsUnlocked = { tier2: false, tier3: false, tier4: false };
 
         // Initialize Card Map with Starting Town at (0, 0)
         this.cardMap.initStartingBoard();
@@ -5680,8 +5940,14 @@ class MonsterJourneyGame {
     }
 
     initCitiesDeck() {
-        // 4 Gym Cities in order or shuffled
-        this.citiesDeck = [...CITIES_DATABASE];
+        this.citiesDeck = [];
+    }
+
+    getPlacementLuckReward(node) {
+        const connCount = node && node.connections ? node.connections.length : 0;
+        if (connCount === 1) return 3;
+        if (connCount <= 3) return 2;
+        return 1;
     }
 
     drawEnvironmentCard() {
@@ -5764,6 +6030,7 @@ class MonsterJourneyGame {
         const tiers = [1];
         if (this.expansionsUnlocked.tier2) tiers.push(2);
         if (this.expansionsUnlocked.tier3) tiers.push(3);
+        if (this.expansionsUnlocked.tier4) tiers.push(4);
         return tiers;
     }
 
@@ -5952,6 +6219,9 @@ class MonsterJourneyGame {
         player.locationHand.splice(cardIndexInHand, 1);
         this.cardMap.placeCardOnNode(targetNode.id, card);
 
+        const luckReward = this.getPlacementLuckReward(targetNode);
+        player.luck += luckReward;
+
         player.currentNodeId = targetNode.id;
         player.x = targetNode.gridX;
         player.y = targetNode.gridY;
@@ -5969,7 +6239,8 @@ class MonsterJourneyGame {
         this.refillLocationHand(player);
 
         if (window.UI) {
-            UI.logGame(`🗺️ ${player.name} descubrió **${card.name}** en ${targetNode.name} (${targetNode.cards.length}/${targetNode.maxCards} cartas) y avanzó hacia allí.`);
+            const connCount = targetNode.connections ? targetNode.connections.length : 0;
+            UI.logGame(`🗺️ ${player.name} descubrió **${card.name}** en ${targetNode.name} (${connCount} conexi${connCount === 1 ? 'ón' : 'ones'}) y ganó **+${luckReward} Suerte 🍀**.`);
             UI.renderAll();
         }
         return true;
@@ -6016,6 +6287,9 @@ class MonsterJourneyGame {
         const cityCard = this.citiesDeck.shift();
         this.cardMap.placeCardOnNode(targetNode.id, cityCard);
 
+        const cityLuckReward = this.getPlacementLuckReward(targetNode);
+        player.luck += cityLuckReward;
+
         player.currentNodeId = targetNode.id;
         player.x = targetNode.gridX;
         player.y = targetNode.gridY;
@@ -6032,43 +6306,45 @@ class MonsterJourneyGame {
 
         const leader = (cityCard.gym && cityCard.gym.leaderName) || cityCard.leaderName || 'Líder de Gimnasio';
         if (window.UI) {
-            UI.logGame(`🏛️ ¡${player.name} fundó la ciudad de **${cityCard.name}** en ${targetNode.name}! Alberga el Gimnasio de ${leader}.`);
+            const connCount = targetNode.connections ? targetNode.connections.length : 0;
+            UI.logGame(`🏛️ ¡${player.name} fundó la ciudad de **${cityCard.name}** en ${targetNode.name} (${connCount} conexiones) y ganó **+${cityLuckReward} Suerte 🍀**! Alberga el Gimnasio de ${leader}.`);
             UI.renderAll();
         }
         return true;
     }
 
     // Rule 15: Fast Travel between Cities
-    fastTravelToCity(targetCityNodeId) {
+    fastTravelToCity(targetCityNodeId, isFlight = false) {
         const player = this.getActivePlayer();
         const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
-        if (!currentNode || !currentNode.cards.some(c => c.biome === 'city')) {
+        if (!isFlight && (!currentNode || !currentNode.cards.some(c => c.biome === 'city'))) {
             alert('Debes estar en una Ciudad para viajar rápidamente a otra.');
-            return;
+            return false;
         }
 
         const targetNode = this.cardMap.getNode(targetCityNodeId);
         if (!targetNode || !targetNode.cards.some(c => c.biome === 'city')) {
             alert('Solo puedes viajar a nodos que contengan una Ciudad.');
-            return;
+            return false;
         }
 
         player.currentNodeId = targetNode.id;
         player.x = targetNode.gridX;
         player.y = targetNode.gridY;
         this.hasMoved = true;
+        this.hasActed = true;
         SoundFX.victory();
 
         if (window.UI) {
             UI.hideCityTravelModal();
-            UI.logGame(`✈️ ${player.name} usó el viaje rápido hacia **${targetNode.name}**.`);
+            UI.logGame(`✈️ ${player.name} usó ${isFlight ? 'Vuelo Rápido' : 'el viaje rápido'} hacia **${targetNode.name}**.`);
             UI.renderAll();
         }
         return true;
     }
 
     // Requirement 4: Execute Location Action (resource trade or special action)
-    executeLocationAction() {
+    executeLocationAction(cardIdOrIndex = null) {
         const player = this.getActivePlayer();
         if (this.hasActed) {
             alert('Ya has tomado tu acción en este turno.');
@@ -6076,8 +6352,25 @@ class MonsterJourneyGame {
         }
 
         const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
-        const cardWithAction = node && node.cards ? node.cards.find(c => c.locationAction) : null;
+        if (!node || !node.cards || node.cards.length === 0) {
+            alert('No hay cartas en esta localización.');
+            return;
+        }
+
+        let cardWithAction = null;
+        if (cardIdOrIndex !== null && cardIdOrIndex !== undefined) {
+            if (typeof cardIdOrIndex === 'number') {
+                const actionCards = node.cards.filter(c => Boolean(c.locationAction));
+                cardWithAction = node.cards[cardIdOrIndex] || actionCards[cardIdOrIndex] || null;
+            } else if (typeof cardIdOrIndex === 'string') {
+                cardWithAction = node.cards.find(c => c.id === cardIdOrIndex) || null;
+            }
+        }
         if (!cardWithAction) {
+            cardWithAction = node.cards.find(c => Boolean(c.locationAction));
+        }
+
+        if (!cardWithAction || !cardWithAction.locationAction) {
             alert('Esta localización no posee una acción especial disponible.');
             return;
         }
@@ -6114,55 +6407,115 @@ class MonsterJourneyGame {
         }
 
         if (action.type === 'special') {
-            if (cardWithAction.id === 'loc_start_town' || cardWithAction.isStart) {
+            if (cardWithAction.id === 'loc_start_town' || cardWithAction.isStart || (cardWithAction.id && cardWithAction.id.startsWith('loc_start'))) {
                 player.monsters.forEach(m => m.hp = m.maxHp);
                 player.luck += 1;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🏡 ${player.name} descansó en Casa: Curó a su equipo y obtuvo +1 Suerte 🍀.`);
-            } else if (cardWithAction.id === 'loc_for_2') {
+            } else if (cardWithAction.id === 'loc_for_1') {
+                const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
+                if (berry) player.inventory.push(JSON.parse(JSON.stringify(berry)));
+                player.luck += 1;
+                this.hasActed = true;
+                SoundFX.coin();
+                if (window.UI) UI.logGame(`🫐 ${player.name} cosechó en Bosque de las Bayas: Obtuvo 1 Baya Aranja y +1 Suerte 🍀.`);
+            } else if (cardWithAction.id === 'loc_for_3') {
+                if (player.luck < 1) {
+                    alert('Requiere al menos 1 Punto de Suerte 🍀.');
+                    return;
+                }
+                if (window.UI && typeof window.UI.promptAncestralTeaching === 'function') {
+                    window.UI.promptAncestralTeaching();
+                    return;
+                }
+                const targetMon = player.monsters[0];
+                if (targetMon) {
+                    this.executeAncestralTeaching(0, targetMon.instanceId);
+                }
+                return;
+            } else if (cardWithAction.id === 'loc_for_4') {
+                if (window.UI && typeof window.UI.promptDruidBlessing === 'function') {
+                    window.UI.promptDruidBlessing();
+                    return;
+                }
+                const targetMon = player.monsters[0];
+                if (targetMon) {
+                    this.executeDruidBlessing(targetMon.instanceId);
+                }
+                return;
+            } else if (cardWithAction.id === 'loc_mtn_3') {
+                const c1 = this.drawEnvironmentCard();
+                const c2 = this.drawEnvironmentCard();
+                if (c1) player.locationHand.push(c1);
+                if (c2) player.locationHand.push(c2);
+                this.hasActed = true;
+                SoundFX.step();
+                if (window.UI) UI.logGame(`🦅 ${player.name} oteó el horizonte en Nido del Águila y robó 2 cartas de localización extra.`);
+            } else if (cardWithAction.id === 'loc_mtn_4') {
                 if (player.luck < 1) {
                     alert('Requiere 1 Suerte 🍀.');
                     return;
                 }
                 player.luck -= 1;
-                player.temporaryModifiers.captureTierBonus = 1;
-                this.searchMonsters();
-                return;
-            } else if (cardWithAction.id === 'loc_mtn_2') {
-                if (player.coins < 2) {
-                    alert('Requiere 2 Monedas 🪙.');
-                    return;
-                }
-                player.coins -= 2;
-                const activeMon = player.monsters[0];
-                if (activeMon) {
-                    activeMon.maxHp += 1;
-                    activeMon.hp += 1;
-                    SoundFX.victory();
-                    if (window.UI) UI.logGame(`🪨 ${player.name} entrenó a ${activeMon.name}: +1 PS Máximo permanente.`);
-                }
+                player.coins += 7;
                 this.hasActed = true;
+                SoundFX.coin();
+                if (window.UI) UI.logGame(`⛏️ ${player.name} excavó en Cueva de los Fósiles: Gastó 1 Suerte y halló 7 Monedas 🪙.`);
             } else if (cardWithAction.id === 'loc_pln_2') {
                 this.mobileShopDiscountActive = true;
                 if (window.UI) {
                     UI.showShopModal();
-                    UI.logGame(`⛺ ${player.name} visitó la Tienda Ambulante con descuento de 1 moneda!`);
+                    UI.logGame(`⛺ ${player.name} visitó la Feria Ambulante con descuento de 1 moneda!`);
                 }
                 this.hasActed = true;
                 return;
-            } else if (cardWithAction.id === 'loc_pln_3') {
-                if (player.coins < 1) {
-                    alert('Requiere 1 Moneda 🪙.');
+            } else if (cardWithAction.id === 'loc_pln_4') {
+                if (player.luck < 1) {
+                    alert('Requiere 1 Suerte 🍀.');
                     return;
                 }
-                player.coins -= 1;
-                const pool = [...ITEMS_DATABASE].sort(() => Math.random() - 0.5);
-                player.inventory.push(JSON.parse(JSON.stringify(pool[0])));
-                player.inventory.push(JSON.parse(JSON.stringify(pool[1])));
-                SoundFX.coin();
+                player.luck -= 1;
+                player.coins += 6;
                 this.hasActed = true;
-                if (window.UI) UI.logGame(`🌿 ${player.name} realizó Alquimia Silvestre y obtuvo 2 cartas de Objeto.`);
+                SoundFX.victory();
+                if (window.UI) UI.logGame(`⚔️ ${player.name} triunfó en Llanura de Duelos: Gastó 1 Suerte y ganó 6 Monedas 🪙.`);
+            } else if (cardWithAction.id === 'loc_frw_1') {
+                player.luck += 2;
+                this.hasActed = true;
+                SoundFX.victory();
+                if (window.UI) UI.logGame(`🏞️ ${player.name} recibió el Bautismo Fluvial en Cascada Cristalina: +2 Suerte 🍀.`);
+            } else if (cardWithAction.id === 'loc_frw_2') {
+                if (window.UI && typeof window.UI.showMapTravelModal === 'function') {
+                    window.UI.showMapTravelModal();
+                    return;
+                }
+                const currentN = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+                const available = Object.values(this.cardMap.nodes).filter(n => n.cards.length > 0 && n.id !== (currentN ? currentN.id : ''));
+                if (available.length > 0) {
+                    this.executeMapTravel(available[0].id);
+                }
+                return;
+            } else if (cardWithAction.id === 'loc_frw_3') {
+                if (player.luck < 1) {
+                    alert('Requiere 1 Suerte 🍀.');
+                    return;
+                }
+                player.luck -= 1;
+                const c1 = this.drawEnvironmentCard();
+                const c2 = this.drawEnvironmentCard();
+                if (c1) player.locationHand.push(c1);
+                if (c2) player.locationHand.push(c2);
+                this.hasActed = true;
+                SoundFX.step();
+                if (window.UI) UI.logGame(`🪷 ${player.name} halló Paz Interior en Laguna de los Lotos y robó 2 cartas de localización.`);
+            } else if (cardWithAction.id === 'loc_ocn_2') {
+                player.coins += 5;
+                const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
+                if (berry) player.inventory.push(JSON.parse(JSON.stringify(berry)));
+                this.hasActed = true;
+                SoundFX.coin();
+                if (window.UI) UI.logGame(`🏴‍☠️ ${player.name} saqueó el Navío Naufragado: Encontró 5 Monedas y 1 Baya Aranja.`);
             } else if (cardWithAction.id === 'loc_ocn_3') {
                 if (player.luck < 2) {
                     alert('Requiere 2 Suerte 🍀.');
@@ -6171,6 +6524,15 @@ class MonsterJourneyGame {
                 player.luck -= 2;
                 this.searchLegendaryMonsters();
                 return;
+            } else if (cardWithAction.id === 'city_flama') {
+                const c1 = this.drawEnvironmentCard();
+                const c2 = this.drawEnvironmentCard();
+                if (c1) player.locationHand.push(c1);
+                if (c2) player.locationHand.push(c2);
+                player.luck += 1;
+                this.hasActed = true;
+                SoundFX.victory();
+                if (window.UI) UI.logGame(`🔥 ${player.name} rindió tributo en Altar de la Flama: Robó 2 cartas de localización y ganó +1 Suerte 🍀.`);
             } else {
                 this.hasActed = true;
                 if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${cardWithAction.name}**.`);
@@ -6180,10 +6542,103 @@ class MonsterJourneyGame {
         }
     }
 
-    // Searching specifically for Tier 3 Legendaries
+    executeAncestralTeaching(attackIndex, monsterInstanceId) {
+        const player = this.getActivePlayer();
+        if (this.hasActed) {
+            alert('Ya has tomado tu acción en este turno.');
+            return;
+        }
+        if (player.luck < 1) {
+            alert('Requiere al menos 1 Punto de Suerte 🍀.');
+            return;
+        }
+
+        const attacksPool = (typeof ANCESTRAL_ATTACKS !== 'undefined' ? ANCESTRAL_ATTACKS : window.ANCESTRAL_ATTACKS) || [];
+        const attack = attacksPool[attackIndex] || attacksPool[0];
+        if (!attack) return;
+
+        const monster = player.monsters.find(m => m.instanceId === monsterInstanceId) || player.monsters[0];
+        if (!monster) return;
+
+        if (monster.attacks.some(a => a.name === attack.name)) {
+            alert(`${monster.name} ya conoce el ataque ${attack.name}.`);
+            return;
+        }
+
+        player.luck -= 1;
+        if (monster.attacks.length >= 3) {
+            monster.attacks[1] = JSON.parse(JSON.stringify(attack));
+        } else {
+            monster.attacks.push(JSON.parse(JSON.stringify(attack)));
+        }
+
+        this.hasActed = true;
+        SoundFX.victory();
+        if (window.UI) {
+            UI.logGame(`📖 ¡${player.name} usó Enseñanza Ancestral! ${monster.name} aprendió **${attack.name}**.`);
+            UI.renderAll();
+        }
+    }
+
+    executeDruidBlessing(monsterInstanceId) {
+        const player = this.getActivePlayer();
+        if (this.hasActed) {
+            alert('Ya has tomado tu acción en este turno.');
+            return;
+        }
+
+        const monster = player.monsters.find(m => m.instanceId === monsterInstanceId) || player.monsters[0];
+        if (!monster) return;
+
+        monster.maxHp += 1;
+        monster.hp += 1;
+        player.coins += 2;
+        this.hasActed = true;
+        SoundFX.victory();
+        if (window.UI) {
+            UI.logGame(`⛩️ ¡${player.name} recibió la Bendición del Druida! ${monster.name} gana +1 PS Máximo permanente y +2 Monedas 🪙.`);
+            UI.renderAll();
+        }
+    }
+
+    executeMapTravel(targetNodeId) {
+        const player = this.getActivePlayer();
+        if (this.hasActed) {
+            alert('Ya has tomado tu acción en este turno.');
+            return false;
+        }
+
+        const targetNode = this.cardMap.getNode(targetNodeId);
+        if (!targetNode || targetNode.cards.length === 0) {
+            alert('Solo puedes viajar a nodos descubiertos con cartas.');
+            return false;
+        }
+
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (currentNode && currentNode.id === targetNode.id) {
+            alert('Ya te encuentras en este nodo.');
+            return false;
+        }
+
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.hasMoved = true;
+        this.hasActed = true;
+        SoundFX.victory();
+
+        if (window.UI) {
+            UI.hideMapTravelModal();
+            UI.logGame(`⛵ ${player.name} usó **Travesía en Barca** desde ${currentNode ? currentNode.name : 'su posición'} hasta **${targetNode.name}**.`);
+            UI.renderAll();
+        }
+        return true;
+    }
+
+    // Searching specifically for Tier 4 Legendaries
     searchLegendaryMonsters() {
         const player = this.getActivePlayer();
-        const legendaries = MONSTERS_DATABASE.filter(m => m.captureTier >= 3);
+        const legendaries = MONSTERS_DATABASE.filter(m => m.captureTier >= 4);
         const drawnCards = [...legendaries].sort(() => Math.random() - 0.5).slice(0, 3).map(m => this.instantiateMonster(m));
 
         this.activeSearchCards = drawnCards;
@@ -6553,6 +7008,24 @@ class MonsterJourneyGame {
             }
         }
 
+        const isThirdGym = (this.defeatedGymTiers.has(3) || this.totalGymsDefeated >= 3);
+        if (isThirdGym && !this.expansionsUnlocked.tier4) {
+            this.expansionsUnlocked.tier4 = true;
+            const t4 = EXPANSION_DECKS.tier4;
+            if (t4) {
+                t4.monsters.forEach(m => {
+                    if (m && this.biomeDecks[m.biome]) {
+                        this.biomeDecks[m.biome].push(m, m);
+                        this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
+                    }
+                });
+                if (window.UI) {
+                    UI.logGame(`🌟 ¡EXPANSIÓN SUPREMA DESBLOQUEADA: **${t4.name}**! Las criaturas Legendarias de Tier 4 han despertado.`);
+                    UI.showNotification(t4.name, t4.desc);
+                }
+            }
+        }
+
         const badgeCount = player.defeatedGymIds && player.defeatedGymIds.length > player.badges.length
             ? player.defeatedGymIds.length
             : player.badges.length;
@@ -6607,6 +7080,12 @@ class MonsterJourneyGame {
             this.hasActed = true;
             if (window.UI) UI.logGame(`🪨 ${monster.name} activa **Romperrocas**: Hallaste 2 monedas.`);
             SoundFX.coin();
+        } else if (ability.id === 'ground') {
+            this.movementPoints += 1;
+            this.hasMoved = false;
+            this.hasActed = true;
+            if (window.UI) UI.logGame(`🦡 ${monster.name} activa **Excavación**: Ganaste +1 movimiento subterráneo en este turno.`);
+            SoundFX.step();
         } else if (ability.id === 'bug') {
             player.temporaryModifiers.captureTierBonus = 1;
             this.hasActed = true;
@@ -6930,7 +7409,8 @@ const UI = {
                             ${node.cards.map((card) => {
                                 const biome = BIOMES[card.biome] || BIOMES.city;
                                 return `
-                                    <div class="node-mini-card" style="border-top: 3px solid ${biome.color};">
+                                    <div class="node-mini-card" style="border-top: 3px solid ${biome.color};"
+                                         onclick="event.stopPropagation(); UI.onMiniCardClicked('${node.id}', '${card.id}')">
                                         <div class="mini-card-icon">${card.icon || biome.icon}</div>
                                         <div class="mini-card-title">${card.name}</div>
                                         ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
@@ -6997,6 +7477,29 @@ const UI = {
         grid.innerHTML = svgHtml + nodesHtml;
     },
 
+    onMiniCardClicked(nodeId, cardId) {
+        const activePlayer = this.game.getActivePlayer();
+        const playerNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+
+        if (playerNode && playerNode.id === nodeId) {
+            const node = this.game.cardMap.getNode(nodeId);
+            const card = node ? node.cards.find(c => c.id === cardId) : null;
+            if (!card) return;
+
+            if (card.locationAction && card.gym) {
+                this.showLocationActionModal();
+            } else if (card.locationAction) {
+                this.confirmExecuteLocationAction(card.id);
+            } else if (card.gym) {
+                this.game.challengeGym();
+            } else {
+                this.onBoardNodeClicked(nodeId);
+            }
+        } else {
+            this.onBoardNodeClicked(nodeId);
+        }
+    },
+
     onBoardNodeClicked(nodeIdOrX, maybeY) {
         const targetNode = this.game.cardMap.getNode(nodeIdOrX, maybeY);
         if (!targetNode) return;
@@ -7040,6 +7543,13 @@ const UI = {
             return;
         }
 
+        const isPlayerCurrentlyHere = playerNode && playerNode.id === targetNode.id;
+        const hasActions = targetNode.cards.some(c => Boolean(c.locationAction));
+        if (isPlayerCurrentlyHere && hasActions) {
+            this.showLocationActionModal();
+            return;
+        }
+
         let msg = `📍 **${targetNode.name}** (${targetNode.cards.length}/${targetNode.maxCards} cartas)\n\n`;
         targetNode.cards.forEach((card, idx) => {
             const biome = BIOMES[card.biome] || BIOMES.city;
@@ -7063,6 +7573,14 @@ const UI = {
         if (!modal) return;
 
         const player = this.game.getActivePlayer();
+        const connCount = targetNode.connections ? targetNode.connections.length : 0;
+        const luckReward = this.game.getPlacementLuckReward ? this.game.getPlacementLuckReward(targetNode) : (connCount === 1 ? 3 : (connCount <= 3 ? 2 : 1));
+
+        const modalDesc = modal.querySelector('.modal-body p');
+        if (modalDesc) {
+            modalDesc.innerHTML = `Descubrirás el nodo <strong>${targetNode.name}</strong> (${connCount} conexi${connCount === 1 ? 'ón' : 'ones'}). ¡Recibirás una bonificación inmediata de <strong>+${luckReward} Suerte 🍀</strong> al colocar una carta!`;
+        }
+
         const container = document.getElementById('place-card-options');
         if (container) {
             let html = '';
@@ -7080,11 +7598,11 @@ const UI = {
                         <div class="location-card-title">${nextCity.name}</div>
                         <div class="location-card-action-box">
                             <strong>Gimnasio de ${nextCity.gym.leaderName}</strong>
-                            Fundar esta metrópoli en ${targetNode.name} otorga acceso exclusivo a la Tienda y al Gimnasio.
+                            Fundar esta metrópoli en ${targetNode.name} otorga acceso exclusivo a la Tienda y al Gimnasio (+${luckReward} 🍀).
                         </div>
                         <div class="location-card-bottom">
                             <button class="btn-place-loc" style="background: linear-gradient(180deg, #f59e0b, #d97706); border-color: #fbbf24;">
-                                🏛️ Fundar en ${targetNode.name}
+                                🏛️ Fundar (+${luckReward} 🍀)
                             </button>
                         </div>
                     </div>
@@ -7107,7 +7625,7 @@ const UI = {
                             ${card.locationAction ? card.locationAction.desc : card.flavor}
                         </div>
                         <div class="location-card-bottom">
-                            <button class="btn-place-loc">🗺️ Colocar en ${targetNode.name}</button>
+                            <button class="btn-place-loc">🗺️ Colocar (+${luckReward} 🍀)</button>
                         </div>
                     </div>
                 `;
@@ -7144,20 +7662,39 @@ const UI = {
         if (!modal) return;
 
         const titleEl = document.getElementById('loc-action-title');
-        if (titleEl) titleEl.textContent = `Acciones en ${node.name}`;
+        if (titleEl) {
+            titleEl.textContent = `Acciones en ${node.name} (${cardsWithAction.length} carta${cardsWithAction.length > 1 ? 's' : ''})`;
+        }
 
         const bodyEl = document.getElementById('loc-action-body');
         if (bodyEl) {
-            bodyEl.innerHTML = cardsWithAction.map((card, idx) => `
-                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 12px;">
-                    <div style="font-size: 2rem; margin-bottom: 6px;">${card.icon || '🔄'}</div>
-                    <h4 style="color: var(--accent-gold); font-size: 1.05rem; margin-bottom: 4px;">${card.name}: ${card.locationAction.name}</h4>
-                    <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px;">${card.locationAction.desc}</p>
-                    <button class="btn btn-primary" onclick="UI.confirmExecuteLocationAction(${idx})">
-                        ⚡ Activar ${card.locationAction.name}
-                    </button>
-                </div>
-            `).join('');
+            bodyEl.innerHTML = cardsWithAction.map((card) => {
+                const biome = BIOMES[card.biome] || BIOMES.city;
+                let costGainHtml = '';
+                if (card.locationAction.type === 'trade') {
+                    const costs = [];
+                    const gains = [];
+                    if (card.locationAction.costCoins) costs.push(`${card.locationAction.costCoins} 🪙`);
+                    if (card.locationAction.costLuck) costs.push(`${card.locationAction.costLuck} 🍀`);
+                    if (card.locationAction.gainCoins) gains.push(`+${card.locationAction.gainCoins} 🪙`);
+                    if (card.locationAction.gainLuck) gains.push(`+${card.locationAction.gainLuck} 🍀`);
+                    costGainHtml = `<div style="margin: 6px 0; font-size: 0.85rem; font-weight: bold; color: #fbbf24;">
+                        ${costs.length > 0 ? `Paga: ${costs.join(', ')} → ` : ''}Recibe: ${gains.join(', ')}
+                    </div>`;
+                }
+                return `
+                    <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 8px; border: 1.5px solid ${biome.color}; text-align: center; margin-bottom: 12px;">
+                        <div style="font-size: 2rem; margin-bottom: 4px;">${card.icon || biome.icon}</div>
+                        <h4 style="color: #fff; font-size: 1.05rem; margin-bottom: 2px;">${card.name}</h4>
+                        <div style="color: var(--accent-gold); font-weight: bold; font-size: 0.95rem; margin-bottom: 4px;">🔄 ${card.locationAction.name}</div>
+                        <p style="color: #cbd5e1; font-size: 0.88rem; margin-bottom: 8px;">${card.locationAction.desc}</p>
+                        ${costGainHtml}
+                        <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="UI.confirmExecuteLocationAction('${card.id}')">
+                            ⚡ Activar ${card.locationAction.name}
+                        </button>
+                    </div>
+                `;
+            }).join('');
         }
 
         const btnConfirm = document.getElementById('btn-confirm-loc-action');
@@ -7168,9 +7705,145 @@ const UI = {
         modal.classList.add('open');
     },
 
-    confirmExecuteLocationAction(cardIndex) {
+    confirmExecuteLocationAction(cardIdOrIndex) {
         document.getElementById('modal-location-action')?.classList.remove('open');
-        this.game.executeLocationAction(cardIndex);
+        this.game.executeLocationAction(cardIdOrIndex);
+    },
+
+    promptAncestralTeaching() {
+        const modal = document.getElementById('modal-ancestral-teaching');
+        if (!modal) {
+            const player = this.game.getActivePlayer();
+            const choice = prompt('Elige ataque (0 a 5):', '0');
+            const atkIdx = parseInt(choice || '0', 10);
+            this.game.executeAncestralTeaching(atkIdx, player.monsters[0]?.instanceId);
+            return;
+        }
+        this.selectedAncestralAttackIdx = 0;
+        this.renderAncestralTeachingModal();
+        modal.classList.add('open');
+    },
+
+    renderAncestralTeachingModal() {
+        const attacksContainer = document.getElementById('ancestral-attacks-list');
+        const targetContainer = document.getElementById('ancestral-monster-target');
+        const choicesContainer = document.getElementById('ancestral-monster-choices');
+        const attacksPool = (typeof ANCESTRAL_ATTACKS !== 'undefined' ? ANCESTRAL_ATTACKS : window.ANCESTRAL_ATTACKS) || [];
+        const player = this.game.getActivePlayer();
+
+        if (attacksContainer) {
+            attacksContainer.innerHTML = attacksPool.map((atk, idx) => {
+                const typeColor = TYPE_COLORS[atk.type] || '#3b82f6';
+                const isSelected = idx === this.selectedAncestralAttackIdx;
+                return `
+                    <div class="ancestral-atk-card" style="background: ${isSelected ? 'rgba(56, 189, 248, 0.2)' : '#1e242d'}; border: 2px solid ${isSelected ? '#38bdf8' : '#374151'}; padding: 10px; border-radius: 8px; cursor: pointer;"
+                         onclick="UI.selectAncestralAttack(${idx})">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <strong style="color: #fff; font-size: 0.9rem;">${atk.name}</strong>
+                            <span class="type-pill" style="background: ${typeColor}; font-size: 0.65rem;">${atk.type}</span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: #fbbf24; font-weight: bold;">💥 ${atk.baseDmg} Daño base</div>
+                        <div style="font-size: 0.72rem; color: #cbd5e1; margin-top: 3px;">${atk.desc}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        if (targetContainer && choicesContainer) {
+            targetContainer.style.display = 'block';
+            choicesContainer.innerHTML = player.monsters.map((m) => `
+                <div class="ancestral-mon-choice" style="background: #18202a; border: 1.5px solid #475569; padding: 8px; border-radius: 8px; text-align: center; cursor: pointer;"
+                     onclick="UI.confirmAncestralTeaching('${m.instanceId}')">
+                    <div style="font-size: 1.8rem;">${m.icon}</div>
+                    <strong style="font-size: 0.85rem; color: #fff; display: block;">${m.name}</strong>
+                    <div style="font-size: 0.7rem; color: #94a3b8;">${m.attacks.length}/3 ataques</div>
+                    <button class="btn-action-small" style="margin-top: 6px; width: 100%;">Enseñar a ${m.name}</button>
+                </div>
+            `).join('');
+        }
+    },
+
+    selectAncestralAttack(idx) {
+        this.selectedAncestralAttackIdx = idx;
+        this.renderAncestralTeachingModal();
+    },
+
+    confirmAncestralTeaching(monsterInstanceId) {
+        document.getElementById('modal-ancestral-teaching')?.classList.remove('open');
+        this.game.executeAncestralTeaching(this.selectedAncestralAttackIdx || 0, monsterInstanceId);
+    },
+
+    promptDruidBlessing() {
+        const modal = document.getElementById('modal-druid-blessing');
+        if (!modal) {
+            const player = this.game.getActivePlayer();
+            const choice = prompt('Elige criatura para la Bendición del Druida (1 a ' + player.monsters.length + '):', '1');
+            const idx = Math.max(0, parseInt(choice || '1', 10) - 1);
+            this.game.executeDruidBlessing(player.monsters[idx]?.instanceId);
+            return;
+        }
+
+        const choicesContainer = document.getElementById('druid-blessing-choices');
+        const player = this.game.getActivePlayer();
+        if (choicesContainer) {
+            choicesContainer.innerHTML = player.monsters.map((m) => `
+                <div style="background: #18202a; border: 1.5px solid #10b981; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;"
+                     onclick="UI.confirmDruidBlessing('${m.instanceId}')">
+                    <div style="font-size: 2.2rem; margin-bottom: 4px;">${m.icon}</div>
+                    <strong style="font-size: 0.95rem; color: #fff; display: block;">${m.name}</strong>
+                    <div style="font-size: 0.78rem; color: #34d399; margin: 4px 0;">❤️ ${m.hp}/${m.maxHp} HP</div>
+                    <button class="btn-action btn-action-primary" style="margin-top: 6px; width: 100%; justify-content: center; background: linear-gradient(180deg, #10b981, #059669); border-color: #34d399;">
+                        ✨ Bendecir (+1 Max HP)
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    confirmDruidBlessing(monsterInstanceId) {
+        document.getElementById('modal-druid-blessing')?.classList.remove('open');
+        this.game.executeDruidBlessing(monsterInstanceId);
+    },
+
+    showMapTravelModal() {
+        const modal = document.getElementById('modal-map-travel');
+        if (!modal) return;
+
+        const container = document.getElementById('map-travel-nodes-list');
+        const player = this.game.getActivePlayer();
+        const currentNode = this.game.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+
+        const discoveredNodes = Object.values(this.game.cardMap.nodes).filter(n => n.cards.length > 0 && n.id !== (currentNode ? currentNode.id : ''));
+
+        if (container) {
+            container.innerHTML = discoveredNodes.map(node => {
+                const topCard = node.card || node.cards[0];
+                const biome = topCard ? (BIOMES[topCard.biome] || BIOMES.city) : BIOMES.city;
+                return `
+                    <div class="travel-city-card" style="border-left: 4px solid ${biome.color}; cursor: pointer;"
+                         onclick="UI.game.executeMapTravel('${node.id}')">
+                        <div class="travel-city-icon" style="font-size: 1.8rem;">${topCard.icon || biome.icon}</div>
+                        <div style="flex: 1;">
+                            <strong style="color: #fff; font-size: 0.95rem;">${node.name}</strong>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">
+                                ${node.cards.map(c => c.name).join(' + ')} (${node.cards.length}/${node.maxCards} cartas)
+                            </div>
+                        </div>
+                        <button class="btn-action-small" style="width: auto; background: #0284c7; border-color: #38bdf8;">
+                            ⛵ Desembarcar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    hideMapTravelModal() {
+        document.getElementById('modal-map-travel')?.classList.remove('open');
     },
 
     showDraftLocationModal({ player, cards, onSelect }) {
@@ -7234,7 +7907,8 @@ const UI = {
         const gymCard = currentNode ? currentNode.cards.find(c => c.gym) : null;
         const hasGym = Boolean(gymCard && gymCard.gym);
         const hasUnclaimedPoi = currentNode && currentNode.poi && !currentNode.poi.claimed;
-        const hasLocAction = currentCard ? Boolean(currentCard.locationAction) : false;
+        const actionCards = currentNode ? currentNode.cards.filter(c => Boolean(c.locationAction)) : [];
+        const hasLocAction = actionCards.length > 0;
 
         if (btnSearch) {
             btnSearch.disabled = this.game.hasActed || isCity || !currentCard;
@@ -7258,7 +7932,15 @@ const UI = {
         if (btnLocAction) {
             btnLocAction.disabled = this.game.hasActed || !hasLocAction;
             if (hasLocAction) {
-                btnLocAction.innerHTML = `🔄 ${currentCard.locationAction.name}`;
+                if (actionCards.length === 1) {
+                    btnLocAction.innerHTML = `🔄 ${actionCards[0].locationAction.name}`;
+                } else {
+                    btnLocAction.innerHTML = `🔄 Acciones de Zona (${actionCards.length})`;
+                }
+                btnLocAction.title = actionCards.map(c => `${c.name}: ${c.locationAction.name}`).join(' | ');
+            } else {
+                btnLocAction.innerHTML = `🔄 Acción de Lugar`;
+                btnLocAction.title = 'No hay acciones disponibles en esta localización';
             }
         }
 
@@ -7704,7 +8386,7 @@ const UI = {
             container.innerHTML = placedCityNodes.map(node => {
                 const cityCard = node.cards.find(c => c.biome === 'city') || node.card;
                 return `
-                    <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}')">
+                    <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}', ${isFlyingAbility})">
                         <div class="travel-city-icon">🏛️</div>
                         <div>
                             <strong>${cityCard ? cityCard.name : node.name}</strong>
@@ -8073,19 +8755,22 @@ const UI = {
         if (this.codexActiveTab === 'monsters') {
             if (filterContainer) {
                 filterContainer.innerHTML = `
-                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (40)</button>
+                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (50)</button>
                     <button class="codex-chip ${this.codexFilter === 'forest' ? 'active' : ''}" onclick="UI.setCodexFilter('forest')">🌲 Bosque</button>
                     <button class="codex-chip ${this.codexFilter === 'mountain' ? 'active' : ''}" onclick="UI.setCodexFilter('mountain')">⛰️ Montaña</button>
                     <button class="codex-chip ${this.codexFilter === 'plains' ? 'active' : ''}" onclick="UI.setCodexFilter('plains')">🌾 Pradera</button>
                     <button class="codex-chip ${this.codexFilter === 'freshwater' ? 'active' : ''}" onclick="UI.setCodexFilter('freshwater')">💧 Dulce</button>
                     <button class="codex-chip ${this.codexFilter === 'saltwater' ? 'active' : ''}" onclick="UI.setCodexFilter('saltwater')">🌊 Salada</button>
-                    <button class="codex-chip ${this.codexFilter === 't3' ? 'active' : ''}" onclick="UI.setCodexFilter('t3')">🌟 Legendarios (T3)</button>
+                    <button class="codex-chip ${this.codexFilter === 't3' ? 'active' : ''}" onclick="UI.setCodexFilter('t3')">Tier 3 (20)</button>
+                    <button class="codex-chip ${this.codexFilter === 't4' ? 'active' : ''}" onclick="UI.setCodexFilter('t4')">👑 Legendarios T4 (10)</button>
                 `;
             }
 
             let filtered = MONSTERS_DATABASE;
             if (this.codexFilter === 't3') {
                 filtered = filtered.filter(m => m.captureTier === 3);
+            } else if (this.codexFilter === 't4') {
+                filtered = filtered.filter(m => m.captureTier === 4);
             } else if (this.codexFilter !== 'all') {
                 filtered = filtered.filter(m => m.biome === this.codexFilter);
             }
@@ -8229,8 +8914,8 @@ const UI = {
         } else if (this.codexActiveTab === 'areas') {
             if (filterContainer) {
                 filterContainer.innerHTML = `
-                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (23)</button>
-                    <button class="codex-chip ${this.codexFilter === 'city' ? 'active' : ''}" onclick="UI.setCodexFilter('city')">🏛️ Ciudades (5)</button>
+                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (22)</button>
+                    <button class="codex-chip ${this.codexFilter === 'city' ? 'active' : ''}" onclick="UI.setCodexFilter('city')">🏛️ Ciudades (4)</button>
                     <button class="codex-chip ${this.codexFilter === 'forest' ? 'active' : ''}" onclick="UI.setCodexFilter('forest')">🌲 Bosque</button>
                     <button class="codex-chip ${this.codexFilter === 'mountain' ? 'active' : ''}" onclick="UI.setCodexFilter('mountain')">⛰️ Montaña</button>
                     <button class="codex-chip ${this.codexFilter === 'plains' ? 'active' : ''}" onclick="UI.setCodexFilter('plains')">🌾 Pradera</button>
@@ -8240,14 +8925,6 @@ const UI = {
             }
 
             const allAreas = [
-                {
-                    id: 'loc_start_town',
-                    name: 'Pueblo de Inicio',
-                    biome: 'city',
-                    icon: '🏡',
-                    flavor: 'Acogedora villa natal donde los aspirantes a campeones inician su odisea.',
-                    locationAction: { name: 'Descanso en Casa', desc: 'Cura por completo a todo tu equipo y recupera +1 Suerte 🍀 gratis.' }
-                },
                 ...CITIES_DATABASE,
                 ...LOCATION_CARDS_DATABASE
             ];

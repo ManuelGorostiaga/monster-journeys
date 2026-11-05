@@ -811,6 +811,178 @@ const MONSTERS_DATABASE = [
         attacks: [
             { name: 'Furia Dragón', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🎯 Inflige 6 puntos de daño fijo garantizado sin tirada de dados.' }
         ]
+    },
+
+    // --- TIER 4: CRIATURAS LEGENDARIAS (1 por cada tipo) ---
+    {
+        id: 'mon_leg_grass',
+        name: 'Yggdrassor',
+        biome: 'forest',
+        type: 'Planta',
+        weakness: 'Fuego',
+        hp: 26,
+        maxHp: 26,
+        speed: 7,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.grass,
+        icon: '🌳',
+        attacks: [
+            { name: 'Ira de Gaia', type: 'Planta', baseDmg: 8, diceCount: 2, hits: 2, effect: 'multi_hit', desc: '🌿 Azote titánico ancestral que impacta 2 veces consecutivas.' }
+        ]
+    },
+    {
+        id: 'mon_leg_bug',
+        name: 'Soberanocoris',
+        biome: 'forest',
+        type: 'Bicho',
+        weakness: 'Fuego',
+        hp: 25,
+        maxHp: 25,
+        speed: 9,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.bug,
+        icon: '👑',
+        attacks: [
+            { name: 'Enjambre Apocalíptico', type: 'Bicho', baseDmg: 9, diceCount: 2, effect: 'poison', desc: '☠️ Horda colosal que inflige daño masivo y envenena (-1 HP/turno).' }
+        ]
+    },
+    {
+        id: 'mon_leg_rock',
+        name: 'Geotitán',
+        biome: 'mountain',
+        type: 'Roca',
+        weakness: 'Agua',
+        hp: 28,
+        maxHp: 28,
+        speed: 4,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.rock,
+        icon: '🗿',
+        attacks: [
+            { name: 'Cataclismo Pétreo', type: 'Roca', baseDmg: 9, diceCount: 2, effect: 'shield_next', desc: '🛡️ Derrumbe de monolitos que prepara un escudo protector de 4.' }
+        ]
+    },
+    {
+        id: 'mon_leg_ground',
+        name: 'Terragón',
+        biome: 'mountain',
+        type: 'Tierra',
+        weakness: 'Planta',
+        hp: 27,
+        maxHp: 27,
+        speed: 5,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.ground,
+        icon: '🦣',
+        attacks: [
+            { name: 'Fisura Devastadora', type: 'Tierra', baseDmg: 9, diceCount: 2, fixedDmg: 10, effect: 'fixed_damage', desc: '💥 Quiebra la corteza terrestre infligiendo 10 daño fijo garantizado.' }
+        ]
+    },
+    {
+        id: 'mon_leg_flying',
+        name: 'Aethelgard',
+        biome: 'mountain',
+        type: 'Volador',
+        weakness: 'Eléctrico',
+        hp: 24,
+        maxHp: 24,
+        speed: 11,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.flying,
+        icon: '🦅',
+        attacks: [
+            { name: 'Tornado del Juicio', type: 'Volador', baseDmg: 9, diceCount: 2, effect: 'force_switch', desc: '🌪️ Vórtice huracanado que expulsa a la criatura rival del combate.' }
+        ]
+    },
+    {
+        id: 'mon_leg_ice',
+        name: 'Glaciodón',
+        biome: 'mountain',
+        type: 'Hielo',
+        weakness: 'Fuego',
+        hp: 26,
+        maxHp: 26,
+        speed: 6,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.water,
+        icon: '❄️',
+        attacks: [
+            { name: 'Cero Absoluto', type: 'Hielo', baseDmg: 9, diceCount: 2, effect: 'paralyze', desc: '❄️ Congelación suprema que reduce la velocidad rival a 0.' }
+        ]
+    },
+    {
+        id: 'mon_leg_electric',
+        name: 'Fulgoraptor',
+        biome: 'plains',
+        type: 'Eléctrico',
+        weakness: 'Tierra',
+        hp: 24,
+        maxHp: 24,
+        speed: 12,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.electric,
+        icon: '⚡',
+        attacks: [
+            { name: 'Juicio del Rayo', type: 'Eléctrico', baseDmg: 8, diceCount: 2, effect: 'speed_damage', desc: '⚡ Descarga cataclísmica cuyo daño base escala con la Velocidad.' }
+        ]
+    },
+    {
+        id: 'mon_leg_fire',
+        name: 'Piroclasto',
+        biome: 'plains',
+        type: 'Fuego',
+        weakness: 'Agua',
+        hp: 26,
+        maxHp: 26,
+        speed: 9,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.fire,
+        icon: '🔥',
+        attacks: [
+            { name: 'Llama del Fin', type: 'Fuego', baseDmg: 9, diceCount: 2, effect: 'charge_next', desc: '🔥 Calcinación suprema que potencia el siguiente ataque con +4 de daño.' }
+        ]
+    },
+    {
+        id: 'mon_leg_water',
+        name: 'Hydragón Marino',
+        biome: 'freshwater',
+        type: 'Agua',
+        weakness: 'Eléctrico',
+        hp: 28,
+        maxHp: 28,
+        speed: 8,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.water,
+        icon: '🐉',
+        attacks: [
+            { name: 'Tsunami Celestial', type: 'Agua', baseDmg: 9, diceCount: 2, effect: 'drowsy', desc: '🌊 Ola titánica que deja aturdido al rival (+1 daño recibido).' }
+        ]
+    },
+    {
+        id: 'mon_leg_dragon',
+        name: 'Bahamut Abisal',
+        biome: 'saltwater',
+        type: 'Dragón',
+        weakness: 'Hielo',
+        hp: 27,
+        maxHp: 27,
+        speed: 10,
+        captureTier: 4,
+        isLegendary: true,
+        overworldAbility: OVERWORLD_ABILITIES.flying,
+        icon: '🌀',
+        attacks: [
+            { name: 'Cometa Ancestral', type: 'Dragón', baseDmg: 10, diceCount: 2, effect: null, desc: '☄️ Impacto estelar supremo con devastadora potencia directa.' }
+        ]
     }
 ];
 
@@ -847,10 +1019,10 @@ const ITEMS_DATABASE = [
         id: 'item_cap_4',
         name: 'Masterball Suprema',
         category: 'capture',
-        tier: 3,
+        tier: 4,
         cost: 22,
         icon: '🟣',
-        desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 3).'
+        desc: 'Permite capturar cualquier criatura salvaje, incluyendo Legendarios de Tier 4.'
     },
 
     // --- OBJETOS DE COMBATE ---
@@ -1186,7 +1358,7 @@ const CITIES_DATABASE = [
         locationAction: {
             name: 'Altar de la Flama',
             type: 'special',
-            desc: 'Roba 2 cartas de localización extra y cura a todo tu equipo.'
+            desc: 'Roba 2 cartas de localización extra y gana +1 Suerte 🍀.'
         }
     }
 ];
@@ -1243,9 +1415,9 @@ const LOCATION_CARDS_DATABASE = [
         icon: '⛩️',
         flavor: 'Un círculo de piedras mágicas que revitaliza a los viajeros.',
         locationAction: {
-            name: 'Bendición Verde',
+            name: 'Bendición del Druida',
             type: 'special',
-            desc: 'Restaura toda la salud de tu equipo y gana +2 Monedas.'
+            desc: 'Bendice a una criatura de tu equipo con +1 PS Máximo permanente y gana +2 Monedas 🪙.'
         }
     },
 
@@ -1302,8 +1474,10 @@ const LOCATION_CARDS_DATABASE = [
         flavor: 'Caverna profunda donde yacen vestigios de gigantes del pasado.',
         locationAction: {
             name: 'Excavación Rara',
-            type: 'special',
-            desc: 'Gasta 1 Suerte 🍀 → Recibe 7 Monedas de oro.'
+            type: 'trade',
+            costLuck: 1,
+            gainCoins: 7,
+            desc: 'Gasta 1 Suerte 🍀 → Recibe 7 Monedas de oro 🪙.'
         }
     },
 
@@ -1376,7 +1550,7 @@ const LOCATION_CARDS_DATABASE = [
         locationAction: {
             name: 'Bautismo Fluvial',
             type: 'special',
-            desc: 'Cura todos los puntos de vida (HP) de tus monstruos y gana +1 Suerte 🍀.'
+            desc: 'Purifica el espíritu de tus criaturas: gana +2 Puntos de Suerte 🍀.'
         }
     },
     {
@@ -1385,13 +1559,11 @@ const LOCATION_CARDS_DATABASE = [
         name: 'Muelle del Pescador',
         biome: 'freshwater',
         icon: '🎣',
-        flavor: 'Viejo embarcadero de madera donde se congregan pescadores sabios.',
+        flavor: 'Viejo embarcadero de madera donde se congregan barqueros y pescadores expertos.',
         locationAction: {
-            name: 'Pesca Milagrosa',
-            type: 'trade',
-            costCoins: 3,
-            gainLuck: 1,
-            desc: 'Paga 3 Monedas 🪙 → Gana 1 Suerte 🍀.'
+            name: 'Travesía en Barca',
+            type: 'special',
+            desc: 'Sube a una barca y viaja inmediatamente a cualquier otro nodo descubierto del mapa.'
         }
     },
     {
@@ -1447,9 +1619,18 @@ const LOCATION_CARDS_DATABASE = [
         locationAction: {
             name: 'Invocación Mítica',
             type: 'special',
-            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 3)!'
+            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 4)!'
         }
     }
+];
+
+const ANCESTRAL_ATTACKS = [
+    { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base Planta de 3 de daño.' },
+    { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base Fuego de 3 de daño.' },
+    { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base Agua de 3 de daño.' },
+    { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ 2 de daño y paraliza al rival (Velocidad pasa a 0).' },
+    { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ 2 de daño y reduce en 2 el próximo golpe recibido.' },
+    { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ 2 de daño y envenena al rival (-1 HP/turno).' }
 ];
 
 const EXPANSION_DECKS = {
@@ -1462,10 +1643,17 @@ const EXPANSION_DECKS = {
     },
     tier3: {
         id: 'tier3',
-        name: 'Expansión Tier 3: Poder Titánico y Legendario',
+        name: 'Expansión Tier 3: Poder Titánico',
         unlockAtGymsCount: 2,
         desc: 'Desbloqueada tras derrotar el 2do Gimnasio. Introduce criaturas y cartas de Tier 3.',
         monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 3)
+    },
+    tier4: {
+        id: 'tier4',
+        name: 'Expansión Tier 4: Leyendas Ancestrales',
+        unlockAtGymsCount: 3,
+        desc: 'Desbloqueada tras derrotar el 3er Gimnasio. Despierta a las criaturas Legendarias de Tier 4.',
+        monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 4)
     }
 };
 
@@ -1483,3 +1671,4 @@ window.CITIES_DATABASE = CITIES_DATABASE;
 window.LOCATION_CARDS_DATABASE = LOCATION_CARDS_DATABASE;
 window.EXPANSION_DECKS = EXPANSION_DECKS;
 window.GYMS_DATABASE = CITIES_DATABASE;
+window.ANCESTRAL_ATTACKS = ANCESTRAL_ATTACKS;

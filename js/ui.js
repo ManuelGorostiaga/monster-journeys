@@ -287,7 +287,8 @@ const UI = {
                             ${node.cards.map((card) => {
                                 const biome = BIOMES[card.biome] || BIOMES.city;
                                 return `
-                                    <div class="node-mini-card" style="border-top: 3px solid ${biome.color};">
+                                    <div class="node-mini-card" style="border-top: 3px solid ${biome.color};"
+                                         onclick="event.stopPropagation(); UI.onMiniCardClicked('${node.id}', '${card.id}')">
                                         <div class="mini-card-icon">${card.icon || biome.icon}</div>
                                         <div class="mini-card-title">${card.name}</div>
                                         ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
@@ -354,6 +355,29 @@ const UI = {
         grid.innerHTML = svgHtml + nodesHtml;
     },
 
+    onMiniCardClicked(nodeId, cardId) {
+        const activePlayer = this.game.getActivePlayer();
+        const playerNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+
+        if (playerNode && playerNode.id === nodeId) {
+            const node = this.game.cardMap.getNode(nodeId);
+            const card = node ? node.cards.find(c => c.id === cardId) : null;
+            if (!card) return;
+
+            if (card.locationAction && card.gym) {
+                this.showLocationActionModal();
+            } else if (card.locationAction) {
+                this.confirmExecuteLocationAction(card.id);
+            } else if (card.gym) {
+                this.game.challengeGym();
+            } else {
+                this.onBoardNodeClicked(nodeId);
+            }
+        } else {
+            this.onBoardNodeClicked(nodeId);
+        }
+    },
+
     onBoardNodeClicked(nodeIdOrX, maybeY) {
         const targetNode = this.game.cardMap.getNode(nodeIdOrX, maybeY);
         if (!targetNode) return;
@@ -397,6 +421,13 @@ const UI = {
             return;
         }
 
+        const isPlayerCurrentlyHere = playerNode && playerNode.id === targetNode.id;
+        const hasActions = targetNode.cards.some(c => Boolean(c.locationAction));
+        if (isPlayerCurrentlyHere && hasActions) {
+            this.showLocationActionModal();
+            return;
+        }
+
         let msg = `📍 **${targetNode.name}** (${targetNode.cards.length}/${targetNode.maxCards} cartas)\n\n`;
         targetNode.cards.forEach((card, idx) => {
             const biome = BIOMES[card.biome] || BIOMES.city;
@@ -420,6 +451,14 @@ const UI = {
         if (!modal) return;
 
         const player = this.game.getActivePlayer();
+        const connCount = targetNode.connections ? targetNode.connections.length : 0;
+        const luckReward = this.game.getPlacementLuckReward ? this.game.getPlacementLuckReward(targetNode) : (connCount === 1 ? 3 : (connCount <= 3 ? 2 : 1));
+
+        const modalDesc = modal.querySelector('.modal-body p');
+        if (modalDesc) {
+            modalDesc.innerHTML = `Descubrirás el nodo <strong>${targetNode.name}</strong> (${connCount} conexi${connCount === 1 ? 'ón' : 'ones'}). ¡Recibirás una bonificación inmediata de <strong>+${luckReward} Suerte 🍀</strong> al colocar una carta!`;
+        }
+
         const container = document.getElementById('place-card-options');
         if (container) {
             let html = '';
@@ -437,11 +476,11 @@ const UI = {
                         <div class="location-card-title">${nextCity.name}</div>
                         <div class="location-card-action-box">
                             <strong>Gimnasio de ${nextCity.gym.leaderName}</strong>
-                            Fundar esta metrópoli en ${targetNode.name} otorga acceso exclusivo a la Tienda y al Gimnasio.
+                            Fundar esta metrópoli en ${targetNode.name} otorga acceso exclusivo a la Tienda y al Gimnasio (+${luckReward} 🍀).
                         </div>
                         <div class="location-card-bottom">
                             <button class="btn-place-loc" style="background: linear-gradient(180deg, #f59e0b, #d97706); border-color: #fbbf24;">
-                                🏛️ Fundar en ${targetNode.name}
+                                🏛️ Fundar (+${luckReward} 🍀)
                             </button>
                         </div>
                     </div>
@@ -464,7 +503,7 @@ const UI = {
                             ${card.locationAction ? card.locationAction.desc : card.flavor}
                         </div>
                         <div class="location-card-bottom">
-                            <button class="btn-place-loc">🗺️ Colocar en ${targetNode.name}</button>
+                            <button class="btn-place-loc">🗺️ Colocar (+${luckReward} 🍀)</button>
                         </div>
                     </div>
                 `;
@@ -501,20 +540,39 @@ const UI = {
         if (!modal) return;
 
         const titleEl = document.getElementById('loc-action-title');
-        if (titleEl) titleEl.textContent = `Acciones en ${node.name}`;
+        if (titleEl) {
+            titleEl.textContent = `Acciones en ${node.name} (${cardsWithAction.length} carta${cardsWithAction.length > 1 ? 's' : ''})`;
+        }
 
         const bodyEl = document.getElementById('loc-action-body');
         if (bodyEl) {
-            bodyEl.innerHTML = cardsWithAction.map((card, idx) => `
-                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 12px;">
-                    <div style="font-size: 2rem; margin-bottom: 6px;">${card.icon || '🔄'}</div>
-                    <h4 style="color: var(--accent-gold); font-size: 1.05rem; margin-bottom: 4px;">${card.name}: ${card.locationAction.name}</h4>
-                    <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px;">${card.locationAction.desc}</p>
-                    <button class="btn btn-primary" onclick="UI.confirmExecuteLocationAction(${idx})">
-                        ⚡ Activar ${card.locationAction.name}
-                    </button>
-                </div>
-            `).join('');
+            bodyEl.innerHTML = cardsWithAction.map((card) => {
+                const biome = BIOMES[card.biome] || BIOMES.city;
+                let costGainHtml = '';
+                if (card.locationAction.type === 'trade') {
+                    const costs = [];
+                    const gains = [];
+                    if (card.locationAction.costCoins) costs.push(`${card.locationAction.costCoins} 🪙`);
+                    if (card.locationAction.costLuck) costs.push(`${card.locationAction.costLuck} 🍀`);
+                    if (card.locationAction.gainCoins) gains.push(`+${card.locationAction.gainCoins} 🪙`);
+                    if (card.locationAction.gainLuck) gains.push(`+${card.locationAction.gainLuck} 🍀`);
+                    costGainHtml = `<div style="margin: 6px 0; font-size: 0.85rem; font-weight: bold; color: #fbbf24;">
+                        ${costs.length > 0 ? `Paga: ${costs.join(', ')} → ` : ''}Recibe: ${gains.join(', ')}
+                    </div>`;
+                }
+                return `
+                    <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 8px; border: 1.5px solid ${biome.color}; text-align: center; margin-bottom: 12px;">
+                        <div style="font-size: 2rem; margin-bottom: 4px;">${card.icon || biome.icon}</div>
+                        <h4 style="color: #fff; font-size: 1.05rem; margin-bottom: 2px;">${card.name}</h4>
+                        <div style="color: var(--accent-gold); font-weight: bold; font-size: 0.95rem; margin-bottom: 4px;">🔄 ${card.locationAction.name}</div>
+                        <p style="color: #cbd5e1; font-size: 0.88rem; margin-bottom: 8px;">${card.locationAction.desc}</p>
+                        ${costGainHtml}
+                        <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="UI.confirmExecuteLocationAction('${card.id}')">
+                            ⚡ Activar ${card.locationAction.name}
+                        </button>
+                    </div>
+                `;
+            }).join('');
         }
 
         const btnConfirm = document.getElementById('btn-confirm-loc-action');
@@ -525,9 +583,145 @@ const UI = {
         modal.classList.add('open');
     },
 
-    confirmExecuteLocationAction(cardIndex) {
+    confirmExecuteLocationAction(cardIdOrIndex) {
         document.getElementById('modal-location-action')?.classList.remove('open');
-        this.game.executeLocationAction(cardIndex);
+        this.game.executeLocationAction(cardIdOrIndex);
+    },
+
+    promptAncestralTeaching() {
+        const modal = document.getElementById('modal-ancestral-teaching');
+        if (!modal) {
+            const player = this.game.getActivePlayer();
+            const choice = prompt('Elige ataque (0 a 5):', '0');
+            const atkIdx = parseInt(choice || '0', 10);
+            this.game.executeAncestralTeaching(atkIdx, player.monsters[0]?.instanceId);
+            return;
+        }
+        this.selectedAncestralAttackIdx = 0;
+        this.renderAncestralTeachingModal();
+        modal.classList.add('open');
+    },
+
+    renderAncestralTeachingModal() {
+        const attacksContainer = document.getElementById('ancestral-attacks-list');
+        const targetContainer = document.getElementById('ancestral-monster-target');
+        const choicesContainer = document.getElementById('ancestral-monster-choices');
+        const attacksPool = (typeof ANCESTRAL_ATTACKS !== 'undefined' ? ANCESTRAL_ATTACKS : window.ANCESTRAL_ATTACKS) || [];
+        const player = this.game.getActivePlayer();
+
+        if (attacksContainer) {
+            attacksContainer.innerHTML = attacksPool.map((atk, idx) => {
+                const typeColor = TYPE_COLORS[atk.type] || '#3b82f6';
+                const isSelected = idx === this.selectedAncestralAttackIdx;
+                return `
+                    <div class="ancestral-atk-card" style="background: ${isSelected ? 'rgba(56, 189, 248, 0.2)' : '#1e242d'}; border: 2px solid ${isSelected ? '#38bdf8' : '#374151'}; padding: 10px; border-radius: 8px; cursor: pointer;"
+                         onclick="UI.selectAncestralAttack(${idx})">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <strong style="color: #fff; font-size: 0.9rem;">${atk.name}</strong>
+                            <span class="type-pill" style="background: ${typeColor}; font-size: 0.65rem;">${atk.type}</span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: #fbbf24; font-weight: bold;">💥 ${atk.baseDmg} Daño base</div>
+                        <div style="font-size: 0.72rem; color: #cbd5e1; margin-top: 3px;">${atk.desc}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        if (targetContainer && choicesContainer) {
+            targetContainer.style.display = 'block';
+            choicesContainer.innerHTML = player.monsters.map((m) => `
+                <div class="ancestral-mon-choice" style="background: #18202a; border: 1.5px solid #475569; padding: 8px; border-radius: 8px; text-align: center; cursor: pointer;"
+                     onclick="UI.confirmAncestralTeaching('${m.instanceId}')">
+                    <div style="font-size: 1.8rem;">${m.icon}</div>
+                    <strong style="font-size: 0.85rem; color: #fff; display: block;">${m.name}</strong>
+                    <div style="font-size: 0.7rem; color: #94a3b8;">${m.attacks.length}/3 ataques</div>
+                    <button class="btn-action-small" style="margin-top: 6px; width: 100%;">Enseñar a ${m.name}</button>
+                </div>
+            `).join('');
+        }
+    },
+
+    selectAncestralAttack(idx) {
+        this.selectedAncestralAttackIdx = idx;
+        this.renderAncestralTeachingModal();
+    },
+
+    confirmAncestralTeaching(monsterInstanceId) {
+        document.getElementById('modal-ancestral-teaching')?.classList.remove('open');
+        this.game.executeAncestralTeaching(this.selectedAncestralAttackIdx || 0, monsterInstanceId);
+    },
+
+    promptDruidBlessing() {
+        const modal = document.getElementById('modal-druid-blessing');
+        if (!modal) {
+            const player = this.game.getActivePlayer();
+            const choice = prompt('Elige criatura para la Bendición del Druida (1 a ' + player.monsters.length + '):', '1');
+            const idx = Math.max(0, parseInt(choice || '1', 10) - 1);
+            this.game.executeDruidBlessing(player.monsters[idx]?.instanceId);
+            return;
+        }
+
+        const choicesContainer = document.getElementById('druid-blessing-choices');
+        const player = this.game.getActivePlayer();
+        if (choicesContainer) {
+            choicesContainer.innerHTML = player.monsters.map((m) => `
+                <div style="background: #18202a; border: 1.5px solid #10b981; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;"
+                     onclick="UI.confirmDruidBlessing('${m.instanceId}')">
+                    <div style="font-size: 2.2rem; margin-bottom: 4px;">${m.icon}</div>
+                    <strong style="font-size: 0.95rem; color: #fff; display: block;">${m.name}</strong>
+                    <div style="font-size: 0.78rem; color: #34d399; margin: 4px 0;">❤️ ${m.hp}/${m.maxHp} HP</div>
+                    <button class="btn-action btn-action-primary" style="margin-top: 6px; width: 100%; justify-content: center; background: linear-gradient(180deg, #10b981, #059669); border-color: #34d399;">
+                        ✨ Bendecir (+1 Max HP)
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    confirmDruidBlessing(monsterInstanceId) {
+        document.getElementById('modal-druid-blessing')?.classList.remove('open');
+        this.game.executeDruidBlessing(monsterInstanceId);
+    },
+
+    showMapTravelModal() {
+        const modal = document.getElementById('modal-map-travel');
+        if (!modal) return;
+
+        const container = document.getElementById('map-travel-nodes-list');
+        const player = this.game.getActivePlayer();
+        const currentNode = this.game.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+
+        const discoveredNodes = Object.values(this.game.cardMap.nodes).filter(n => n.cards.length > 0 && n.id !== (currentNode ? currentNode.id : ''));
+
+        if (container) {
+            container.innerHTML = discoveredNodes.map(node => {
+                const topCard = node.card || node.cards[0];
+                const biome = topCard ? (BIOMES[topCard.biome] || BIOMES.city) : BIOMES.city;
+                return `
+                    <div class="travel-city-card" style="border-left: 4px solid ${biome.color}; cursor: pointer;"
+                         onclick="UI.game.executeMapTravel('${node.id}')">
+                        <div class="travel-city-icon" style="font-size: 1.8rem;">${topCard.icon || biome.icon}</div>
+                        <div style="flex: 1;">
+                            <strong style="color: #fff; font-size: 0.95rem;">${node.name}</strong>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">
+                                ${node.cards.map(c => c.name).join(' + ')} (${node.cards.length}/${node.maxCards} cartas)
+                            </div>
+                        </div>
+                        <button class="btn-action-small" style="width: auto; background: #0284c7; border-color: #38bdf8;">
+                            ⛵ Desembarcar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    hideMapTravelModal() {
+        document.getElementById('modal-map-travel')?.classList.remove('open');
     },
 
     showDraftLocationModal({ player, cards, onSelect }) {
@@ -591,7 +785,8 @@ const UI = {
         const gymCard = currentNode ? currentNode.cards.find(c => c.gym) : null;
         const hasGym = Boolean(gymCard && gymCard.gym);
         const hasUnclaimedPoi = currentNode && currentNode.poi && !currentNode.poi.claimed;
-        const hasLocAction = currentCard ? Boolean(currentCard.locationAction) : false;
+        const actionCards = currentNode ? currentNode.cards.filter(c => Boolean(c.locationAction)) : [];
+        const hasLocAction = actionCards.length > 0;
 
         if (btnSearch) {
             btnSearch.disabled = this.game.hasActed || isCity || !currentCard;
@@ -615,7 +810,15 @@ const UI = {
         if (btnLocAction) {
             btnLocAction.disabled = this.game.hasActed || !hasLocAction;
             if (hasLocAction) {
-                btnLocAction.innerHTML = `🔄 ${currentCard.locationAction.name}`;
+                if (actionCards.length === 1) {
+                    btnLocAction.innerHTML = `🔄 ${actionCards[0].locationAction.name}`;
+                } else {
+                    btnLocAction.innerHTML = `🔄 Acciones de Zona (${actionCards.length})`;
+                }
+                btnLocAction.title = actionCards.map(c => `${c.name}: ${c.locationAction.name}`).join(' | ');
+            } else {
+                btnLocAction.innerHTML = `🔄 Acción de Lugar`;
+                btnLocAction.title = 'No hay acciones disponibles en esta localización';
             }
         }
 
@@ -1061,7 +1264,7 @@ const UI = {
             container.innerHTML = placedCityNodes.map(node => {
                 const cityCard = node.cards.find(c => c.biome === 'city') || node.card;
                 return `
-                    <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}')">
+                    <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}', ${isFlyingAbility})">
                         <div class="travel-city-icon">🏛️</div>
                         <div>
                             <strong>${cityCard ? cityCard.name : node.name}</strong>
@@ -1430,19 +1633,22 @@ const UI = {
         if (this.codexActiveTab === 'monsters') {
             if (filterContainer) {
                 filterContainer.innerHTML = `
-                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (40)</button>
+                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (50)</button>
                     <button class="codex-chip ${this.codexFilter === 'forest' ? 'active' : ''}" onclick="UI.setCodexFilter('forest')">🌲 Bosque</button>
                     <button class="codex-chip ${this.codexFilter === 'mountain' ? 'active' : ''}" onclick="UI.setCodexFilter('mountain')">⛰️ Montaña</button>
                     <button class="codex-chip ${this.codexFilter === 'plains' ? 'active' : ''}" onclick="UI.setCodexFilter('plains')">🌾 Pradera</button>
                     <button class="codex-chip ${this.codexFilter === 'freshwater' ? 'active' : ''}" onclick="UI.setCodexFilter('freshwater')">💧 Dulce</button>
                     <button class="codex-chip ${this.codexFilter === 'saltwater' ? 'active' : ''}" onclick="UI.setCodexFilter('saltwater')">🌊 Salada</button>
-                    <button class="codex-chip ${this.codexFilter === 't3' ? 'active' : ''}" onclick="UI.setCodexFilter('t3')">🌟 Legendarios (T3)</button>
+                    <button class="codex-chip ${this.codexFilter === 't3' ? 'active' : ''}" onclick="UI.setCodexFilter('t3')">Tier 3 (20)</button>
+                    <button class="codex-chip ${this.codexFilter === 't4' ? 'active' : ''}" onclick="UI.setCodexFilter('t4')">👑 Legendarios T4 (10)</button>
                 `;
             }
 
             let filtered = MONSTERS_DATABASE;
             if (this.codexFilter === 't3') {
                 filtered = filtered.filter(m => m.captureTier === 3);
+            } else if (this.codexFilter === 't4') {
+                filtered = filtered.filter(m => m.captureTier === 4);
             } else if (this.codexFilter !== 'all') {
                 filtered = filtered.filter(m => m.biome === this.codexFilter);
             }
@@ -1586,8 +1792,8 @@ const UI = {
         } else if (this.codexActiveTab === 'areas') {
             if (filterContainer) {
                 filterContainer.innerHTML = `
-                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (23)</button>
-                    <button class="codex-chip ${this.codexFilter === 'city' ? 'active' : ''}" onclick="UI.setCodexFilter('city')">🏛️ Ciudades (5)</button>
+                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (22)</button>
+                    <button class="codex-chip ${this.codexFilter === 'city' ? 'active' : ''}" onclick="UI.setCodexFilter('city')">🏛️ Ciudades (4)</button>
                     <button class="codex-chip ${this.codexFilter === 'forest' ? 'active' : ''}" onclick="UI.setCodexFilter('forest')">🌲 Bosque</button>
                     <button class="codex-chip ${this.codexFilter === 'mountain' ? 'active' : ''}" onclick="UI.setCodexFilter('mountain')">⛰️ Montaña</button>
                     <button class="codex-chip ${this.codexFilter === 'plains' ? 'active' : ''}" onclick="UI.setCodexFilter('plains')">🌾 Pradera</button>
@@ -1597,14 +1803,6 @@ const UI = {
             }
 
             const allAreas = [
-                {
-                    id: 'loc_start_town',
-                    name: 'Pueblo de Inicio',
-                    biome: 'city',
-                    icon: '🏡',
-                    flavor: 'Acogedora villa natal donde los aspirantes a campeones inician su odisea.',
-                    locationAction: { name: 'Descanso en Casa', desc: 'Cura por completo a todo tu equipo y recupera +1 Suerte 🍀 gratis.' }
-                },
                 ...CITIES_DATABASE,
                 ...LOCATION_CARDS_DATABASE
             ];
