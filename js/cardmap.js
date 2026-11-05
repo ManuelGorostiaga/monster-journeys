@@ -27,8 +27,8 @@ class CardMap {
             node_sw: {
                 id: 'node_sw',
                 name: 'Pueblo Hoja',
-                x: 100,
-                y: 490,
+                x: 250,
+                y: 730,
                 gridX: 0,
                 gridY: 0,
                 corner: 'SW',
@@ -40,8 +40,8 @@ class CardMap {
             node_sw_secret: {
                 id: 'node_sw_secret',
                 name: 'Cueva Origen',
-                x: 35,
-                y: 490,
+                x: 80,
+                y: 730,
                 gridX: -1,
                 gridY: 0,
                 corner: 'SW',
@@ -54,8 +54,8 @@ class CardMap {
             node_ne: {
                 id: 'node_ne',
                 name: 'Pueblo Brisa',
-                x: 880,
-                y: 110,
+                x: 1170,
+                y: 250,
                 gridX: 6,
                 gridY: 6,
                 corner: 'NE',
@@ -69,8 +69,8 @@ class CardMap {
             node_nw: {
                 id: 'node_nw',
                 name: 'Pueblo Puerto',
-                x: 100,
-                y: 110,
+                x: 250,
+                y: 250,
                 gridX: 0,
                 gridY: 6,
                 corner: 'NW',
@@ -84,8 +84,8 @@ class CardMap {
             node_se: {
                 id: 'node_se',
                 name: 'Pueblo Alba',
-                x: 880,
-                y: 490,
+                x: 1170,
+                y: 730,
                 gridX: 6,
                 gridY: 0,
                 corner: 'SE',
@@ -99,8 +99,8 @@ class CardMap {
             node_w_cross: {
                 id: 'node_w_cross',
                 name: 'Encrucijada Poniente',
-                x: 310,
-                y: 350,
+                x: 470,
+                y: 570,
                 gridX: 1,
                 gridY: 0,
                 maxCards: 2,
@@ -110,8 +110,8 @@ class CardMap {
             node_center_hub: {
                 id: 'node_center_hub',
                 name: 'Gran Plaza Central',
-                x: 500,
-                y: 280,
+                x: 720,
+                y: 570,
                 gridX: 3,
                 gridY: 3,
                 maxCards: 2,
@@ -121,8 +121,8 @@ class CardMap {
             node_se_cross: {
                 id: 'node_se_cross',
                 name: 'Cruce del Alba',
-                x: 680,
-                y: 430,
+                x: 970,
+                y: 730,
                 gridX: 4,
                 gridY: 1,
                 maxCards: 2,
@@ -134,8 +134,8 @@ class CardMap {
             node_s_valley: {
                 id: 'node_s_valley',
                 name: 'Valle Rocoso',
-                x: 310,
-                y: 490,
+                x: 470,
+                y: 730,
                 gridX: 1,
                 gridY: 1,
                 maxCards: 1,
@@ -145,8 +145,8 @@ class CardMap {
             node_s_abyss: {
                 id: 'node_s_abyss',
                 name: 'Fosa Abisal',
-                x: 310,
-                y: 585,
+                x: 470,
+                y: 890,
                 gridX: 2,
                 gridY: -1,
                 maxCards: 1,
@@ -156,8 +156,8 @@ class CardMap {
             node_w_route: {
                 id: 'node_w_route',
                 name: 'Ruta Poniente',
-                x: 100,
-                y: 300,
+                x: 250,
+                y: 570,
                 gridX: 0,
                 gridY: 1,
                 maxCards: 1,
@@ -167,8 +167,8 @@ class CardMap {
             node_nw_bay: {
                 id: 'node_nw_bay',
                 name: 'Bahía Bruma',
-                x: 210,
-                y: 200,
+                x: 250,
+                y: 410,
                 gridX: 1,
                 gridY: 4,
                 maxCards: 1,
@@ -178,8 +178,8 @@ class CardMap {
             node_n_route: {
                 id: 'node_n_route',
                 name: 'Ruta Septentrional',
-                x: 420,
-                y: 110,
+                x: 720,
+                y: 250,
                 gridX: 3,
                 gridY: 6,
                 maxCards: 1,
@@ -189,8 +189,8 @@ class CardMap {
             node_n_peak: {
                 id: 'node_n_peak',
                 name: 'Pico Nevado',
-                x: 550,
-                y: 35,
+                x: 720,
+                y: 90,
                 gridX: 4,
                 gridY: 7,
                 maxCards: 1,
@@ -200,8 +200,8 @@ class CardMap {
             node_ne_plateau: {
                 id: 'node_ne_plateau',
                 name: 'Meseta Oriental',
-                x: 730,
-                y: 200,
+                x: 1170,
+                y: 410,
                 gridX: 5,
                 gridY: 4,
                 maxCards: 1,
@@ -211,8 +211,8 @@ class CardMap {
             node_e_coast: {
                 id: 'node_e_coast',
                 name: 'Ruta Marina Este',
-                x: 880,
-                y: 320,
+                x: 1170,
+                y: 570,
                 gridX: 6,
                 gridY: 3,
                 maxCards: 1,
@@ -222,8 +222,8 @@ class CardMap {
             node_e_reef: {
                 id: 'node_e_reef',
                 name: 'Arrecife del Sol',
-                x: 965,
-                y: 320,
+                x: 1320,
+                y: 570,
                 gridX: 7,
                 gridY: 3,
                 maxCards: 1,
@@ -286,7 +286,8 @@ class CardMap {
             throw new Error(`Casillero (${x}, ${y}) no existe en el mapa.`);
         }
         if (node.cards.length >= node.maxCards) {
-            throw new Error(`El casillero (${x}, ${y}) ya contiene el máximo de cartas (${node.maxCards}): ${node.card.name}`);
+            const cardName = node.card ? node.card.name : 'carta';
+            throw new Error(`El casillero (${x}, ${y}) ya contiene el máximo de cartas (${node.maxCards}): ${cardName}`);
         }
         node.cards.push(cardData);
         return node;

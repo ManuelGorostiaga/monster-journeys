@@ -152,6 +152,54 @@ const UI = {
         }
     },
 
+    getOrthogonalRoutePath(n1, n2) {
+        const x1 = n1.mapX;
+        const y1 = n1.mapY;
+        const x2 = n2.mapX;
+        const y2 = n2.mapY;
+
+        if (x1 === x2 || y1 === y2) {
+            return `M ${x1} ${y1} L ${x2} ${y2}`;
+        }
+
+        const pair = [n1.id, n2.id].sort().join('--');
+
+        if (pair === 'node_nw_bay--node_w_cross') {
+            const bay = n1.id === 'node_nw_bay' ? n1 : n2;
+            const cross = n1.id === 'node_w_cross' ? n1 : n2;
+            return `M ${bay.mapX} ${bay.mapY} L ${cross.mapX} ${bay.mapY} L ${cross.mapX} ${cross.mapY}`;
+        }
+
+        if (pair === 'node_sw--node_w_cross') {
+            const sw = n1.id === 'node_sw' ? n1 : n2;
+            const cross = n1.id === 'node_w_cross' ? n1 : n2;
+            const midX = Math.round((sw.mapX + cross.mapX) / 2);
+            return `M ${sw.mapX} ${sw.mapY} L ${midX} ${sw.mapY} L ${midX} ${cross.mapY} L ${cross.mapX} ${cross.mapY}`;
+        }
+
+        if (pair === 'node_center_hub--node_ne_plateau') {
+            const hub = n1.id === 'node_center_hub' ? n1 : n2;
+            const plat = n1.id === 'node_ne_plateau' ? n1 : n2;
+            return `M ${hub.mapX} ${hub.mapY} L ${hub.mapX} ${plat.mapY} L ${plat.mapX} ${plat.mapY}`;
+        }
+
+        if (pair === 'node_center_hub--node_se_cross') {
+            const hub = n1.id === 'node_center_hub' ? n1 : n2;
+            const cross = n1.id === 'node_se_cross' ? n1 : n2;
+            return `M ${hub.mapX} ${hub.mapY} L ${cross.mapX} ${hub.mapY} L ${cross.mapX} ${cross.mapY}`;
+        }
+
+        if (pair === 'node_e_coast--node_se_cross') {
+            const coast = n1.id === 'node_e_coast' ? n1 : n2;
+            const cross = n1.id === 'node_se_cross' ? n1 : n2;
+            const midX = Math.round((cross.mapX + coast.mapX) / 2);
+            return `M ${cross.mapX} ${cross.mapY} L ${midX} ${cross.mapY} L ${midX} ${coast.mapY} L ${coast.mapX} ${coast.mapY}`;
+        }
+
+        const midX = Math.round((x1 + x2) / 2);
+        return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+    },
+
     // Requirement 1 & 6: Pokemon-Style Region Route Map Renderer
     renderCardMap() {
         const grid = document.getElementById('card-board-grid');
@@ -166,8 +214,8 @@ const UI = {
             ? this.game.cardMap.getReachableNodes(playerNode.id, remainingSteps)
             : { reachableDiscovered: new Map(), reachableUndiscovered: new Map() };
 
-        grid.style.width = '1040px';
-        grid.style.height = '660px';
+        grid.style.width = '1380px';
+        grid.style.height = '960px';
         grid.style.position = 'relative';
 
         // 1. Draw connecting route lines (SVG layer)
@@ -188,17 +236,17 @@ const UI = {
                     (reachableDiscovered.has(node.id) && reachableDiscovered.has(conn.id))
                 );
 
+                const pathD = this.getOrthogonalRoutePath(node, conn);
+
                 svgLines += `
-                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
-                          class="route-casing" />
-                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
-                          class="route-inner ${isDiscovered ? 'route-discovered' : 'route-undiscovered'} ${isPlayerRoute ? 'route-adjacent-player' : ''}" />
+                    <path d="${pathD}" class="route-casing" />
+                    <path d="${pathD}" class="route-inner ${isDiscovered ? 'route-discovered' : 'route-undiscovered'} ${isPlayerRoute ? 'route-adjacent-player' : ''}" />
                 `;
             });
         });
 
         const svgHtml = `
-            <svg class="pokemon-map-routes" width="1040" height="660" viewBox="0 0 1040 660">
+            <svg class="pokemon-map-routes" width="1380" height="960" viewBox="0 0 1380 960">
                 ${svgLines}
             </svg>
         `;
@@ -529,7 +577,7 @@ const UI = {
 
     renderActionBar() {
         const activePlayer = this.game.getActivePlayer();
-        const currentNode = this.game.cardMap.getNode(activePlayer.x, activePlayer.y);
+        const currentNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
 
         const btnSearch = document.getElementById('btn-act-search');
         const btnGym = document.getElementById('btn-act-gym');
@@ -538,21 +586,23 @@ const UI = {
         const btnPoi = document.getElementById('btn-act-poi');
         const btnTravel = document.getElementById('btn-act-travel');
 
-        const isCity = currentNode && currentNode.card.biome === 'city';
-        const hasGym = currentNode && currentNode.card.gym;
+        const currentCard = currentNode ? currentNode.card : null;
+        const isCity = currentCard ? (currentCard.biome === 'city' || currentNode.cards.some(c => c.biome === 'city')) : false;
+        const gymCard = currentNode ? currentNode.cards.find(c => c.gym) : null;
+        const hasGym = Boolean(gymCard && gymCard.gym);
         const hasUnclaimedPoi = currentNode && currentNode.poi && !currentNode.poi.claimed;
-        const hasLocAction = currentNode && currentNode.card.locationAction;
+        const hasLocAction = currentCard ? Boolean(currentCard.locationAction) : false;
 
         if (btnSearch) {
-            btnSearch.disabled = this.game.hasActed || isCity;
+            btnSearch.disabled = this.game.hasActed || isCity || !currentCard;
             btnSearch.title = isCity ? 'No hay monstruos salvajes en Ciudades' : 'Buscar monstruos salvajes en este bioma';
         }
 
         if (btnGym) {
             btnGym.style.display = hasGym ? 'flex' : 'none';
-            btnGym.disabled = this.game.hasActed || (hasGym && activePlayer.badges.includes(currentNode.card.gym.tier));
+            btnGym.disabled = this.game.hasActed || (hasGym && activePlayer.badges.includes(gymCard.gym.tier));
             if (hasGym) {
-                btnGym.innerHTML = `🏛️ Desafiar ${currentNode.card.gym.name} (T${currentNode.card.gym.tier})`;
+                btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${gymCard.gym.tier})`;
             }
         }
 
@@ -565,7 +615,7 @@ const UI = {
         if (btnLocAction) {
             btnLocAction.disabled = this.game.hasActed || !hasLocAction;
             if (hasLocAction) {
-                btnLocAction.innerHTML = `🔄 ${currentNode.card.locationAction.name}`;
+                btnLocAction.innerHTML = `🔄 ${currentCard.locationAction.name}`;
             }
         }
 
@@ -574,7 +624,7 @@ const UI = {
         }
 
         if (btnTravel) {
-            const cityNodesCount = Object.values(this.game.cardMap.nodes).filter(n => n.card.biome === 'city').length;
+            const cityNodesCount = Object.values(this.game.cardMap.nodes).filter(n => n.cards.some(c => c.biome === 'city')).length;
             btnTravel.disabled = this.game.hasActed || !isCity || cityNodesCount < 2;
         }
     },
@@ -1005,20 +1055,23 @@ const UI = {
         if (!modal) return;
 
         const container = document.getElementById('travel-cities-list');
-        const placedCityNodes = Object.values(this.game.cardMap.nodes).filter(n => n.card.biome === 'city');
+        const placedCityNodes = Object.values(this.game.cardMap.nodes).filter(n => n.cards.some(c => c.biome === 'city'));
 
         if (container) {
-            container.innerHTML = placedCityNodes.map(node => `
-                <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${this.game.cardMap.key(node.x, node.y)}')">
-                    <div class="travel-city-icon">🏛️</div>
-                    <div>
-                        <strong>${node.card.name}</strong>
-                        <div>${node.card.gym ? `Gimnasio de ${node.card.gym.leaderName}` : 'Pueblo de Inicio'}</div>
-                        <small>Coords: (${node.x}, ${node.y})</small>
+            container.innerHTML = placedCityNodes.map(node => {
+                const cityCard = node.cards.find(c => c.biome === 'city') || node.card;
+                return `
+                    <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}')">
+                        <div class="travel-city-icon">🏛️</div>
+                        <div>
+                            <strong>${cityCard ? cityCard.name : node.name}</strong>
+                            <div>${cityCard && cityCard.gym ? `Gimnasio de ${cityCard.gym.leaderName}` : 'Pueblo de Inicio'}</div>
+                            <small>Coords: (${node.gridX}, ${node.gridY})</small>
+                        </div>
+                        <button class="btn-action-small">Viajar Aquí</button>
                     </div>
-                    <button class="btn-action-small">Viajar Aquí</button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         modal.classList.add('open');
@@ -1045,6 +1098,7 @@ const UI = {
 
         const p1Mon = combat.getP1Active();
         const p2Mon = combat.getP2Active();
+        if (!p1Mon || !p2Mon) return;
 
         // Player 1 Fighter
         const p1NameEl = document.getElementById('combat-p1-mon-name');

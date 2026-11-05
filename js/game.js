@@ -529,13 +529,14 @@ class MonsterJourneyGame {
             return;
         }
 
-        const node = this.cardMap.getNode(player.x, player.y);
-        if (!node || !node.card.locationAction) {
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const cardWithAction = node && node.cards ? node.cards.find(c => c.locationAction) : null;
+        if (!cardWithAction) {
             alert('Esta localización no posee una acción especial disponible.');
             return;
         }
 
-        const action = node.card.locationAction;
+        const action = cardWithAction.locationAction;
 
         if (action.type === 'trade') {
             const costCoins = action.costCoins || 0;
@@ -560,23 +561,20 @@ class MonsterJourneyGame {
             SoundFX.coin();
 
             if (window.UI) {
-                UI.logGame(`🔄 ${player.name} realizó la acción de **${node.card.name}**: ${action.desc}`);
+                UI.logGame(`🔄 ${player.name} realizó la acción de **${cardWithAction.name}**: ${action.desc}`);
                 UI.renderAll();
             }
             return;
         }
 
         if (action.type === 'special') {
-            // Check specific card action IDs or logic
-            if (node.card.id === 'loc_start_town') {
-                // Heal all and +1 luck
+            if (cardWithAction.id === 'loc_start_town' || cardWithAction.isStart) {
                 player.monsters.forEach(m => m.hp = m.maxHp);
                 player.luck += 1;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🏡 ${player.name} descansó en Casa: Curó a su equipo y obtuvo +1 Suerte 🍀.`);
-            } else if (node.card.id === 'loc_for_2') {
-                // Cacería sagrada: 1 luck -> search with +1 capture tier
+            } else if (cardWithAction.id === 'loc_for_2') {
                 if (player.luck < 1) {
                     alert('Requiere 1 Suerte 🍀.');
                     return;
@@ -585,8 +583,7 @@ class MonsterJourneyGame {
                 player.temporaryModifiers.captureTierBonus = 1;
                 this.searchMonsters();
                 return;
-            } else if (node.card.id === 'loc_mtn_2') {
-                // Entrenamiento en Rocas: 2 coins -> +1 max HP to active monster
+            } else if (cardWithAction.id === 'loc_mtn_2') {
                 if (player.coins < 2) {
                     alert('Requiere 2 Monedas 🪙.');
                     return;
@@ -600,8 +597,7 @@ class MonsterJourneyGame {
                     if (window.UI) UI.logGame(`🪨 ${player.name} entrenó a ${activeMon.name}: +1 PS Máximo permanente.`);
                 }
                 this.hasActed = true;
-            } else if (node.card.id === 'loc_pln_2') {
-                // Tienda Ambulante: Access river shop with 1 coin discount
+            } else if (cardWithAction.id === 'loc_pln_2') {
                 this.mobileShopDiscountActive = true;
                 if (window.UI) {
                     UI.showShopModal();
@@ -609,8 +605,7 @@ class MonsterJourneyGame {
                 }
                 this.hasActed = true;
                 return;
-            } else if (node.card.id === 'loc_pln_3') {
-                // Alquimia silvestre: 1 coin -> draw 2 items
+            } else if (cardWithAction.id === 'loc_pln_3') {
                 if (player.coins < 1) {
                     alert('Requiere 1 Moneda 🪙.');
                     return;
@@ -622,8 +617,7 @@ class MonsterJourneyGame {
                 SoundFX.coin();
                 this.hasActed = true;
                 if (window.UI) UI.logGame(`🌿 ${player.name} realizó Alquimia Silvestre y obtuvo 2 cartas de Objeto.`);
-            } else if (node.card.id === 'loc_ocn_3') {
-                // Invocación Mítica: 2 luck -> search among Tier 4 Legendaries
+            } else if (cardWithAction.id === 'loc_ocn_3') {
                 if (player.luck < 2) {
                     alert('Requiere 2 Suerte 🍀.');
                     return;
@@ -632,9 +626,8 @@ class MonsterJourneyGame {
                 this.searchLegendaryMonsters();
                 return;
             } else {
-                // General city gym or other action
                 this.hasActed = true;
-                if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${node.card.name}**.`);
+                if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${cardWithAction.name}**.`);
             }
 
             if (window.UI) UI.renderAll();
@@ -663,8 +656,8 @@ class MonsterJourneyGame {
     canAccessShop() {
         const player = this.getActivePlayer();
         if (this.mobileShopDiscountActive) return true;
-        const node = this.cardMap.getNode(player.x, player.y);
-        return Boolean(node && (node.card.biome === 'city' || node.card.hasShop));
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        return Boolean(node && node.cards && node.cards.some(c => c.biome === 'city' || c.hasShop));
     }
 
     openShop() {
@@ -677,7 +670,6 @@ class MonsterJourneyGame {
         }
     }
 
-    // Search Wild Monsters in current biome
     searchMonsters() {
         const player = this.getActivePlayer();
         if (this.hasActed) {
@@ -685,8 +677,11 @@ class MonsterJourneyGame {
             return;
         }
 
-        const currentNode = this.cardMap.getNode(player.x, player.y);
-        if (!currentNode) return;
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode || !currentNode.card) {
+            alert('Debes estar en una localización descubierta para buscar monstruos.');
+            return;
+        }
 
         const biome = currentNode.card.biome;
         if (biome === 'city') {
@@ -719,7 +714,6 @@ class MonsterJourneyGame {
         }
     }
 
-    // Requirement 3: Spend 1 Luck to redraw wild monsters looked at
     redrawActiveSearch() {
         const player = this.getActivePlayer();
         if (player.luck < 1) {
@@ -727,8 +721,8 @@ class MonsterJourneyGame {
             return;
         }
 
-        const currentNode = this.cardMap.getNode(player.x, player.y);
-        if (!currentNode) return;
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode || !currentNode.card) return;
         const biome = currentNode.card.biome;
 
         player.luck -= 1;
@@ -935,13 +929,14 @@ class MonsterJourneyGame {
             return;
         }
 
-        const node = this.cardMap.getNode(player.x, player.y);
-        if (!node || !node.card.gym) {
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const gymCard = node && node.cards ? node.cards.find(c => c.gym) : null;
+        if (!gymCard || !gymCard.gym) {
             alert('No hay ningún Gimnasio en esta localización.');
             return;
         }
 
-        const gym = node.card.gym;
+        const gym = gymCard.gym;
         const alreadyDefeated = (player.defeatedGymIds && player.defeatedGymIds.includes(gym.id)) ||
                                 (player.badges.includes(gym.tier) && gym.tier < 3);
         if (alreadyDefeated) {

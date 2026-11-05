@@ -142,7 +142,7 @@ console.assert(uniqueIds.size === 8, 'All 8 items in river shop are unique');
 // Move to city to buy
 game.hasMoved = false;
 game.movePlayerToNode(1, 1); // City
-p1.coins = 20;
+p1.coins = 50;
 const itemToBuy = game.shopRiver[0];
 game.buyShopItem(0);
 console.assert(game.shopRiver.length === 8, 'River shop replenished back to 8 items');
@@ -297,6 +297,7 @@ console.assert(t3Base.baseDmg === 7, 'Tier 3 base attack has 7 base damage');
 console.assert(t3Base.baseDmg > t2Base.baseDmg && t2Base.baseDmg > t1Base.baseDmg, 'Base attacks scale cleanly: T3 > T2 > T1');
 
 // Setup test combatants
+combatEngine.inCombat = true;
 combatEngine.player1 = game.players[0];
 const attackerMon = combatEngine.cloneMonster(MONSTERS_DATABASE[0]);
 const defenderMon = combatEngine.cloneMonster(MONSTERS_DATABASE[1]);

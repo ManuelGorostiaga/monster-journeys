@@ -261,23 +261,23 @@ main.main-workspace {
 /* Board Tabletop Area */
 .card-board-viewport {
     width: 100%;
-    min-height: 520px;
-    max-height: 720px;
+    min-height: 560px;
+    max-height: 820px;
     overflow: auto;
     background: radial-gradient(circle at center, #18202c 0%, #0c0f14 100%);
     position: relative;
     padding: 30px;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: flex-start;
 }
 
 .card-board-grid {
     position: relative;
-    width: 1040px;
-    height: 660px;
-    min-width: 1040px;
-    min-height: 660px;
+    width: 1380px;
+    height: 960px;
+    min-width: 1380px;
+    min-height: 960px;
     margin: auto;
 }
 
@@ -286,8 +286,8 @@ main.main-workspace {
     position: absolute;
     top: 0;
     left: 0;
-    width: 1040px;
-    height: 660px;
+    width: 1380px;
+    height: 960px;
     pointer-events: none;
     z-index: 2;
 }
@@ -296,12 +296,16 @@ main.main-workspace {
     stroke: #0b111e;
     stroke-width: 12;
     stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
     opacity: 0.95;
 }
 
 .route-inner {
     stroke-width: 6;
     stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
     transition: stroke 0.3s ease;
 }
 
@@ -337,15 +341,15 @@ main.main-workspace {
     padding: 6px;
     box-shadow: 0 8px 22px rgba(0,0,0,0.65);
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
     z-index: 10;
     min-width: 110px;
     user-select: none;
 }
 
 .pokemon-map-node:hover {
-    transform: translate(-50%, -50%) scale(1.05);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.85);
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: 0 14px 28px rgba(0,0,0,0.8), 0 0 16px rgba(148, 163, 184, 0.35);
     border-color: #cbd5e1;
     z-index: 25;
 }
@@ -483,14 +487,22 @@ main.main-workspace {
 
 .node-empty-discoverable:hover, .discoverable-slot:hover {
     background: rgba(52, 211, 153, 0.18) !important;
-    transform: translate(-50%, -50%) scale(1.06);
-    box-shadow: 0 0 20px rgba(52, 211, 153, 0.45) !important;
+    transform: translate(-50%, calc(-50% - 10px)) !important;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.7), 0 0 18px rgba(52, 211, 153, 0.5) !important;
+    border-color: #34d399 !important;
 }
 
 .undiscovered-slot {
     border: 2px dashed #475569 !important;
     background: rgba(15, 23, 42, 0.6) !important;
     opacity: 0.7;
+}
+
+.undiscovered-slot:hover {
+    opacity: 0.95;
+    transform: translate(-50%, calc(-50% - 10px)) !important;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.7), 0 0 14px rgba(148, 163, 184, 0.3) !important;
+    border-color: #94a3b8 !important;
 }
 
 .empty-slot-body {
@@ -514,13 +526,13 @@ main.main-workspace {
     flex-direction: column;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
     background: #1e293b;
     z-index: 10;
 }
 
 .board-card-node:hover {
-    transform: translateY(-4px) scale(1.03);
+    transform: translateY(-10px);
     box-shadow: 0 12px 28px rgba(0,0,0,0.8);
     border-color: #cbd5e1;
     z-index: 25;
@@ -645,8 +657,7 @@ main.main-workspace {
 /* Empty Adjacent Slot for Card Placement */
 .board-empty-slot {
     position: absolute;
-    width: 130px;
-    height: 182px;
+    min-width: 110px;
     border-radius: 10px;
     border: 2px dashed #4b5563;
     display: flex;
@@ -657,7 +668,7 @@ main.main-workspace {
     color: #64748b;
     cursor: pointer;
     background: rgba(15, 23, 42, 0.4);
-    transition: all 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
     z-index: 5;
 }
 
@@ -665,8 +676,8 @@ main.main-workspace {
     border-color: #34d399;
     color: #34d399;
     background: rgba(52, 211, 153, 0.1);
-    transform: scale(1.02);
-    box-shadow: 0 0 16px rgba(52, 211, 153, 0.3);
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: 0 12px 24px rgba(0,0,0,0.7), 0 0 16px rgba(52, 211, 153, 0.4);
     z-index: 20;
 }
 
@@ -965,8 +976,8 @@ main.main-workspace {
 }
 
 .location-hand-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.7);
+    transform: translateY(-16px);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.7), 0 0 16px rgba(148, 163, 184, 0.3);
     border-color: #94a3b8;
 }
 
@@ -1054,8 +1065,8 @@ main.main-workspace {
 }
 
 .cities-deck-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 24px rgba(251, 191, 36, 0.5);
+    transform: translateY(-16px);
+    box-shadow: 0 14px 28px rgba(251, 191, 36, 0.5), 0 0 16px rgba(251, 191, 36, 0.4);
 }
 
 /* ========================================================
@@ -1084,7 +1095,13 @@ main.main-workspace {
     flex-direction: column;
     box-shadow: 0 6px 16px rgba(0,0,0,0.3);
     position: relative;
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.creature-card-slot:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 26px rgba(0,0,0,0.5), 0 0 12px rgba(96, 165, 250, 0.25);
+    border-color: #60a5fa;
 }
 
 .creature-card-slot.battle-party {
@@ -4104,8 +4121,8 @@ class CardMap {
             node_sw: {
                 id: 'node_sw',
                 name: 'Pueblo Hoja',
-                x: 100,
-                y: 490,
+                x: 250,
+                y: 730,
                 gridX: 0,
                 gridY: 0,
                 corner: 'SW',
@@ -4117,8 +4134,8 @@ class CardMap {
             node_sw_secret: {
                 id: 'node_sw_secret',
                 name: 'Cueva Origen',
-                x: 35,
-                y: 490,
+                x: 80,
+                y: 730,
                 gridX: -1,
                 gridY: 0,
                 corner: 'SW',
@@ -4131,8 +4148,8 @@ class CardMap {
             node_ne: {
                 id: 'node_ne',
                 name: 'Pueblo Brisa',
-                x: 880,
-                y: 110,
+                x: 1170,
+                y: 250,
                 gridX: 6,
                 gridY: 6,
                 corner: 'NE',
@@ -4146,8 +4163,8 @@ class CardMap {
             node_nw: {
                 id: 'node_nw',
                 name: 'Pueblo Puerto',
-                x: 100,
-                y: 110,
+                x: 250,
+                y: 250,
                 gridX: 0,
                 gridY: 6,
                 corner: 'NW',
@@ -4161,8 +4178,8 @@ class CardMap {
             node_se: {
                 id: 'node_se',
                 name: 'Pueblo Alba',
-                x: 880,
-                y: 490,
+                x: 1170,
+                y: 730,
                 gridX: 6,
                 gridY: 0,
                 corner: 'SE',
@@ -4176,8 +4193,8 @@ class CardMap {
             node_w_cross: {
                 id: 'node_w_cross',
                 name: 'Encrucijada Poniente',
-                x: 310,
-                y: 350,
+                x: 470,
+                y: 570,
                 gridX: 1,
                 gridY: 0,
                 maxCards: 2,
@@ -4187,8 +4204,8 @@ class CardMap {
             node_center_hub: {
                 id: 'node_center_hub',
                 name: 'Gran Plaza Central',
-                x: 500,
-                y: 280,
+                x: 720,
+                y: 570,
                 gridX: 3,
                 gridY: 3,
                 maxCards: 2,
@@ -4198,8 +4215,8 @@ class CardMap {
             node_se_cross: {
                 id: 'node_se_cross',
                 name: 'Cruce del Alba',
-                x: 680,
-                y: 430,
+                x: 970,
+                y: 730,
                 gridX: 4,
                 gridY: 1,
                 maxCards: 2,
@@ -4211,8 +4228,8 @@ class CardMap {
             node_s_valley: {
                 id: 'node_s_valley',
                 name: 'Valle Rocoso',
-                x: 310,
-                y: 490,
+                x: 470,
+                y: 730,
                 gridX: 1,
                 gridY: 1,
                 maxCards: 1,
@@ -4222,8 +4239,8 @@ class CardMap {
             node_s_abyss: {
                 id: 'node_s_abyss',
                 name: 'Fosa Abisal',
-                x: 310,
-                y: 585,
+                x: 470,
+                y: 890,
                 gridX: 2,
                 gridY: -1,
                 maxCards: 1,
@@ -4233,8 +4250,8 @@ class CardMap {
             node_w_route: {
                 id: 'node_w_route',
                 name: 'Ruta Poniente',
-                x: 100,
-                y: 300,
+                x: 250,
+                y: 570,
                 gridX: 0,
                 gridY: 1,
                 maxCards: 1,
@@ -4244,8 +4261,8 @@ class CardMap {
             node_nw_bay: {
                 id: 'node_nw_bay',
                 name: 'Bahía Bruma',
-                x: 210,
-                y: 200,
+                x: 250,
+                y: 410,
                 gridX: 1,
                 gridY: 4,
                 maxCards: 1,
@@ -4255,8 +4272,8 @@ class CardMap {
             node_n_route: {
                 id: 'node_n_route',
                 name: 'Ruta Septentrional',
-                x: 420,
-                y: 110,
+                x: 720,
+                y: 250,
                 gridX: 3,
                 gridY: 6,
                 maxCards: 1,
@@ -4266,8 +4283,8 @@ class CardMap {
             node_n_peak: {
                 id: 'node_n_peak',
                 name: 'Pico Nevado',
-                x: 550,
-                y: 35,
+                x: 720,
+                y: 90,
                 gridX: 4,
                 gridY: 7,
                 maxCards: 1,
@@ -4277,8 +4294,8 @@ class CardMap {
             node_ne_plateau: {
                 id: 'node_ne_plateau',
                 name: 'Meseta Oriental',
-                x: 730,
-                y: 200,
+                x: 1170,
+                y: 410,
                 gridX: 5,
                 gridY: 4,
                 maxCards: 1,
@@ -4288,8 +4305,8 @@ class CardMap {
             node_e_coast: {
                 id: 'node_e_coast',
                 name: 'Ruta Marina Este',
-                x: 880,
-                y: 320,
+                x: 1170,
+                y: 570,
                 gridX: 6,
                 gridY: 3,
                 maxCards: 1,
@@ -4299,8 +4316,8 @@ class CardMap {
             node_e_reef: {
                 id: 'node_e_reef',
                 name: 'Arrecife del Sol',
-                x: 965,
-                y: 320,
+                x: 1320,
+                y: 570,
                 gridX: 7,
                 gridY: 3,
                 maxCards: 1,
@@ -4363,7 +4380,8 @@ class CardMap {
             throw new Error(`Casillero (${x}, ${y}) no existe en el mapa.`);
         }
         if (node.cards.length >= node.maxCards) {
-            throw new Error(`El casillero (${x}, ${y}) ya contiene el máximo de cartas (${node.maxCards}): ${node.card.name}`);
+            const cardName = node.card ? node.card.name : 'carta';
+            throw new Error(`El casillero (${x}, ${y}) ya contiene el máximo de cartas (${node.maxCards}): ${cardName}`);
         }
         node.cards.push(cardData);
         return node;
@@ -4689,26 +4707,31 @@ class CombatEngine {
     }
 
     executeTurnSequence(firstStrike, secondStrike) {
-        // Step 1: First strike
         this.executeAttack(firstStrike);
         SoundFX.diceRoll();
 
         setTimeout(() => {
+            if (!this.inCombat) return;
+
             const firstTargetFainted = firstStrike.defender.hp <= 0;
             if (window.UI) UI.renderCombatArena();
 
             if (firstTargetFainted) {
                 this.handleFaint(firstStrike.defender, firstStrike.defenderPlayer);
+                if (!this.inCombat) return;
+
                 this.endTurnPoisonPhase();
+                if (!this.inCombat) return;
+
                 this.turnNumber++;
                 this.isProcessing = false;
                 if (window.UI) UI.renderCombatArena();
                 return;
             }
 
-            // Step 2: Second strike
             setTimeout(() => {
-                // If defender was force-switched or pivoted, make sure second strike uses current active attacker
+                if (!this.inCombat) return;
+
                 const activeSecondAttacker = (secondStrike.attackerPlayer === this.player1) ? this.getP1Active() : this.getP2Active();
                 if (secondStrike.attacker !== activeSecondAttacker) {
                     secondStrike.attacker = activeSecondAttacker;
@@ -4722,11 +4745,14 @@ class CombatEngine {
                     const secondTargetFainted = secondStrike.defender.hp <= 0;
                     if (secondTargetFainted) {
                         this.handleFaint(secondStrike.defender, secondStrike.defenderPlayer);
+                        if (!this.inCombat) return;
                     }
                 }
 
-                // End of turn poison damage phase
+                if (!this.inCombat) return;
+
                 this.endTurnPoisonPhase();
+                if (!this.inCombat) return;
 
                 this.turnNumber++;
                 this.isProcessing = false;
@@ -4747,7 +4773,10 @@ class CombatEngine {
             }
         };
         checkPoison(this.getP1Active(), this.player1);
-        checkPoison(this.getP2Active(), this.player2);
+        const p1Alive = this.p1Team && this.p1Team.some(m => m.hp > 0);
+        if (p1Alive) {
+            checkPoison(this.getP2Active(), this.player2);
+        }
     }
 
     executeAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first = false, isFreeAttackOnSwitch = false }) {
@@ -5179,6 +5208,7 @@ class CombatEngine {
     // Rule 13: "Los monstruos se recuperan la salud despues de una pelea."
     // Rule 14: "Cuando el jugador pierde la pelea, obtiene dinero de todas maneras, como si hubiera ganado."
     endBattle(playerWon) {
+        this.inCombat = false;
         this.isProcessing = false;
         this.log(`🏁 FIN DEL COMBATE: ${playerWon ? `¡VICTORIA para ${this.player1.name}!` : `¡${this.player1.name} ha sido derrotado!`}`);
 
@@ -5187,14 +5217,12 @@ class CombatEngine {
             rewardCoins = this.gymData.rewardCoins;
         }
 
-        // Amulet Coin bonus
-        const hasAmulet = this.player1.inventory.some(i => i.id === 'item_utl_5');
+        const hasAmulet = this.player1.inventory && this.player1.inventory.some(i => i.id === 'item_utl_5');
         if (hasAmulet) {
             rewardCoins += 3;
             this.log(`🪙 Moneda Amuleto otorga +3 monedas extras.`);
         }
 
-        // RULE 14: Even if lost, player receives money as if won!
         this.player1.coins += rewardCoins;
         SoundFX.coin();
 
@@ -5203,7 +5231,6 @@ class CombatEngine {
             this.log(`🎉 ¡Has ganado ${rewardCoins} monedas de oro!`);
 
             if (this.gymData) {
-                // Award Gym Badge & Luck
                 if (this.gymData.rewardLuck) {
                     this.player1.luck = (this.player1.luck || 0) + this.gymData.rewardLuck;
                     this.log(`🍀 ¡Obtienes +${this.gymData.rewardLuck} Suerte por vencer en el Gimnasio!`);
@@ -5215,7 +5242,6 @@ class CombatEngine {
                     this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
                     this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
 
-                    // Requirement 5: Trigger expansion decks & 3/4 gym check
                     if (this.game && this.game.onGymDefeated) {
                         this.game.onGymDefeated(this.player1, this.gymData);
                     }
@@ -5225,13 +5251,30 @@ class CombatEngine {
             this.log(`🪙 REGLA 14: A pesar de la derrota, ¡obtienes ${rewardCoins} monedas de recompensa para recuperarte!`);
         }
 
-        // RULE 13: Monsters fully recover HP and cleanse statuses after a fight!
-        this.player1.monsters.forEach(m => {
-            m.hp = m.maxHp;
-            m.status = null;
-            m.shieldNextTurn = 0;
-            m.chargeNextTurn = 0;
-        });
+        if (this.p1Team) {
+            this.p1Team.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
+        if (this.player1 && this.player1.monsters) {
+            this.player1.monsters.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
+        if (this.p2Team) {
+            this.p2Team.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
         if (this.player2 && this.player2.monsters) {
             this.player2.monsters.forEach(m => {
                 m.hp = m.maxHp;
@@ -5251,10 +5294,11 @@ class CombatEngine {
                 moveTeaching: this.pendingMoveTeaching,
                 onContinue: () => {
                     this.inCombat = false;
+                    this.isProcessing = false;
+                    if (window.UI) UI.hideCombatModal();
                     if (this.onCombatEndCallback) {
                         this.onCombatEndCallback(playerWon);
                     }
-                    if (window.UI) UI.hideCombatModal();
                 }
             });
         }
@@ -6031,13 +6075,14 @@ class MonsterJourneyGame {
             return;
         }
 
-        const node = this.cardMap.getNode(player.x, player.y);
-        if (!node || !node.card.locationAction) {
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const cardWithAction = node && node.cards ? node.cards.find(c => c.locationAction) : null;
+        if (!cardWithAction) {
             alert('Esta localización no posee una acción especial disponible.');
             return;
         }
 
-        const action = node.card.locationAction;
+        const action = cardWithAction.locationAction;
 
         if (action.type === 'trade') {
             const costCoins = action.costCoins || 0;
@@ -6062,23 +6107,20 @@ class MonsterJourneyGame {
             SoundFX.coin();
 
             if (window.UI) {
-                UI.logGame(`🔄 ${player.name} realizó la acción de **${node.card.name}**: ${action.desc}`);
+                UI.logGame(`🔄 ${player.name} realizó la acción de **${cardWithAction.name}**: ${action.desc}`);
                 UI.renderAll();
             }
             return;
         }
 
         if (action.type === 'special') {
-            // Check specific card action IDs or logic
-            if (node.card.id === 'loc_start_town') {
-                // Heal all and +1 luck
+            if (cardWithAction.id === 'loc_start_town' || cardWithAction.isStart) {
                 player.monsters.forEach(m => m.hp = m.maxHp);
                 player.luck += 1;
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🏡 ${player.name} descansó en Casa: Curó a su equipo y obtuvo +1 Suerte 🍀.`);
-            } else if (node.card.id === 'loc_for_2') {
-                // Cacería sagrada: 1 luck -> search with +1 capture tier
+            } else if (cardWithAction.id === 'loc_for_2') {
                 if (player.luck < 1) {
                     alert('Requiere 1 Suerte 🍀.');
                     return;
@@ -6087,8 +6129,7 @@ class MonsterJourneyGame {
                 player.temporaryModifiers.captureTierBonus = 1;
                 this.searchMonsters();
                 return;
-            } else if (node.card.id === 'loc_mtn_2') {
-                // Entrenamiento en Rocas: 2 coins -> +1 max HP to active monster
+            } else if (cardWithAction.id === 'loc_mtn_2') {
                 if (player.coins < 2) {
                     alert('Requiere 2 Monedas 🪙.');
                     return;
@@ -6102,8 +6143,7 @@ class MonsterJourneyGame {
                     if (window.UI) UI.logGame(`🪨 ${player.name} entrenó a ${activeMon.name}: +1 PS Máximo permanente.`);
                 }
                 this.hasActed = true;
-            } else if (node.card.id === 'loc_pln_2') {
-                // Tienda Ambulante: Access river shop with 1 coin discount
+            } else if (cardWithAction.id === 'loc_pln_2') {
                 this.mobileShopDiscountActive = true;
                 if (window.UI) {
                     UI.showShopModal();
@@ -6111,8 +6151,7 @@ class MonsterJourneyGame {
                 }
                 this.hasActed = true;
                 return;
-            } else if (node.card.id === 'loc_pln_3') {
-                // Alquimia silvestre: 1 coin -> draw 2 items
+            } else if (cardWithAction.id === 'loc_pln_3') {
                 if (player.coins < 1) {
                     alert('Requiere 1 Moneda 🪙.');
                     return;
@@ -6124,8 +6163,7 @@ class MonsterJourneyGame {
                 SoundFX.coin();
                 this.hasActed = true;
                 if (window.UI) UI.logGame(`🌿 ${player.name} realizó Alquimia Silvestre y obtuvo 2 cartas de Objeto.`);
-            } else if (node.card.id === 'loc_ocn_3') {
-                // Invocación Mítica: 2 luck -> search among Tier 4 Legendaries
+            } else if (cardWithAction.id === 'loc_ocn_3') {
                 if (player.luck < 2) {
                     alert('Requiere 2 Suerte 🍀.');
                     return;
@@ -6134,9 +6172,8 @@ class MonsterJourneyGame {
                 this.searchLegendaryMonsters();
                 return;
             } else {
-                // General city gym or other action
                 this.hasActed = true;
-                if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${node.card.name}**.`);
+                if (window.UI) UI.logGame(`⚡ ${player.name} activó la acción especial de **${cardWithAction.name}**.`);
             }
 
             if (window.UI) UI.renderAll();
@@ -6165,8 +6202,8 @@ class MonsterJourneyGame {
     canAccessShop() {
         const player = this.getActivePlayer();
         if (this.mobileShopDiscountActive) return true;
-        const node = this.cardMap.getNode(player.x, player.y);
-        return Boolean(node && (node.card.biome === 'city' || node.card.hasShop));
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        return Boolean(node && node.cards && node.cards.some(c => c.biome === 'city' || c.hasShop));
     }
 
     openShop() {
@@ -6179,7 +6216,6 @@ class MonsterJourneyGame {
         }
     }
 
-    // Search Wild Monsters in current biome
     searchMonsters() {
         const player = this.getActivePlayer();
         if (this.hasActed) {
@@ -6187,8 +6223,11 @@ class MonsterJourneyGame {
             return;
         }
 
-        const currentNode = this.cardMap.getNode(player.x, player.y);
-        if (!currentNode) return;
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode || !currentNode.card) {
+            alert('Debes estar en una localización descubierta para buscar monstruos.');
+            return;
+        }
 
         const biome = currentNode.card.biome;
         if (biome === 'city') {
@@ -6221,7 +6260,6 @@ class MonsterJourneyGame {
         }
     }
 
-    // Requirement 3: Spend 1 Luck to redraw wild monsters looked at
     redrawActiveSearch() {
         const player = this.getActivePlayer();
         if (player.luck < 1) {
@@ -6229,8 +6267,8 @@ class MonsterJourneyGame {
             return;
         }
 
-        const currentNode = this.cardMap.getNode(player.x, player.y);
-        if (!currentNode) return;
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode || !currentNode.card) return;
         const biome = currentNode.card.biome;
 
         player.luck -= 1;
@@ -6437,13 +6475,14 @@ class MonsterJourneyGame {
             return;
         }
 
-        const node = this.cardMap.getNode(player.x, player.y);
-        if (!node || !node.card.gym) {
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const gymCard = node && node.cards ? node.cards.find(c => c.gym) : null;
+        if (!gymCard || !gymCard.gym) {
             alert('No hay ningún Gimnasio en esta localización.');
             return;
         }
 
-        const gym = node.card.gym;
+        const gym = gymCard.gym;
         const alreadyDefeated = (player.defeatedGymIds && player.defeatedGymIds.includes(gym.id)) ||
                                 (player.badges.includes(gym.tier) && gym.tier < 3);
         if (alreadyDefeated) {
@@ -6756,6 +6795,54 @@ const UI = {
         }
     },
 
+    getOrthogonalRoutePath(n1, n2) {
+        const x1 = n1.mapX;
+        const y1 = n1.mapY;
+        const x2 = n2.mapX;
+        const y2 = n2.mapY;
+
+        if (x1 === x2 || y1 === y2) {
+            return `M ${x1} ${y1} L ${x2} ${y2}`;
+        }
+
+        const pair = [n1.id, n2.id].sort().join('--');
+
+        if (pair === 'node_nw_bay--node_w_cross') {
+            const bay = n1.id === 'node_nw_bay' ? n1 : n2;
+            const cross = n1.id === 'node_w_cross' ? n1 : n2;
+            return `M ${bay.mapX} ${bay.mapY} L ${cross.mapX} ${bay.mapY} L ${cross.mapX} ${cross.mapY}`;
+        }
+
+        if (pair === 'node_sw--node_w_cross') {
+            const sw = n1.id === 'node_sw' ? n1 : n2;
+            const cross = n1.id === 'node_w_cross' ? n1 : n2;
+            const midX = Math.round((sw.mapX + cross.mapX) / 2);
+            return `M ${sw.mapX} ${sw.mapY} L ${midX} ${sw.mapY} L ${midX} ${cross.mapY} L ${cross.mapX} ${cross.mapY}`;
+        }
+
+        if (pair === 'node_center_hub--node_ne_plateau') {
+            const hub = n1.id === 'node_center_hub' ? n1 : n2;
+            const plat = n1.id === 'node_ne_plateau' ? n1 : n2;
+            return `M ${hub.mapX} ${hub.mapY} L ${hub.mapX} ${plat.mapY} L ${plat.mapX} ${plat.mapY}`;
+        }
+
+        if (pair === 'node_center_hub--node_se_cross') {
+            const hub = n1.id === 'node_center_hub' ? n1 : n2;
+            const cross = n1.id === 'node_se_cross' ? n1 : n2;
+            return `M ${hub.mapX} ${hub.mapY} L ${cross.mapX} ${hub.mapY} L ${cross.mapX} ${cross.mapY}`;
+        }
+
+        if (pair === 'node_e_coast--node_se_cross') {
+            const coast = n1.id === 'node_e_coast' ? n1 : n2;
+            const cross = n1.id === 'node_se_cross' ? n1 : n2;
+            const midX = Math.round((cross.mapX + coast.mapX) / 2);
+            return `M ${cross.mapX} ${cross.mapY} L ${midX} ${cross.mapY} L ${midX} ${coast.mapY} L ${coast.mapX} ${coast.mapY}`;
+        }
+
+        const midX = Math.round((x1 + x2) / 2);
+        return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+    },
+
     // Requirement 1 & 6: Pokemon-Style Region Route Map Renderer
     renderCardMap() {
         const grid = document.getElementById('card-board-grid');
@@ -6770,8 +6857,8 @@ const UI = {
             ? this.game.cardMap.getReachableNodes(playerNode.id, remainingSteps)
             : { reachableDiscovered: new Map(), reachableUndiscovered: new Map() };
 
-        grid.style.width = '1040px';
-        grid.style.height = '660px';
+        grid.style.width = '1380px';
+        grid.style.height = '960px';
         grid.style.position = 'relative';
 
         // 1. Draw connecting route lines (SVG layer)
@@ -6792,17 +6879,17 @@ const UI = {
                     (reachableDiscovered.has(node.id) && reachableDiscovered.has(conn.id))
                 );
 
+                const pathD = this.getOrthogonalRoutePath(node, conn);
+
                 svgLines += `
-                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
-                          class="route-casing" />
-                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
-                          class="route-inner ${isDiscovered ? 'route-discovered' : 'route-undiscovered'} ${isPlayerRoute ? 'route-adjacent-player' : ''}" />
+                    <path d="${pathD}" class="route-casing" />
+                    <path d="${pathD}" class="route-inner ${isDiscovered ? 'route-discovered' : 'route-undiscovered'} ${isPlayerRoute ? 'route-adjacent-player' : ''}" />
                 `;
             });
         });
 
         const svgHtml = `
-            <svg class="pokemon-map-routes" width="1040" height="660" viewBox="0 0 1040 660">
+            <svg class="pokemon-map-routes" width="1380" height="960" viewBox="0 0 1380 960">
                 ${svgLines}
             </svg>
         `;
@@ -7133,7 +7220,7 @@ const UI = {
 
     renderActionBar() {
         const activePlayer = this.game.getActivePlayer();
-        const currentNode = this.game.cardMap.getNode(activePlayer.x, activePlayer.y);
+        const currentNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
 
         const btnSearch = document.getElementById('btn-act-search');
         const btnGym = document.getElementById('btn-act-gym');
@@ -7142,21 +7229,23 @@ const UI = {
         const btnPoi = document.getElementById('btn-act-poi');
         const btnTravel = document.getElementById('btn-act-travel');
 
-        const isCity = currentNode && currentNode.card.biome === 'city';
-        const hasGym = currentNode && currentNode.card.gym;
+        const currentCard = currentNode ? currentNode.card : null;
+        const isCity = currentCard ? (currentCard.biome === 'city' || currentNode.cards.some(c => c.biome === 'city')) : false;
+        const gymCard = currentNode ? currentNode.cards.find(c => c.gym) : null;
+        const hasGym = Boolean(gymCard && gymCard.gym);
         const hasUnclaimedPoi = currentNode && currentNode.poi && !currentNode.poi.claimed;
-        const hasLocAction = currentNode && currentNode.card.locationAction;
+        const hasLocAction = currentCard ? Boolean(currentCard.locationAction) : false;
 
         if (btnSearch) {
-            btnSearch.disabled = this.game.hasActed || isCity;
+            btnSearch.disabled = this.game.hasActed || isCity || !currentCard;
             btnSearch.title = isCity ? 'No hay monstruos salvajes en Ciudades' : 'Buscar monstruos salvajes en este bioma';
         }
 
         if (btnGym) {
             btnGym.style.display = hasGym ? 'flex' : 'none';
-            btnGym.disabled = this.game.hasActed || (hasGym && activePlayer.badges.includes(currentNode.card.gym.tier));
+            btnGym.disabled = this.game.hasActed || (hasGym && activePlayer.badges.includes(gymCard.gym.tier));
             if (hasGym) {
-                btnGym.innerHTML = `🏛️ Desafiar ${currentNode.card.gym.name} (T${currentNode.card.gym.tier})`;
+                btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${gymCard.gym.tier})`;
             }
         }
 
@@ -7169,7 +7258,7 @@ const UI = {
         if (btnLocAction) {
             btnLocAction.disabled = this.game.hasActed || !hasLocAction;
             if (hasLocAction) {
-                btnLocAction.innerHTML = `🔄 ${currentNode.card.locationAction.name}`;
+                btnLocAction.innerHTML = `🔄 ${currentCard.locationAction.name}`;
             }
         }
 
@@ -7178,7 +7267,7 @@ const UI = {
         }
 
         if (btnTravel) {
-            const cityNodesCount = Object.values(this.game.cardMap.nodes).filter(n => n.card.biome === 'city').length;
+            const cityNodesCount = Object.values(this.game.cardMap.nodes).filter(n => n.cards.some(c => c.biome === 'city')).length;
             btnTravel.disabled = this.game.hasActed || !isCity || cityNodesCount < 2;
         }
     },
@@ -7609,20 +7698,23 @@ const UI = {
         if (!modal) return;
 
         const container = document.getElementById('travel-cities-list');
-        const placedCityNodes = Object.values(this.game.cardMap.nodes).filter(n => n.card.biome === 'city');
+        const placedCityNodes = Object.values(this.game.cardMap.nodes).filter(n => n.cards.some(c => c.biome === 'city'));
 
         if (container) {
-            container.innerHTML = placedCityNodes.map(node => `
-                <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${this.game.cardMap.key(node.x, node.y)}')">
-                    <div class="travel-city-icon">🏛️</div>
-                    <div>
-                        <strong>${node.card.name}</strong>
-                        <div>${node.card.gym ? `Gimnasio de ${node.card.gym.leaderName}` : 'Pueblo de Inicio'}</div>
-                        <small>Coords: (${node.x}, ${node.y})</small>
+            container.innerHTML = placedCityNodes.map(node => {
+                const cityCard = node.cards.find(c => c.biome === 'city') || node.card;
+                return `
+                    <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}')">
+                        <div class="travel-city-icon">🏛️</div>
+                        <div>
+                            <strong>${cityCard ? cityCard.name : node.name}</strong>
+                            <div>${cityCard && cityCard.gym ? `Gimnasio de ${cityCard.gym.leaderName}` : 'Pueblo de Inicio'}</div>
+                            <small>Coords: (${node.gridX}, ${node.gridY})</small>
+                        </div>
+                        <button class="btn-action-small">Viajar Aquí</button>
                     </div>
-                    <button class="btn-action-small">Viajar Aquí</button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         modal.classList.add('open');
@@ -7649,6 +7741,7 @@ const UI = {
 
         const p1Mon = combat.getP1Active();
         const p2Mon = combat.getP2Active();
+        if (!p1Mon || !p2Mon) return;
 
         // Player 1 Fighter
         const p1NameEl = document.getElementById('combat-p1-mon-name');

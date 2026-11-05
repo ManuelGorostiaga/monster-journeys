@@ -215,26 +215,31 @@ class CombatEngine {
     }
 
     executeTurnSequence(firstStrike, secondStrike) {
-        // Step 1: First strike
         this.executeAttack(firstStrike);
         SoundFX.diceRoll();
 
         setTimeout(() => {
+            if (!this.inCombat) return;
+
             const firstTargetFainted = firstStrike.defender.hp <= 0;
             if (window.UI) UI.renderCombatArena();
 
             if (firstTargetFainted) {
                 this.handleFaint(firstStrike.defender, firstStrike.defenderPlayer);
+                if (!this.inCombat) return;
+
                 this.endTurnPoisonPhase();
+                if (!this.inCombat) return;
+
                 this.turnNumber++;
                 this.isProcessing = false;
                 if (window.UI) UI.renderCombatArena();
                 return;
             }
 
-            // Step 2: Second strike
             setTimeout(() => {
-                // If defender was force-switched or pivoted, make sure second strike uses current active attacker
+                if (!this.inCombat) return;
+
                 const activeSecondAttacker = (secondStrike.attackerPlayer === this.player1) ? this.getP1Active() : this.getP2Active();
                 if (secondStrike.attacker !== activeSecondAttacker) {
                     secondStrike.attacker = activeSecondAttacker;
@@ -248,11 +253,14 @@ class CombatEngine {
                     const secondTargetFainted = secondStrike.defender.hp <= 0;
                     if (secondTargetFainted) {
                         this.handleFaint(secondStrike.defender, secondStrike.defenderPlayer);
+                        if (!this.inCombat) return;
                     }
                 }
 
-                // End of turn poison damage phase
+                if (!this.inCombat) return;
+
                 this.endTurnPoisonPhase();
+                if (!this.inCombat) return;
 
                 this.turnNumber++;
                 this.isProcessing = false;
@@ -273,7 +281,10 @@ class CombatEngine {
             }
         };
         checkPoison(this.getP1Active(), this.player1);
-        checkPoison(this.getP2Active(), this.player2);
+        const p1Alive = this.p1Team && this.p1Team.some(m => m.hp > 0);
+        if (p1Alive) {
+            checkPoison(this.getP2Active(), this.player2);
+        }
     }
 
     executeAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first = false, isFreeAttackOnSwitch = false }) {
@@ -705,6 +716,7 @@ class CombatEngine {
     // Rule 13: "Los monstruos se recuperan la salud despues de una pelea."
     // Rule 14: "Cuando el jugador pierde la pelea, obtiene dinero de todas maneras, como si hubiera ganado."
     endBattle(playerWon) {
+        this.inCombat = false;
         this.isProcessing = false;
         this.log(`🏁 FIN DEL COMBATE: ${playerWon ? `¡VICTORIA para ${this.player1.name}!` : `¡${this.player1.name} ha sido derrotado!`}`);
 
@@ -713,14 +725,12 @@ class CombatEngine {
             rewardCoins = this.gymData.rewardCoins;
         }
 
-        // Amulet Coin bonus
-        const hasAmulet = this.player1.inventory.some(i => i.id === 'item_utl_5');
+        const hasAmulet = this.player1.inventory && this.player1.inventory.some(i => i.id === 'item_utl_5');
         if (hasAmulet) {
             rewardCoins += 3;
             this.log(`🪙 Moneda Amuleto otorga +3 monedas extras.`);
         }
 
-        // RULE 14: Even if lost, player receives money as if won!
         this.player1.coins += rewardCoins;
         SoundFX.coin();
 
@@ -729,7 +739,6 @@ class CombatEngine {
             this.log(`🎉 ¡Has ganado ${rewardCoins} monedas de oro!`);
 
             if (this.gymData) {
-                // Award Gym Badge & Luck
                 if (this.gymData.rewardLuck) {
                     this.player1.luck = (this.player1.luck || 0) + this.gymData.rewardLuck;
                     this.log(`🍀 ¡Obtienes +${this.gymData.rewardLuck} Suerte por vencer en el Gimnasio!`);
@@ -741,7 +750,6 @@ class CombatEngine {
                     this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
                     this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
 
-                    // Requirement 5: Trigger expansion decks & 3/4 gym check
                     if (this.game && this.game.onGymDefeated) {
                         this.game.onGymDefeated(this.player1, this.gymData);
                     }
@@ -751,13 +759,30 @@ class CombatEngine {
             this.log(`🪙 REGLA 14: A pesar de la derrota, ¡obtienes ${rewardCoins} monedas de recompensa para recuperarte!`);
         }
 
-        // RULE 13: Monsters fully recover HP and cleanse statuses after a fight!
-        this.player1.monsters.forEach(m => {
-            m.hp = m.maxHp;
-            m.status = null;
-            m.shieldNextTurn = 0;
-            m.chargeNextTurn = 0;
-        });
+        if (this.p1Team) {
+            this.p1Team.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
+        if (this.player1 && this.player1.monsters) {
+            this.player1.monsters.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
+        if (this.p2Team) {
+            this.p2Team.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
         if (this.player2 && this.player2.monsters) {
             this.player2.monsters.forEach(m => {
                 m.hp = m.maxHp;
@@ -777,10 +802,11 @@ class CombatEngine {
                 moveTeaching: this.pendingMoveTeaching,
                 onContinue: () => {
                     this.inCombat = false;
+                    this.isProcessing = false;
+                    if (window.UI) UI.hideCombatModal();
                     if (this.onCombatEndCallback) {
                         this.onCombatEndCallback(playerWon);
                     }
-                    if (window.UI) UI.hideCombatModal();
                 }
             });
         }
