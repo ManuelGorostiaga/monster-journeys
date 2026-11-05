@@ -93,10 +93,6 @@ const UI = {
             this.showLocationActionModal();
         });
 
-        document.getElementById('btn-act-poi')?.addEventListener('click', () => {
-            this.game.visitPOI();
-        });
-
         document.getElementById('btn-act-travel')?.addEventListener('click', () => {
             this.showCityTravelModal(false);
         });
@@ -119,6 +115,7 @@ const UI = {
     },
 
     renderAll() {
+        if (!this.game) return;
         this.renderHeader();
         this.renderCardMap();
         this.renderActionBar();
@@ -138,8 +135,14 @@ const UI = {
 
         const moveStatusEl = document.getElementById('status-movement');
         if (moveStatusEl) {
-            moveStatusEl.textContent = this.game.hasMoved ? 'Movimiento: Agotado' : `Movimiento: Disponible (1 casillero)`;
-            moveStatusEl.className = this.game.hasMoved ? 'status-pill tag-disabled' : 'status-pill tag-success';
+            if (this.game.hasMoved || this.game.movementPoints <= 0) {
+                moveStatusEl.textContent = 'Movimiento: Agotado';
+                moveStatusEl.className = 'status-pill tag-disabled';
+            } else {
+                const pts = this.game.movementPoints;
+                moveStatusEl.textContent = `Movimiento: ${pts} paso${pts > 1 ? 's' : ''} disponible${pts > 1 ? 's' : ''}`;
+                moveStatusEl.className = 'status-pill tag-success';
+            }
         }
 
         const actStatusEl = document.getElementById('status-action');
@@ -149,190 +152,222 @@ const UI = {
         }
     },
 
-    // Requirement 1 & 6: Interconnected Card Node System Map Renderer
+    // Requirement 1 & 6: Pokemon-Style Region Route Map Renderer
     renderCardMap() {
         const grid = document.getElementById('card-board-grid');
         if (!grid) return;
 
         const activePlayer = this.game.getActivePlayer();
-        const nodes = this.game.cardMap.getAllNodes();
+        const playerNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+        const allNodes = this.game.cardMap.getAllNodes();
 
-        // Calculate card coordinates layout
-        const CARD_W = 130;
-        const CARD_H = 182;
-        const GAP_X = 28;
-        const GAP_Y = 28;
-        const STEP_X = CARD_W + GAP_X;
-        const STEP_Y = CARD_H + GAP_Y;
+        const remainingSteps = (this.game.hasMoved || this.game.movementPoints <= 0) ? 0 : this.game.movementPoints;
+        const { reachableDiscovered, reachableUndiscovered } = playerNode
+            ? this.game.cardMap.getReachableNodes(playerNode.id, remainingSteps)
+            : { reachableDiscovered: new Map(), reachableUndiscovered: new Map() };
 
-        // Bounding box of placed nodes
-        let minX = 0, maxX = 0, minY = 0, maxY = 0;
-        nodes.forEach(n => {
-            if (n.x < minX) minX = n.x;
-            if (n.x > maxX) maxX = n.x;
-            if (n.y < minY) minY = n.y;
-            if (n.y > maxY) maxY = n.y;
+        grid.style.width = '1040px';
+        grid.style.height = '660px';
+        grid.style.position = 'relative';
+
+        // 1. Draw connecting route lines (SVG layer)
+        const renderedEdges = new Set();
+        let svgLines = '';
+
+        allNodes.forEach(node => {
+            const connectedNodes = this.game.cardMap.getConnectedNodes(node);
+            connectedNodes.forEach(conn => {
+                const edgeKey = [node.id, conn.id].sort().join('--');
+                if (renderedEdges.has(edgeKey)) return;
+                renderedEdges.add(edgeKey);
+
+                const isDiscovered = (node.cards.length > 0 && conn.cards.length > 0);
+                const isPlayerRoute = playerNode && (
+                    (playerNode.id === node.id && (conn.cards.length > 0 || reachableUndiscovered.has(conn.id))) ||
+                    (playerNode.id === conn.id && (node.cards.length > 0 || reachableUndiscovered.has(node.id))) ||
+                    (reachableDiscovered.has(node.id) && reachableDiscovered.has(conn.id))
+                );
+
+                svgLines += `
+                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
+                          class="route-casing" />
+                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
+                          class="route-inner ${isDiscovered ? 'route-discovered' : 'route-undiscovered'} ${isPlayerRoute ? 'route-adjacent-player' : ''}" />
+                `;
+            });
         });
 
-        // Expand bounds by 1 to include adjacent placeable empty slots
-        const renderMinX = minX - 1;
-        const renderMaxX = maxX + 1;
-        const renderMinY = minY - 1;
-        const renderMaxY = maxY + 1;
+        const svgHtml = `
+            <svg class="pokemon-map-routes" width="1040" height="660" viewBox="0 0 1040 660">
+                ${svgLines}
+            </svg>
+        `;
 
-        const totalCols = (renderMaxX - renderMinX) + 1;
-        const totalRows = (renderMaxY - renderMinY) + 1;
+        // 2. Render Pokemon Map Nodes
+        let nodesHtml = '';
+        allNodes.forEach(node => {
+            const isPlayerHere = playerNode && (playerNode.id === node.id);
+            const isDirectConnected = playerNode ? playerNode.connections.includes(node.id) : false;
+            const isDiscoveredReachable = reachableDiscovered.has(node.id) && !this.game.hasMoved;
+            const isDiscoverableReachable = (reachableUndiscovered.has(node.id) || isDirectConnected) && !this.game.hasMoved && remainingSteps > 0;
+            const isAdjacentReachable = isDiscoveredReachable || isDiscoverableReachable;
 
-        const gridWidth = Math.max(900, totalCols * STEP_X + 40);
-        const gridHeight = Math.max(480, totalRows * STEP_Y + 40);
+            const playersOnNode = this.game.players.filter(p => {
+                const pNode = this.game.cardMap.getNode(p.currentNodeId || `${p.x},${p.y}`);
+                return pNode && pNode.id === node.id;
+            });
 
-        grid.style.width = `${gridWidth}px`;
-        grid.style.height = `${gridHeight}px`;
+            const hasCards = node.cards.length > 0;
 
-        const originX = (gridWidth - (totalCols * STEP_X - GAP_X)) / 2 - (renderMinX * STEP_X);
-        const originY = (gridHeight - (totalRows * STEP_Y - GAP_Y)) / 2 - (renderMinY * STEP_Y);
-
-        let html = '';
-
-        // Draw connections between orthogonally adjacent placed cards
-        nodes.forEach(node => {
-            const px = originX + node.x * STEP_X;
-            const py = originY + node.y * STEP_Y;
-
-            // Check East neighbor
-            if (this.game.cardMap.hasCard(node.x + 1, node.y)) {
-                html += `
-                    <div class="board-path-line" style="
-                        left: ${px + CARD_W}px;
-                        top: ${py + CARD_H / 2 - 3}px;
-                        width: ${GAP_X}px;
-                        height: 6px;
-                        border-top: 2px dashed rgba(148, 163, 184, 0.4);
-                        border-bottom: 2px dashed rgba(148, 163, 184, 0.4);
-                    "></div>
-                `;
-            }
-            // Check South neighbor
-            if (this.game.cardMap.hasCard(node.x, node.y + 1)) {
-                html += `
-                    <div class="board-path-line" style="
-                        left: ${px + CARD_W / 2 - 3}px;
-                        top: ${py + CARD_H}px;
-                        width: 6px;
-                        height: ${GAP_Y}px;
-                        border-left: 2px dashed rgba(148, 163, 184, 0.4);
-                        border-right: 2px dashed rgba(148, 163, 184, 0.4);
-                    "></div>
-                `;
-            }
-        });
-
-        // Render Placed Cards
-        nodes.forEach(node => {
-            const card = node.card;
-            const biome = BIOMES[card.biome] || BIOMES.city;
-            const px = originX + node.x * STEP_X;
-            const py = originY + node.y * STEP_Y;
-
-            const isPlayerHere = (activePlayer.x === node.x && activePlayer.y === node.y);
-            const dist = Math.abs(activePlayer.x - node.x) + Math.abs(activePlayer.y - node.y);
-            const isAdjacent = (dist === 1);
-
-            let nodeClass = 'board-card-node';
+            let nodeClass = 'pokemon-map-node';
             if (isPlayerHere) nodeClass += ' current-player-node';
-            else if (isAdjacent && !this.game.hasMoved) nodeClass += ' adjacent-target-node';
+            if (isAdjacentReachable) nodeClass += ' adjacent-target-node';
+            if (node.maxCards === 2) nodeClass += ' hub-node';
 
-            const playersOnNode = this.game.players.filter(p => p.x === node.x && p.y === node.y);
-
-            html += `
-                <div class="${nodeClass}" style="left: ${px}px; top: ${py}px; border-color: ${biome.color};" 
-                     onclick="UI.onBoardNodeClicked(${node.x}, ${node.y})">
-                    
-                    <div class="board-card-header" style="background: ${biome.color};">
-                        <span>${biome.icon} ${biome.name}</span>
-                        <small>(${node.x},${node.y})</small>
-                    </div>
-
-                    <div class="board-card-body">
-                        ${card.gym ? `<div class="board-card-gym-badge">🏛️ T${card.gym.tier}</div>` : ''}
-                        ${node.poi && !node.poi.claimed ? `<div class="board-card-poi-badge" title="${node.poi.name}: ${node.poi.desc}">${node.poi.icon}</div>` : ''}
+            if (hasCards) {
+                nodesHtml += `
+                    <div class="${nodeClass}" style="left: ${node.mapX}px; top: ${node.mapY}px;"
+                         onclick="UI.onBoardNodeClicked('${node.id}')">
                         
-                        <div class="board-card-icon">${card.icon || biome.icon}</div>
-                        <div class="board-card-title">${card.name}</div>
-                    </div>
-
-                    <!-- Players standing here -->
-                    ${playersOnNode.length > 0 ? `
-                        <div class="board-players-container">
-                            ${playersOnNode.map(p => `
-                                <div class="player-meeple" style="background: ${p.color};" title="${p.name}">
-                                    P${p.num}
-                                </div>
-                            `).join('')}
+                        <div class="node-badge-header">
+                            <span class="node-name-text">${node.name}</span>
+                            ${node.maxCards === 2 ? `<span class="node-hub-pill">${node.cards.length}/2 🗂️</span>` : ''}
+                            ${node.corner ? `<span class="node-corner-pill">🏡 ${node.corner}</span>` : ''}
                         </div>
-                    ` : ''}
 
-                    <div class="board-card-footer">
-                        ${card.locationAction ? `<span>🔄 ${card.locationAction.name}</span>` : `<span>${biome.name}</span>`}
-                    </div>
-                </div>
-            `;
-        });
+                        <div class="node-cards-row">
+                            ${node.cards.map((card) => {
+                                const biome = BIOMES[card.biome] || BIOMES.city;
+                                return `
+                                    <div class="node-mini-card" style="border-top: 3px solid ${biome.color};">
+                                        <div class="mini-card-icon">${card.icon || biome.icon}</div>
+                                        <div class="mini-card-title">${card.name}</div>
+                                        ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
+                                        ${card.locationAction ? `<div class="mini-card-action">🔄</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                            ${(node.cards.length < node.maxCards && (isAdjacentReachable || isPlayerHere)) ? `
+                                <div class="node-mini-card node-mini-card-add" title="Colocar 2ª carta en este Hub"
+                                     onclick="event.stopPropagation(); UI.showPlaceCardModal('${node.id}')">
+                                    <span class="empty-slot-plus">➕</span>
+                                    <span class="empty-slot-text">2ª Carta</span>
+                                </div>
+                            ` : ''}
+                        </div>
 
-        // Render Empty Border Slots (Explorable Areas)
-        const emptySlots = this.game.cardMap.getAllEmptyBorderSlots();
-        emptySlots.forEach(slot => {
-            const px = originX + slot.x * STEP_X;
-            const py = originY + slot.y * STEP_Y;
-
-            const dist = Math.abs(activePlayer.x - slot.x) + Math.abs(activePlayer.y - slot.y);
-            const isDirectlyAdjacentToPlayer = (dist === 1);
-
-            if (isDirectlyAdjacentToPlayer && !this.game.hasMoved) {
-                html += `
-                    <div class="board-empty-slot" style="left: ${px}px; top: ${py}px; border-color: #34d399; background: rgba(52, 211, 153, 0.08);"
-                         onclick="UI.showPlaceCardModal(${slot.x}, ${slot.y})">
-                        <span class="empty-slot-plus">➕</span>
-                        <span class="empty-slot-text" style="color: #34d399;">Descubrir Zona (${slot.x}, ${slot.y})</span>
+                        ${playersOnNode.length > 0 ? `
+                            <div class="board-players-container">
+                                ${playersOnNode.map(p => `
+                                    <div class="player-meeple" style="background: ${p.color};" title="${p.name}">
+                                        P${p.num}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             } else {
-                html += `
-                    <div class="board-empty-slot" style="left: ${px}px; top: ${py}px; opacity: 0.35;" 
-                         title="Espacio vacío (${slot.x}, ${slot.y})">
-                        <span class="empty-slot-plus">＋</span>
-                        <span class="empty-slot-text">(${slot.x}, ${slot.y})</span>
-                    </div>
-                `;
+                if (isAdjacentReachable) {
+                    nodesHtml += `
+                        <div class="${nodeClass} board-empty-slot discoverable-slot" 
+                             style="left: ${node.mapX}px; top: ${node.mapY}px;"
+                             onclick="UI.showPlaceCardModal('${node.id}')">
+                            <div class="node-badge-header">
+                                <span class="node-name-text">${node.name}</span>
+                                ${node.maxCards === 2 ? `<span class="node-hub-pill">Hub 2🗂️</span>` : ''}
+                            </div>
+                            <div class="empty-slot-body">
+                                <span class="empty-slot-plus">➕</span>
+                                <span class="empty-slot-text">Descubrir</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    nodesHtml += `
+                        <div class="${nodeClass} board-empty-slot undiscovered-slot" 
+                             style="left: ${node.mapX}px; top: ${node.mapY}px;"
+                             onclick="UI.onBoardNodeClicked('${node.id}')"
+                             title="Ruta a ${node.name}">
+                            <div class="node-badge-header">
+                                <span class="node-name-text">${node.name}</span>
+                                ${node.maxCards === 2 ? `<span class="node-hub-pill">Hub 2🗂️</span>` : ''}
+                            </div>
+                            <div class="empty-slot-body">
+                                <span class="empty-slot-plus">？</span>
+                                <span class="empty-slot-text">No explorado</span>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         });
 
-        grid.innerHTML = html;
+        grid.innerHTML = svgHtml + nodesHtml;
     },
 
-    onBoardNodeClicked(x, y) {
-        const activePlayer = this.game.getActivePlayer();
-        const dist = Math.abs(activePlayer.x - x) + Math.abs(activePlayer.y - y);
+    onBoardNodeClicked(nodeIdOrX, maybeY) {
+        const targetNode = this.game.cardMap.getNode(nodeIdOrX, maybeY);
+        if (!targetNode) return;
 
-        if (!this.game.hasMoved && dist <= this.game.movementPoints && dist > 0) {
-            this.game.movePlayerToNode(x, y);
+        const activePlayer = this.game.getActivePlayer();
+        const playerNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+
+        const remainingSteps = (this.game.hasMoved || this.game.movementPoints <= 0) ? 0 : this.game.movementPoints;
+        const { reachableDiscovered, reachableUndiscovered } = playerNode
+            ? this.game.cardMap.getReachableNodes(playerNode.id, remainingSteps)
+            : { reachableDiscovered: new Map(), reachableUndiscovered: new Map() };
+
+        if (!this.game.hasMoved && remainingSteps > 0) {
+            const isDirectConnected = playerNode ? playerNode.connections.includes(targetNode.id) : false;
+
+            if (targetNode.cards.length > 0 && (reachableDiscovered.has(targetNode.id) || isDirectConnected)) {
+                this.game.movePlayerToNode(targetNode.id);
+                return;
+            }
+
+            if (targetNode.cards.length === 0) {
+                if (isDirectConnected) {
+                    this.showPlaceCardModal(targetNode.id);
+                    return;
+                } else if (reachableUndiscovered.has(targetNode.id)) {
+                    const reachInfo = reachableUndiscovered.get(targetNode.id);
+                    if (reachInfo && reachInfo.path.length >= 2) {
+                        const intermediateNodeId = reachInfo.path[1];
+                        this.game.movePlayerToNode(intermediateNodeId);
+                        setTimeout(() => {
+                            this.showPlaceCardModal(targetNode.id);
+                        }, 250);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (targetNode.cards.length === 0) {
+            this.showNotification(targetNode.name, `Zona aún no descubierta.<br>Conexiones: ${targetNode.connections.map(c => this.game.cardMap.getNode(c)?.name || c).join(', ')}`);
             return;
         }
 
-        const node = this.game.cardMap.getNode(x, y);
-        if (!node) return;
+        let msg = `📍 **${targetNode.name}** (${targetNode.cards.length}/${targetNode.maxCards} cartas)\n\n`;
+        targetNode.cards.forEach((card, idx) => {
+            const biome = BIOMES[card.biome] || BIOMES.city;
+            msg += `**[Carta ${idx + 1}] ${card.name}** (${biome.name})\n`;
+            if (card.flavor) msg += `*${card.flavor}*\n`;
+            if (card.locationAction) msg += `🔄 **Acción:** ${card.locationAction.name} - ${card.locationAction.desc}\n`;
+            if (card.gym) msg += `🏛️ **Gimnasio:** Líder ${card.gym.leaderName} (Tier ${card.gym.tier})\n`;
+            msg += `\n`;
+        });
 
-        let msg = `📍 **${node.card.name}** (${node.x}, ${node.y})\nBioma: ${BIOMES[node.card.biome].name}\n`;
-        if (node.card.flavor) msg += `*${node.card.flavor}*\n\n`;
-        if (node.card.locationAction) msg += `🔄 **Acción de Lugar:** ${node.card.locationAction.name} - ${node.card.locationAction.desc}\n`;
-        if (node.card.gym) msg += `🏛️ **Gimnasio:** Líder ${node.card.gym.leaderName} (Tier ${node.card.gym.tier})\n`;
-        if (node.poi && !node.poi.claimed) msg += `✨ **Punto de Interés:** ${node.poi.name} (${node.poi.desc})\n`;
-
-        this.showNotification(node.card.name, msg.replace(/\n/g, '<br>'));
+        this.showNotification(targetNode.name, msg.replace(/\n/g, '<br>'));
     },
 
-    showPlaceCardModal(x, y) {
-        this.pendingPlacementCoords = { x, y };
+    showPlaceCardModal(nodeIdOrX, maybeY) {
+        const targetNode = this.game.cardMap.getNode(nodeIdOrX, maybeY);
+        if (!targetNode) return;
+
+        this.pendingPlacementNodeId = targetNode.id;
+        this.pendingPlacementCoords = { x: targetNode.gridX, y: targetNode.gridY };
         const modal = document.getElementById('modal-place-card');
         if (!modal) return;
 
@@ -345,7 +380,7 @@ const UI = {
             if (this.game.citiesDeck.length > 0) {
                 const nextCity = this.game.citiesDeck[0];
                 html += `
-                    <div class="location-hand-card cities-deck-card" style="cursor: pointer;" onclick="UI.confirmPlaceCity(${x}, ${y})">
+                    <div class="location-hand-card cities-deck-card" style="cursor: pointer;" onclick="UI.confirmPlaceCity('${targetNode.id}')">
                         <div class="location-card-banner" style="background: #1e293b; color: #fbbf24; border-bottom: 1px solid #fbbf24;">
                             <span>🏛️ Mazo de Ciudades</span>
                             <span>T${nextCity.gym.tier}</span>
@@ -354,11 +389,11 @@ const UI = {
                         <div class="location-card-title">${nextCity.name}</div>
                         <div class="location-card-action-box">
                             <strong>Gimnasio de ${nextCity.gym.leaderName}</strong>
-                            Fundar esta metrópoli otorga acceso exclusivo a la Tienda y al Gimnasio.
+                            Fundar esta metrópoli en ${targetNode.name} otorga acceso exclusivo a la Tienda y al Gimnasio.
                         </div>
                         <div class="location-card-bottom">
                             <button class="btn-place-loc" style="background: linear-gradient(180deg, #f59e0b, #d97706); border-color: #fbbf24;">
-                                🏛️ Fundar Ciudad Aquí
+                                🏛️ Fundar en ${targetNode.name}
                             </button>
                         </div>
                     </div>
@@ -369,7 +404,7 @@ const UI = {
             player.locationHand.forEach((card, idx) => {
                 const biome = BIOMES[card.biome] || BIOMES.forest;
                 html += `
-                    <div class="location-hand-card" style="border-color: ${biome.color}; cursor: pointer;" onclick="UI.confirmPlaceLocationHand(${idx}, ${x}, ${y})">
+                    <div class="location-hand-card" style="border-color: ${biome.color}; cursor: pointer;" onclick="UI.confirmPlaceLocationHand(${idx}, '${targetNode.id}')">
                         <div class="location-card-banner" style="background: ${biome.color};">
                             <span>${biome.icon} ${biome.name}</span>
                             <span>#${idx + 1}</span>
@@ -381,7 +416,7 @@ const UI = {
                             ${card.locationAction ? card.locationAction.desc : card.flavor}
                         </div>
                         <div class="location-card-bottom">
-                            <button class="btn-place-loc">🗺️ Colocar Carta</button>
+                            <button class="btn-place-loc">🗺️ Colocar en ${targetNode.name}</button>
                         </div>
                     </div>
                 `;
@@ -393,51 +428,58 @@ const UI = {
         modal.classList.add('open');
     },
 
-    confirmPlaceLocationHand(cardIndex, x, y) {
+    confirmPlaceLocationHand(cardIndex, targetNodeId) {
         document.getElementById('modal-place-card')?.classList.remove('open');
-        this.game.placeLocationCardAndMove(cardIndex, x, y);
+        this.game.placeLocationCardAndMove(cardIndex, targetNodeId);
     },
 
-    confirmPlaceCity(x, y) {
+    confirmPlaceCity(targetNodeId) {
         document.getElementById('modal-place-card')?.classList.remove('open');
-        this.game.placeCityCardAndMove(x, y);
+        this.game.placeCityCardAndMove(targetNodeId);
     },
 
     showLocationActionModal() {
         const activePlayer = this.game.getActivePlayer();
-        const node = this.game.cardMap.getNode(activePlayer.x, activePlayer.y);
-        if (!node || !node.card.locationAction) {
+        const node = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+        if (!node) return;
+
+        const cardsWithAction = node.cards.filter(c => Boolean(c.locationAction));
+        if (cardsWithAction.length === 0) {
             alert('Esta localización no posee una acción disponible.');
             return;
         }
 
-        const action = node.card.locationAction;
         const modal = document.getElementById('modal-location-action');
         if (!modal) return;
 
         const titleEl = document.getElementById('loc-action-title');
-        if (titleEl) titleEl.textContent = `Acción de ${node.card.name}: ${action.name}`;
+        if (titleEl) titleEl.textContent = `Acciones en ${node.name}`;
 
         const bodyEl = document.getElementById('loc-action-body');
         if (bodyEl) {
-            bodyEl.innerHTML = `
-                <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-                    <div style="font-size: 2.5rem; margin-bottom: 8px;">${node.card.icon || '🔄'}</div>
-                    <h4 style="color: var(--accent-gold); font-size: 1.1rem; margin-bottom: 6px;">${action.name}</h4>
-                    <p style="color: #cbd5e1; font-size: 0.95rem;">${action.desc}</p>
+            bodyEl.innerHTML = cardsWithAction.map((card, idx) => `
+                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 12px;">
+                    <div style="font-size: 2rem; margin-bottom: 6px;">${card.icon || '🔄'}</div>
+                    <h4 style="color: var(--accent-gold); font-size: 1.05rem; margin-bottom: 4px;">${card.name}: ${card.locationAction.name}</h4>
+                    <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px;">${card.locationAction.desc}</p>
+                    <button class="btn btn-primary" onclick="UI.confirmExecuteLocationAction(${idx})">
+                        ⚡ Activar ${card.locationAction.name}
+                    </button>
                 </div>
-            `;
+            `).join('');
         }
 
         const btnConfirm = document.getElementById('btn-confirm-loc-action');
         if (btnConfirm) {
-            btnConfirm.onclick = () => {
-                modal.classList.remove('open');
-                this.game.executeLocationAction();
-            };
+            btnConfirm.style.display = 'none';
         }
 
         modal.classList.add('open');
+    },
+
+    confirmExecuteLocationAction(cardIndex) {
+        document.getElementById('modal-location-action')?.classList.remove('open');
+        this.game.executeLocationAction(cardIndex);
     },
 
     showDraftLocationModal({ player, cards, onSelect }) {
@@ -577,7 +619,8 @@ const UI = {
         const badgesContainer = document.getElementById('board-badges-list');
         if (badgesContainer) {
             badgesContainer.innerHTML = CITIES_DATABASE.map(city => {
-                const earned = player.badges.includes(city.gym.tier);
+                const earned = (player.defeatedGymIds && player.defeatedGymIds.includes(city.gym.id)) ||
+                               player.badges.includes(city.gym.tier);
                 return `
                     <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${city.gym.badgeName} (Tier ${city.gym.tier}) - ${city.name}">
                         <span>${city.gym.badgeIcon}</span>
@@ -687,19 +730,25 @@ const UI = {
 
                                 <!-- Speed & Weakness Tag (Rule 18: Weak +2) -->
                                 <div class="stats-row">
-                                    <div class="stat-box">Vel: <strong>${monster.speed} ⚡</strong></div>
+                                    <div class="stat-box">Vel: <strong>${monster.speed + (monster.equippedItem && monster.equippedItem.id === 'item_cmb_3' ? 2 : 0)} ⚡</strong>${monster.equippedItem && monster.equippedItem.id === 'item_cmb_3' ? ' <small style="color:#fbbf24;">(+2 Garra)</small>' : ''}</div>
                                     <div class="stat-box weakness-tag" title="Sufre +2 daño de este tipo">Weak +2: <strong>${monster.weakness}</strong></div>
                                 </div>
 
-                                <!-- Attacks list (Requirement 1: clean attack damage display) -->
+                                <!-- Attacks list (with varied effects display) -->
                                 <div class="attacks-section">
                                     <div class="section-title">Ataques:</div>
-                                    ${monster.attacks.map(atk => `
-                                        <div class="attack-item">
-                                            <span class="atk-name">${atk.name} (${atk.type}):</span>
-                                            <span class="atk-math">${atk.baseDmg} daño</span>
-                                        </div>
-                                    `).join('')}
+                                    ${monster.attacks.map(atk => {
+                                        const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg} daño`;
+                                        return `
+                                            <div class="attack-item" style="display: flex; flex-direction: column; gap: 1px; margin-bottom: 3px;">
+                                                <div style="display: flex; justify-content: space-between;">
+                                                    <span class="atk-name">${atk.name} (${atk.type}):</span>
+                                                    <span class="atk-math">${dmgDisplay}</span>
+                                                </div>
+                                                ${atk.desc ? `<small style="font-size: 0.64rem; color: #fde047; line-height: 1.2;">${atk.desc}</small>` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
                                 </div>
 
                                 <!-- Equipped Item (Rule 10: max 1 item) -->
@@ -824,7 +873,7 @@ const UI = {
         if (container) {
             container.innerHTML = cards.map((monster, idx) => {
                 const canCapture = highestToolTier >= monster.captureTier;
-                const canTeach = maxGymBadge >= monster.captureTier;
+                const canTeach = player.monsters.length > 0;
 
                 return `
                     <div class="wild-card-container">
@@ -845,7 +894,8 @@ const UI = {
                             </div>
 
                             <div class="wild-attack">
-                                <strong>Ataque:</strong> ${monster.attacks[0].name} (${monster.attacks[0].type}) — ${monster.attacks[0].baseDmg} daño
+                                <strong>Ataque:</strong> ${monster.attacks[0].name} (${monster.attacks[0].type}) — ${monster.attacks[0].effect === 'speed_damage' ? 'Velocidad' : monster.attacks[0].effect === 'fixed_damage' ? `${monster.attacks[0].fixedDmg} Daño Fijo` : `${monster.attacks[0].baseDmg} daño`}
+                                ${monster.attacks[0].desc ? `<div style="font-size: 0.72rem; color: #fde047; margin-top: 2px;">${monster.attacks[0].desc}</div>` : ''}
                             </div>
 
                             <div class="wild-actions">
@@ -854,9 +904,9 @@ const UI = {
                                     🪤 Capturar (Req: T${monster.captureTier} - Tienes: T${highestToolTier})
                                 </button>
                                 
-                                <button class="btn-wild-teach ${canTeach ? 'btn-can-teach' : 'btn-cannot'}" 
+                                <button class="btn-wild-teach btn-can-teach" 
                                         onclick="UI.promptTeachAttack(${idx})">
-                                    📖 Aprender Ataque (Req: ${monster.captureTier} Gimnasios - Tienes: ${maxGymBadge})
+                                    📖 Enseñar Ataque (+${monster.attacks[0].name})
                                 </button>
                             </div>
                         </div>
@@ -885,9 +935,10 @@ const UI = {
 
     promptTeachAttack(monsterIndex) {
         const player = this.game.getActivePlayer();
-        const wildMon = this.activeSearchData.cards[monsterIndex];
+        const wildMon = (this.activeSearchData && this.activeSearchData.cards && this.activeSearchData.cards[monsterIndex]) || (this.game.activeSearchCards && this.game.activeSearchCards[monsterIndex]);
+        if (!wildMon) return;
 
-        let msg = `¿A qué criatura de tu equipo deseas enseñarle "${wildMon.attacks[0].name}"?\n`;
+        let msg = `¿A qué criatura de tu equipo deseas enseñarle "${wildMon.attacks[0].name}" (${wildMon.attacks[0].type}, ${wildMon.attacks[0].baseDmg} daño)?\n\n`;
         player.monsters.forEach((m, i) => {
             msg += `${i + 1}. ${m.name} (Ataques: ${m.attacks.map(a => a.name).join(', ')})\n`;
         });
@@ -1008,11 +1059,21 @@ const UI = {
         const p1HpBar = document.getElementById('combat-p1-hp-bar');
         if (p1HpBar) p1HpBar.style.width = `${(p1Mon.hp / p1Mon.maxHp) * 100}%`;
 
+        const p1EffSpeed = (p1Mon.status === 'paralysis') ? 0 : p1Mon.speed;
         const p1SpeedEl = document.getElementById('combat-p1-speed');
-        if (p1SpeedEl) p1SpeedEl.textContent = `Velocidad: ${p1Mon.speed} ⚡`;
+        if (p1SpeedEl) p1SpeedEl.textContent = `Velocidad: ${p1EffSpeed} ⚡ ${p1Mon.status === 'paralysis' ? '(Parálisis 0)' : ''}`;
 
         const p1WeakEl = document.getElementById('combat-p1-weak');
-        if (p1WeakEl) p1WeakEl.textContent = `Weak +2: ${p1Mon.weakness}`;
+        if (p1WeakEl) {
+            let statusHtml = '';
+            if (p1Mon.status === 'paralysis') statusHtml += '<span class="combat-status-badge status-paralysis">⚡ Parálisis</span> ';
+            if (p1Mon.status === 'poison') statusHtml += '<span class="combat-status-badge status-poison">☠️ Veneno (-1 HP)</span> ';
+            if (p1Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
+            if (p1Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p1Mon.shieldNextTurn})</span> `;
+            if (p1Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p1Mon.chargeNextTurn})</span> `;
+
+            p1WeakEl.innerHTML = `Weak +2: ${p1Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
+        }
 
         // Opponent Fighter
         const p2NameEl = document.getElementById('combat-p2-mon-name');
@@ -1027,11 +1088,21 @@ const UI = {
         const p2HpBar = document.getElementById('combat-p2-hp-bar');
         if (p2HpBar) p2HpBar.style.width = `${(p2Mon.hp / p2Mon.maxHp) * 100}%`;
 
+        const p2EffSpeed = (p2Mon.status === 'paralysis') ? 0 : p2Mon.speed;
         const p2SpeedEl = document.getElementById('combat-p2-speed');
-        if (p2SpeedEl) p2SpeedEl.textContent = `Velocidad: ${p2Mon.speed} ⚡`;
+        if (p2SpeedEl) p2SpeedEl.textContent = `Velocidad: ${p2EffSpeed} ⚡ ${p2Mon.status === 'paralysis' ? '(Parálisis 0)' : ''}`;
 
         const p2WeakEl = document.getElementById('combat-p2-weak');
-        if (p2WeakEl) p2WeakEl.textContent = `Weak +2: ${p2Mon.weakness}`;
+        if (p2WeakEl) {
+            let statusHtml = '';
+            if (p2Mon.status === 'paralysis') statusHtml += '<span class="combat-status-badge status-paralysis">⚡ Parálisis</span> ';
+            if (p2Mon.status === 'poison') statusHtml += '<span class="combat-status-badge status-poison">☠️ Veneno (-1 HP)</span> ';
+            if (p2Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
+            if (p2Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p2Mon.shieldNextTurn})</span> `;
+            if (p2Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p2Mon.chargeNextTurn})</span> `;
+
+            p2WeakEl.innerHTML = `Weak +2: ${p2Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
+        }
 
         // Combat Actions & Luck Boost toggle (Requirement 3 & Requirement 1)
         const actionsContainer = document.getElementById('combat-actions-bar');
@@ -1047,9 +1118,11 @@ const UI = {
             `;
 
             p1Mon.attacks.forEach((atk, idx) => {
+                const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg}`;
                 actionsHtml += `
                     <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx})" ${combat.isProcessing ? 'disabled' : ''}>
-                        💥 ${atk.name} (${atk.type}): ${atk.baseDmg} daño ${luckActive ? '(+1🍀 Suerte activa)' : ''}
+                        <div style="font-weight: 800;">💥 ${atk.name} (${atk.type}): ${dmgDisplay} daño ${luckActive ? '(+1🍀)' : ''}</div>
+                        ${atk.desc ? `<div style="font-size: 0.72rem; color: #fde047; font-weight: normal; margin-top: 2px;">${atk.desc}</div>` : ''}
                     </button>
                 `;
             });
@@ -1076,6 +1149,22 @@ const UI = {
             const idx = parseInt(choice, 10) - 1;
             if (idx >= 0 && idx < combat.p1Team.length) {
                 combat.playerSwitchMonster(idx);
+            }
+        }
+    },
+
+    promptPivotSwitch() {
+        const combat = this.game.combatEngine;
+        let msg = `🔄 ¡Cambio Táctico Disponible!\nSelecciona el monstruo al que deseas cambiar sin recibir penalización:\n`;
+        combat.p1Team.forEach((m, idx) => {
+            msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === combat.p1ActiveIndex ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
+        });
+
+        const choice = prompt(msg, '2');
+        if (choice) {
+            const idx = parseInt(choice, 10) - 1;
+            if (idx >= 0 && idx < combat.p1Team.length) {
+                combat.playerPivotSwitch(idx);
             }
         }
     },
@@ -1287,19 +1376,19 @@ const UI = {
         if (this.codexActiveTab === 'monsters') {
             if (filterContainer) {
                 filterContainer.innerHTML = `
-                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (32)</button>
+                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (40)</button>
                     <button class="codex-chip ${this.codexFilter === 'forest' ? 'active' : ''}" onclick="UI.setCodexFilter('forest')">🌲 Bosque</button>
                     <button class="codex-chip ${this.codexFilter === 'mountain' ? 'active' : ''}" onclick="UI.setCodexFilter('mountain')">⛰️ Montaña</button>
                     <button class="codex-chip ${this.codexFilter === 'plains' ? 'active' : ''}" onclick="UI.setCodexFilter('plains')">🌾 Pradera</button>
                     <button class="codex-chip ${this.codexFilter === 'freshwater' ? 'active' : ''}" onclick="UI.setCodexFilter('freshwater')">💧 Dulce</button>
                     <button class="codex-chip ${this.codexFilter === 'saltwater' ? 'active' : ''}" onclick="UI.setCodexFilter('saltwater')">🌊 Salada</button>
-                    <button class="codex-chip ${this.codexFilter === 't4' ? 'active' : ''}" onclick="UI.setCodexFilter('t4')">🌟 Legendarios (T4)</button>
+                    <button class="codex-chip ${this.codexFilter === 't3' ? 'active' : ''}" onclick="UI.setCodexFilter('t3')">🌟 Legendarios (T3)</button>
                 `;
             }
 
             let filtered = MONSTERS_DATABASE;
-            if (this.codexFilter === 't4') {
-                filtered = filtered.filter(m => m.captureTier === 4);
+            if (this.codexFilter === 't3') {
+                filtered = filtered.filter(m => m.captureTier === 3);
             } else if (this.codexFilter !== 'all') {
                 filtered = filtered.filter(m => m.biome === this.codexFilter);
             }
@@ -1396,7 +1485,8 @@ const UI = {
                             <span class="type-pill" style="background: ${typeColor};">${a.type}</span>
                         </div>
                         <div class="codex-attack-meta">
-                            💥 Daño Base: <strong>${a.baseDmg}</strong> (tira dados en combate)
+                            💥 Daño: <strong>${a.effect === 'speed_damage' ? 'Igual a Velocidad' : a.effect === 'fixed_damage' ? `${a.fixedDmg} Fijo` : `${a.baseDmg} Base`}</strong> ${a.diceCount ? `(+${a.diceCount} dado${a.diceCount > 1 ? 's' : ''})` : ''}
+                            ${a.desc ? `<div style="color: #fde047; font-size: 0.8rem; margin-top: 3px;">${a.desc}</div>` : ''}
                         </div>
                         <div class="codex-attack-learners">
                             <strong>Monstruos de origen:</strong> ${a.learners.join(', ')}

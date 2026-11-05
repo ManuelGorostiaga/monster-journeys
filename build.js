@@ -98,9 +98,6 @@ ${css}
                     <button id="btn-act-loc-action" class="btn-action btn-action-action">
                         🔄 Acción de Lugar
                     </button>
-                    <button id="btn-act-poi" class="btn-action btn-action-action">
-                        📍 Visitar POI
-                    </button>
                     <button id="btn-act-travel" class="btn-action">
                         ✈️ Viajar a otra Ciudad
                     </button>
@@ -435,13 +432,13 @@ ${css}
                     <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate + 1 en reserva (4 en tablero personal).</li>
                     <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
                     <li><strong>Mazos de Biomas:</strong> Salen de biomas temáticos (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada).</li>
-                    <li><strong>Herramientas de Captura:</strong> Cada criatura tiene un tier de captura (1 a 4). Sin la herramienta no puede ser capturada.</li>
+                    <li><strong>Herramientas de Captura:</strong> Cada criatura tiene un tier de captura (1 a 3). Sin la herramienta no puede ser capturada.</li>
                     <li><strong>Mazo de Encuentro:</strong> Al buscar miras las primeras 3 cartas del mazo del bioma y eliges una.</li>
-                    <li><strong>Mapa de Nodos de Cartas:</strong> Empieza vacío con el Pueblo de Inicio. Los jugadores roban cartas de entorno a su mano (máx 5) y las van colocando adyacentemente al explorar.</li>
-                    <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador. La tienda solo es accesible desde Ciudades.</li>
+                    <li><strong>Mapa de Región Estilo Pokémon:</strong> Mapa con nodos y rutas interconectadas. Los jugadores inician en diferentes esquinas del mapa (SO, NE, NO, SE). La mayoría de nodos alojan 1 carta de entorno, mientras que los grandes cruces (hubs) alojan hasta 2 cartas.</li>
+                    <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador en cualquier nodo conectado. La tienda solo es accesible desde Ciudades.</li>
                     <li><strong>Objetos Equipados:</strong> Máximo un objeto equipado por monstruo.</li>
                     <li><strong>Sistema de Suerte:</strong> Los puntos de Suerte 🍀 permiten sumar +1 al dado en combate, draftear 3 cartas de entorno en vez de robar 1, o redibujar los 3 monstruos salvajes vistos.</li>
-                    <li><strong>Puntos de Interés:</strong> En el 50% de las cartas de entorno hay POIs visitables.</li>
+                    <li><strong>Enseñar Ataques:</strong> Al encontrar un monstruo salvaje, puedes elegir capturarlo o que enseñe su técnica de ataque a cualquier criatura de tu equipo.</li>
                     <li><strong>Recuperación:</strong> Los monstruos recuperan toda su salud tras una pelea.</li>
                     <li><strong>Recompensa de Derrota:</strong> Al perder una pelea, obtienes dinero de todas maneras como si hubieras ganado.</li>
                     <li><strong>Viaje Rápido:</strong> Se puede viajar de una ciudad a otra si estás en una ciudad.</li>
@@ -449,7 +446,7 @@ ${css}
                     <li><strong>Habilidades de Overworld:</strong> Los tipos otorgan habilidades especiales en el mapa en vez de la acción normal.</li>
                     <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
                     <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas con tirada de dados de ataque.</li>
-                    <li><strong>Expansiones de Mazos:</strong> Al derrotar cada gimnasio se desbloquea una nueva expansión (Tier 2, Tier 3, Tier 4).</li>
+                    <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, y derrotar al 2do gimnasio añade Tier 3. Hay 3 tiers en total (1, 2 y 3).</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 20 rondas) activa el Gran Torneo Final!</li>
                 </ol>
             </div>

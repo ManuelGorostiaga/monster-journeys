@@ -28,10 +28,10 @@ class MonsterJourneyGame {
 
         // Expansion deck unlock tracking
         this.totalGymsDefeated = 0;
+        this.defeatedGymTiers = new Set();
         this.expansionsUnlocked = {
             tier2: false,
-            tier3: false,
-            tier4: false
+            tier3: false
         };
 
         // Active search state
@@ -52,7 +52,8 @@ class MonsterJourneyGame {
         this.movementPoints = 1;
         this.isGameOver = false;
         this.totalGymsDefeated = 0;
-        this.expansionsUnlocked = { tier2: false, tier3: false, tier4: false };
+        this.defeatedGymTiers = new Set();
+        this.expansionsUnlocked = { tier2: false, tier3: false };
 
         // Initialize Card Map with Starting Town at (0, 0)
         this.cardMap.initStartingBoard();
@@ -66,6 +67,8 @@ class MonsterJourneyGame {
 
         // Initialize River Shop (8 unique items)
         this.initShopRiver();
+
+        const cornerNodeIds = ['node_sw', 'node_ne', 'node_nw', 'node_se'];
 
         // Setup players
         playerConfigs.forEach((cfg, idx) => {
@@ -85,7 +88,10 @@ class MonsterJourneyGame {
                 return JSON.parse(JSON.stringify(item));
             });
 
-            // Player starts at (0, 0) - Starting Town
+            const startNodeId = cornerNodeIds[idx % cornerNodeIds.length];
+            const startNode = this.cardMap.getNode(startNodeId);
+
+            // Player starts at their respective corner node
             const player = {
                 id: `p${idx + 1}`,
                 num: idx + 1,
@@ -93,11 +99,13 @@ class MonsterJourneyGame {
                 characterId: charData.id,
                 character: charData,
                 color: ['#e53935', '#1e88e5', '#43a047', '#8e24aa'][idx % 4],
-                x: 0,
-                y: 0,
+                currentNodeId: startNode.id,
+                x: startNode.gridX,
+                y: startNode.gridY,
                 coins: charData.startingCoins,
                 luck: charData.startingLuck !== undefined ? charData.startingLuck : 3,
-                badges: [], // Array of defeated gym tiers: [1, 2, 3, 4]
+                badges: [], // Array of defeated gym tiers: [1, 2, 3]
+                defeatedGymIds: [],
                 monsters: [starterMonster], // Up to 4 on board (3 active + 1 reserve)
                 storageMonsters: [],
                 inventory: startingItems, // Hand of item cards
@@ -206,12 +214,37 @@ class MonsterJourneyGame {
         };
     }
 
+    getUnlockedTiers() {
+        const tiers = [1];
+        if (this.expansionsUnlocked.tier2) tiers.push(2);
+        if (this.expansionsUnlocked.tier3) tiers.push(3);
+        return tiers;
+    }
+
     initBiomeDecks() {
         this.biomeDecks = {};
+        const allowedTiers = this.getUnlockedTiers();
         Object.keys(BIOMES).forEach(biomeKey => {
-            const list = MONSTERS_DATABASE.filter(m => m.biome === biomeKey);
-            this.biomeDecks[biomeKey] = [...list, ...list].sort(() => Math.random() - 0.5);
+            const list = MONSTERS_DATABASE.filter(m => m.biome === biomeKey && allowedTiers.includes(m.captureTier));
+            this.biomeDecks[biomeKey] = [...list, ...list, ...list].sort(() => Math.random() - 0.5);
         });
+    }
+
+    refillBiomeDeck(biome) {
+        const allowedTiers = this.getUnlockedTiers();
+        const available = MONSTERS_DATABASE.filter(m => m.biome === biome && allowedTiers.includes(m.captureTier));
+        const newCards = [...available, ...available, ...available].sort(() => Math.random() - 0.5);
+        if (!this.biomeDecks[biome]) {
+            this.biomeDecks[biome] = [];
+        }
+        this.biomeDecks[biome].push(...newCards);
+    }
+
+    drawMonsterCard(biome) {
+        if (!this.biomeDecks[biome] || this.biomeDecks[biome].length === 0) {
+            this.refillBiomeDeck(biome);
+        }
+        return this.instantiateMonster(this.biomeDecks[biome].pop());
     }
 
     // Rule 16: River Shop with 8 unique items
@@ -251,16 +284,16 @@ class MonsterJourneyGame {
         player.temporaryModifiers.searchBonus = 0;
         player.temporaryModifiers.captureTierBonus = 0;
 
-        // Check for Light Boots
-        const hasBoots = player.inventory.some(i => i.id === 'item_utl_1');
+        // Check for Light Boots (Zapatillas)
+        const hasBoots = player.inventory.some(i => i.id === 'item_utl_1') || player.monsters.some(m => m.equippedItem && m.equippedItem.id === 'item_utl_1');
         if (hasBoots) {
             this.movementPoints = 2;
         }
 
-        // Check Treasure Magnet
+        // Check Treasure Magnet: +1 gold coin every turn!
         const hasMagnet = player.inventory.some(i => i.id === 'item_utl_8');
-        if (hasMagnet && this.currentRound % 3 === 0) {
-            player.coins += 2;
+        if (hasMagnet) {
+            player.coins += 1;
             SoundFX.coin();
         }
 
@@ -273,98 +306,159 @@ class MonsterJourneyGame {
         }
     }
 
-    // Movement on placed card node
-    movePlayerToNode(destX, destY) {
+    // Movement on connected graph route
+    movePlayerToNode(targetXOrId, maybeY) {
         const player = this.getActivePlayer();
         if (this.hasMoved) {
             alert('Ya has realizado tu movimiento en este turno.');
             return false;
         }
+        if (!this.movementPoints || this.movementPoints <= 0) {
+            this.movementPoints = 1;
+        }
 
-        const targetNode = this.cardMap.getNode(destX, destY);
+        const targetNode = this.cardMap.getNode(targetXOrId, maybeY);
         if (!targetNode) {
-            alert('No hay ninguna carta colocada en ese casillero.');
+            alert('No se encontró el nodo destino en el mapa.');
             return false;
         }
 
-        // Distance check in card grid: orthogonal distance
-        const dist = Math.abs(player.x - destX) + Math.abs(player.y - destY);
-        if (dist > this.movementPoints) {
-            alert(`Esa carta está a ${dist} pasos de distancia. Tu movimiento máximo es de ${this.movementPoints}.`);
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode) {
+            throw new Error('Nodo actual del jugador no encontrado en el mapa');
+        }
+
+        if (currentNode.id === targetNode.id) {
             return false;
         }
 
-        player.x = destX;
-        player.y = destY;
-        this.hasMoved = true;
+        if (targetNode.cards.length === 0) {
+            alert(`El nodo ${targetNode.name} aún no ha sido descubierto.`);
+            return false;
+        }
+
+        const { reachableDiscovered } = this.cardMap.getReachableNodes(currentNode.id, this.movementPoints);
+        const reachInfo = reachableDiscovered.get(targetNode.id);
+
+        const isDirectConnection = currentNode.connections.includes(targetNode.id);
+        const gridDist = Math.abs(currentNode.gridX - targetNode.gridX) + Math.abs(currentNode.gridY - targetNode.gridY);
+        const canTraverseFallback = isDirectConnection || (gridDist > 0 && gridDist <= this.movementPoints);
+
+        if (!reachInfo && !canTraverseFallback) {
+            alert(`No hay una ruta transitable hasta ${targetNode.name} con tus puntos de movimiento disponibles (${this.movementPoints}).`);
+            return false;
+        }
+
+        const cost = reachInfo ? reachInfo.distance : 1;
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.movementPoints = Math.max(0, this.movementPoints - cost);
+        if (this.movementPoints <= 0) {
+            this.hasMoved = true;
+        }
         SoundFX.step();
 
         if (window.UI) {
-            UI.logGame(`${player.name} se desplazó a **${targetNode.card.name}** (${targetNode.x}, ${targetNode.y}).`);
+            const remainingNotice = this.movementPoints > 0 ? ` (${this.movementPoints} paso restante)` : '';
+            UI.logGame(`${player.name} se desplazó por la ruta hasta **${targetNode.name}**${remainingNotice}.`);
             UI.renderAll();
         }
         return true;
     }
 
-    // Placing a location card from hand into an empty adjacent slot, and moving onto it!
-    placeLocationCardAndMove(cardIndexInHand, targetX, targetY) {
+    // Placing a location card from hand into an adjacent connected slot
+    placeLocationCardAndMove(cardIndexInHand, targetXOrId, maybeY) {
         const player = this.getActivePlayer();
         if (this.hasMoved) {
             alert('Ya has realizado tu movimiento en este turno.');
             return false;
         }
+        if (!this.movementPoints || this.movementPoints <= 0) {
+            this.movementPoints = 1;
+        }
 
-        if (this.cardMap.hasCard(targetX, targetY)) {
-            alert('Ese casillero ya tiene una carta colocada.');
+        const targetNode = this.cardMap.getNode(targetXOrId, maybeY);
+        if (!targetNode) {
+            alert('Nodo no encontrado en el mapa.');
             return false;
         }
 
-        // Must be orthogonally adjacent to player
-        const dist = Math.abs(player.x - targetX) + Math.abs(player.y - targetY);
-        if (dist !== 1) {
-            alert('Solo puedes colocar una carta en un espacio adyacente (a 1 casilla).');
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const isConnected = currentNode ? currentNode.connections.includes(targetNode.id) : true;
+        const gridDist = currentNode ? (Math.abs(currentNode.gridX - targetNode.gridX) + Math.abs(currentNode.gridY - targetNode.gridY)) : 1;
+        const isAdjacent = isConnected || (gridDist === 1);
+        const isSameNodeWithRoom = (currentNode && currentNode.id === targetNode.id && targetNode.cards.length < targetNode.maxCards);
+
+        if (!isAdjacent && !isSameNodeWithRoom) {
+            alert('Solo puedes colocar cartas en nodos conectados a tu posición actual.');
+            return false;
+        }
+
+        if (targetNode.cards.length >= targetNode.maxCards) {
+            alert(`El nodo ${targetNode.name} ya tiene su capacidad máxima (${targetNode.maxCards} carta${targetNode.maxCards > 1 ? 's' : ''}).`);
             return false;
         }
 
         const card = player.locationHand[cardIndexInHand];
         if (!card) return false;
 
-        // Remove from hand and place on board
         player.locationHand.splice(cardIndexInHand, 1);
-        const placedNode = this.cardMap.placeCard(targetX, targetY, card);
+        this.cardMap.placeCardOnNode(targetNode.id, card);
 
-        // Move player onto the newly placed card
-        player.x = targetX;
-        player.y = targetY;
-        this.hasMoved = true;
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.movementPoints = Math.max(0, this.movementPoints - 1);
+        if (this.movementPoints <= 0) {
+            this.hasMoved = true;
+        }
         SoundFX.step();
 
-        // Refill hand up to 5 cards
+        if (player.inventory.some(i => i.id === 'item_utl_3')) {
+            player.coins += 2;
+            SoundFX.coin();
+        }
+
         this.refillLocationHand(player);
 
         if (window.UI) {
-            UI.logGame(`🗺️ ${player.name} descubrió y colocó **${card.name}** (${BIOMES[card.biome].name}) en (${targetX}, ${targetY}) y avanzó hacia ella.`);
+            UI.logGame(`🗺️ ${player.name} descubrió **${card.name}** en ${targetNode.name} (${targetNode.cards.length}/${targetNode.maxCards} cartas) y avanzó hacia allí.`);
             UI.renderAll();
         }
         return true;
     }
 
-    // Requirement 6: Place top of Cities Deck into empty adjacent slot
-    placeCityCardAndMove(targetX, targetY) {
+    // Place top of Cities Deck into adjacent connected slot
+    placeCityCardAndMove(targetXOrId, maybeY) {
         const player = this.getActivePlayer();
         if (this.hasMoved) {
             alert('Ya has realizado tu movimiento en este turno.');
             return false;
         }
+        if (!this.movementPoints || this.movementPoints <= 0) {
+            this.movementPoints = 1;
+        }
 
-        if (this.cardMap.hasCard(targetX, targetY)) {
-            alert('Ese casillero ya tiene una carta colocada.');
+        const targetNode = this.cardMap.getNode(targetXOrId, maybeY);
+        if (!targetNode) {
+            alert('Nodo no encontrado en el mapa.');
             return false;
         }
 
-        const dist = Math.abs(player.x - targetX) + Math.abs(player.y - targetY);
-        if (dist !== 1) {
-            alert('Solo puedes fundar una ciudad en un espacio adyacente (a 1 casilla).');
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const isConnected = currentNode ? currentNode.connections.includes(targetNode.id) : true;
+        const gridDist = currentNode ? (Math.abs(currentNode.gridX - targetNode.gridX) + Math.abs(currentNode.gridY - targetNode.gridY)) : 1;
+        const isAdjacent = isConnected || (gridDist === 1);
+        const isSameNodeWithRoom = (currentNode && currentNode.id === targetNode.id && targetNode.cards.length < targetNode.maxCards);
+
+        if (!isAdjacent && !isSameNodeWithRoom) {
+            alert('Solo puedes fundar una ciudad en nodos conectados a tu posición actual.');
+            return false;
+        }
+
+        if (targetNode.cards.length >= targetNode.maxCards) {
+            alert(`El nodo ${targetNode.name} ya tiene su capacidad máxima (${targetNode.maxCards} carta${targetNode.maxCards > 1 ? 's' : ''}).`);
             return false;
         }
 
@@ -374,44 +468,54 @@ class MonsterJourneyGame {
         }
 
         const cityCard = this.citiesDeck.shift();
-        const placedNode = this.cardMap.placeCard(targetX, targetY, cityCard);
+        this.cardMap.placeCardOnNode(targetNode.id, cityCard);
 
-        player.x = targetX;
-        player.y = targetY;
-        this.hasMoved = true;
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.movementPoints = Math.max(0, this.movementPoints - 1);
+        if (this.movementPoints <= 0) {
+            this.hasMoved = true;
+        }
         SoundFX.victory();
+
+        if (player.inventory.some(i => i.id === 'item_utl_3')) {
+            player.coins += 2;
+            SoundFX.coin();
+        }
 
         const leader = (cityCard.gym && cityCard.gym.leaderName) || cityCard.leaderName || 'Líder de Gimnasio';
         if (window.UI) {
-            UI.logGame(`🏛️ ¡${player.name} fundó la metrópoli **${cityCard.name}** en (${targetX}, ${targetY})! Alberga el Gimnasio de ${leader}.`);
+            UI.logGame(`🏛️ ¡${player.name} fundó la ciudad de **${cityCard.name}** en ${targetNode.name}! Alberga el Gimnasio de ${leader}.`);
             UI.renderAll();
         }
         return true;
     }
 
     // Rule 15: Fast Travel between Cities
-    fastTravelToCity(targetCityNodeKey) {
+    fastTravelToCity(targetCityNodeId) {
         const player = this.getActivePlayer();
-        const currentNode = this.cardMap.getNode(player.x, player.y);
-        if (!currentNode || currentNode.card.biome !== 'city') {
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode || !currentNode.cards.some(c => c.biome === 'city')) {
             alert('Debes estar en una Ciudad para viajar rápidamente a otra.');
-            return false;
+            return;
         }
 
-        const targetNode = this.cardMap.nodes[targetCityNodeKey];
-        if (!targetNode || targetNode.card.biome !== 'city') {
-            alert('Destino no válido.');
-            return false;
+        const targetNode = this.cardMap.getNode(targetCityNodeId);
+        if (!targetNode || !targetNode.cards.some(c => c.biome === 'city')) {
+            alert('Solo puedes viajar a nodos que contengan una Ciudad.');
+            return;
         }
 
-        player.x = targetNode.x;
-        player.y = targetNode.y;
-        this.hasActed = true;
-        SoundFX.step();
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.hasMoved = true;
+        SoundFX.victory();
 
         if (window.UI) {
-            UI.logGame(`✈️ ${player.name} viajó rápidamente de ${currentNode.card.name} a **${targetNode.card.name}**.`);
             UI.hideCityTravelModal();
+            UI.logGame(`✈️ ${player.name} usó el viaje rápido hacia **${targetNode.name}**.`);
             UI.renderAll();
         }
         return true;
@@ -537,10 +641,10 @@ class MonsterJourneyGame {
         }
     }
 
-    // Searching specifically for Tier 4 Legendaries
+    // Searching specifically for Tier 3 Legendaries
     searchLegendaryMonsters() {
         const player = this.getActivePlayer();
-        const legendaries = MONSTERS_DATABASE.filter(m => m.captureTier >= 4);
+        const legendaries = MONSTERS_DATABASE.filter(m => m.captureTier >= 3);
         const drawnCards = [...legendaries].sort(() => Math.random() - 0.5).slice(0, 3).map(m => this.instantiateMonster(m));
 
         this.activeSearchCards = drawnCards;
@@ -590,21 +694,17 @@ class MonsterJourneyGame {
             return;
         }
 
-        // Draw 3 cards (or 4 if telescope / grass ability)
         let drawCount = 3 + (player.temporaryModifiers.searchBonus || 0);
+        if (player.inventory.some(i => i.id === 'item_utl_2')) {
+            drawCount += 1;
+        }
         if (player.inventory.some(i => i.id === 'item_utl_7')) {
             drawCount += 1;
         }
 
-        const deck = this.biomeDecks[biome];
-        if (!deck || deck.length < drawCount) {
-            this.initBiomeDecks();
-        }
-
         const drawnCards = [];
         for (let i = 0; i < drawCount; i++) {
-            if (this.biomeDecks[biome].length === 0) this.initBiomeDecks();
-            drawnCards.push(this.instantiateMonster(this.biomeDecks[biome].pop()));
+            drawnCards.push(this.drawMonsterCard(biome));
         }
 
         this.activeSearchCards = drawnCards;
@@ -635,12 +735,12 @@ class MonsterJourneyGame {
         SoundFX.diceRoll();
 
         let drawCount = 3 + (player.temporaryModifiers.searchBonus || 0);
+        if (player.inventory.some(i => i.id === 'item_utl_2')) drawCount += 1;
         if (player.inventory.some(i => i.id === 'item_utl_7')) drawCount += 1;
 
         const drawnCards = [];
         for (let i = 0; i < drawCount; i++) {
-            if (!this.biomeDecks[biome] || this.biomeDecks[biome].length === 0) this.initBiomeDecks();
-            drawnCards.push(this.instantiateMonster(this.biomeDecks[biome].pop()));
+            drawnCards.push(this.drawMonsterCard(biome));
         }
 
         this.activeSearchCards = drawnCards;
@@ -702,14 +802,6 @@ class MonsterJourneyGame {
         const player = this.getActivePlayer();
         const wildMon = this.activeSearchCards[monsterIndex];
         if (!wildMon) return;
-
-        const maxGymBadge = player.badges.length > 0 ? Math.max(...player.badges) : 0;
-        const requiredTier = wildMon.captureTier;
-
-        if (maxGymBadge < requiredTier) {
-            alert(`⚠️ Para aprender el ataque de ${wildMon.name} necesitas haber derrotado un Gimnasio de al menos Tier ${requiredTier}.\nTus medallas actuales: Tier ${player.badges.join(', ') || 'Ninguna'}.`);
-            return;
-        }
 
         const targetMon = player.monsters.find(m => m.instanceId === targetMonsterInstanceId);
         if (!targetMon) return;
@@ -783,11 +875,19 @@ class MonsterJourneyGame {
         if (!item || !monster) return;
 
         if (monster.equippedItem) {
+            if (monster.equippedItem.id === 'item_cmb_9') {
+                monster.maxHp = Math.max(1, monster.maxHp - 3);
+                monster.hp = Math.min(monster.hp, monster.maxHp);
+            }
             player.inventory.push(monster.equippedItem);
             monster.equippedItem = null;
         }
 
         monster.equippedItem = JSON.parse(JSON.stringify(item));
+        if (item.id === 'item_cmb_9') {
+            monster.maxHp += 3;
+            monster.hp += 3;
+        }
         player.inventory.splice(itemIndexInInventory, 1);
         SoundFX.step();
 
@@ -801,6 +901,10 @@ class MonsterJourneyGame {
         if (!monster || !monster.equippedItem) return;
 
         const item = monster.equippedItem;
+        if (item.id === 'item_cmb_9') {
+            monster.maxHp = Math.max(1, monster.maxHp - 3);
+            monster.hp = Math.min(monster.hp, monster.maxHp);
+        }
         monster.equippedItem = null;
         player.inventory.push(item);
         SoundFX.step();
@@ -823,44 +927,6 @@ class MonsterJourneyGame {
         if (window.UI) UI.renderAll();
     }
 
-    visitPOI() {
-        const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
-            return;
-        }
-
-        const node = this.cardMap.getNode(player.x, player.y);
-        if (!node || !node.poi || node.poi.claimed) {
-            alert('No hay ningún Punto de Interés disponible en esta carta.');
-            return;
-        }
-
-        const poi = node.poi;
-        poi.claimed = true;
-
-        if (poi.type === 'item_cache') {
-            player.coins += 3;
-            player.luck += 1;
-            SoundFX.coin();
-        } else if (poi.type === 'fountain') {
-            player.monsters.forEach(m => m.hp = m.maxHp);
-            SoundFX.victory();
-        } else if (poi.type === 'shrine') {
-            player.luck += 2;
-            SoundFX.victory();
-        } else if (poi.type === 'trainer') {
-            player.coins += 4;
-            SoundFX.victory();
-        }
-
-        this.hasActed = true;
-        if (window.UI) {
-            UI.logGame(`📍 ${player.name} visitó el POI **${poi.name}**: ${poi.desc}`);
-            UI.renderAll();
-        }
-    }
-
     // Challenge Gym in current City node
     challengeGym() {
         const player = this.getActivePlayer();
@@ -876,7 +942,9 @@ class MonsterJourneyGame {
         }
 
         const gym = node.card.gym;
-        if (player.badges.includes(gym.tier)) {
+        const alreadyDefeated = (player.defeatedGymIds && player.defeatedGymIds.includes(gym.id)) ||
+                                (player.badges.includes(gym.tier) && gym.tier < 3);
+        if (alreadyDefeated) {
             alert(`Ya has derrotado este Gimnasio y posees la ${gym.badgeName}.`);
             return;
         }
@@ -892,22 +960,34 @@ class MonsterJourneyGame {
         });
     }
 
-    // Requirement 5: Expansion Decks + 3 of 4 Gyms Win Condition
     onGymDefeated(player, gymData) {
         this.totalGymsDefeated++;
 
-        if (gymData && gymData.tier && !player.badges.includes(gymData.tier)) {
-            player.badges.push(gymData.tier);
-            player.badges.sort((a, b) => a - b);
+        if (gymData) {
+            if (!player.defeatedGymIds) player.defeatedGymIds = [];
+            if (gymData.id && !player.defeatedGymIds.includes(gymData.id)) {
+                player.defeatedGymIds.push(gymData.id);
+            }
+            if (gymData.tier && !player.badges.includes(gymData.tier)) {
+                player.badges.push(gymData.tier);
+                player.badges.sort((a, b) => a - b);
+            }
         }
 
-        // Add expansion decks
-        if (this.totalGymsDefeated === 1 && !this.expansionsUnlocked.tier2) {
+        if (!this.defeatedGymTiers) this.defeatedGymTiers = new Set();
+        if (gymData && gymData.tier) {
+            this.defeatedGymTiers.add(gymData.tier);
+        }
+
+        const isFirstGym = (this.defeatedGymTiers.has(1) || this.totalGymsDefeated === 1);
+        const isSecondGym = (this.defeatedGymTiers.has(2) || this.totalGymsDefeated >= 2);
+
+        if (isFirstGym && !this.expansionsUnlocked.tier2) {
             this.expansionsUnlocked.tier2 = true;
             const t2 = EXPANSION_DECKS.tier2;
             t2.monsters.forEach(m => {
                 if (m && this.biomeDecks[m.biome]) {
-                    this.biomeDecks[m.biome].push(m);
+                    this.biomeDecks[m.biome].push(m, m, m);
                     this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
                 }
             });
@@ -915,12 +995,14 @@ class MonsterJourneyGame {
                 UI.logGame(`📦 ¡EXPANSIÓN DESBLOQUEADA: **${t2.name}**! Nuevas criaturas de Tier 2 añadidas.`);
                 UI.showNotification(t2.name, t2.desc);
             }
-        } else if (this.totalGymsDefeated === 2 && !this.expansionsUnlocked.tier3) {
+        }
+
+        if (isSecondGym && !this.expansionsUnlocked.tier3) {
             this.expansionsUnlocked.tier3 = true;
             const t3 = EXPANSION_DECKS.tier3;
             t3.monsters.forEach(m => {
                 if (m && this.biomeDecks[m.biome]) {
-                    this.biomeDecks[m.biome].push(m);
+                    this.biomeDecks[m.biome].push(m, m, m);
                     this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
                 }
             });
@@ -928,25 +1010,15 @@ class MonsterJourneyGame {
                 UI.logGame(`📦 ¡EXPANSIÓN DESBLOQUEADA: **${t3.name}**! Nuevas criaturas de Tier 3 añadidas.`);
                 UI.showNotification(t3.name, t3.desc);
             }
-        } else if (this.totalGymsDefeated >= 3 && !this.expansionsUnlocked.tier4) {
-            this.expansionsUnlocked.tier4 = true;
-            const t4 = EXPANSION_DECKS.tier4;
-            t4.monsters.forEach(m => {
-                if (m && this.biomeDecks[m.biome]) {
-                    this.biomeDecks[m.biome].push(m);
-                    this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
-                }
-            });
-            if (window.UI) {
-                UI.logGame(`🌟 ¡EXPANSIÓN DESBLOQUEADA: **${t4.name}**! Criaturas Legendarias añadidas.`);
-                UI.showNotification(t4.name, t4.desc);
-            }
         }
 
-        // Requirement 5: Win condition - Only need 3 of 4 Gyms!
-        if (player.badges.length >= 3) {
+        const badgeCount = player.defeatedGymIds && player.defeatedGymIds.length > player.badges.length
+            ? player.defeatedGymIds.length
+            : player.badges.length;
+
+        if (badgeCount >= 3) {
             if (window.UI) {
-                UI.logGame(`👑 **¡${player.name} HA OBTENIDO 3 MEDALLAS DE GIMNASIO (DE 4)!** ¡Se activa el Gran Torneo Final!`);
+                UI.logGame(`👑 **¡${player.name} HA OBTENIDO 3 MEDALLAS DE GIMNASIO!** ¡Se activa el Gran Torneo Final!`);
             }
             this.triggerTournament();
         }

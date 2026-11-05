@@ -145,13 +145,13 @@ const OVERWORLD_ABILITIES = {
     rock: {
         id: 'rock',
         name: 'Romperrocas',
-        desc: 'Permite atravesar terrenos montañosos y ganar +2 monedas al visitar POIs de montaña.',
+        desc: 'Permite atravesar terrenos montañosos y genera +2 monedas al activarse.',
         mountainPass: true
     },
     ground: {
         id: 'ground',
         name: 'Excavación',
-        desc: 'Teletranspórtate a la casilla con Punto de Interés no visitado más cercana.',
+        desc: 'Muévete instantáneamente a cualquier nodo conectado del mapa sin gastar tu movimiento normal.',
         burrow: true
     },
     bug: {
@@ -177,7 +177,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌱',
         attacks: [
-            { name: 'Látigo Cepa', type: 'Planta', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -193,7 +193,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🐛',
         attacks: [
-            { name: 'Picadura', type: 'Bicho', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Envenena al rival (-1 HP al final de cada turno).' }
         ]
     },
     {
@@ -209,7 +209,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌵',
         attacks: [
-            { name: 'Espina Aguda', type: 'Planta', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Trío de Espinas', type: 'Planta', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Golpea 3 veces consecutivas en un solo turno.' }
         ]
     },
     {
@@ -225,7 +225,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🦗',
         attacks: [
-            { name: 'Corte Rápido', type: 'Bicho', baseDmg: 2, diceCount: 2, desc: '2 base + 2 dados' }
+            { name: 'Ida y Vuelta', type: 'Bicho', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataca y te permite cambiar de criatura inmediatamente.' }
         ]
     },
     {
@@ -241,7 +241,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🍄',
         attacks: [
-            { name: 'Esporas Tóxicas', type: 'Planta', baseDmg: 4, diceCount: 1, desc: '4 base + 1 dado' }
+            { name: 'Espora Somnífera', type: 'Planta', baseDmg: 4, diceCount: 1, effect: 'drowsy', desc: '💤 Deja somnoliento al rival (+1 de daño recibido).' }
         ]
     },
     {
@@ -257,7 +257,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🪲',
         attacks: [
-            { name: 'Cuerno Titán', type: 'Bicho', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Furia Agónica', type: 'Bicho', baseDmg: 4, diceCount: 1, effect: 'facade_status', desc: '🔥 Inflige +4 de daño si el usuario sufre algún estado alterado.' }
         ]
     },
     {
@@ -269,11 +269,11 @@ const MONSTERS_DATABASE = [
         hp: 20,
         maxHp: 20,
         speed: 6,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌳',
         attacks: [
-            { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -285,11 +285,11 @@ const MONSTERS_DATABASE = [
         hp: 18,
         maxHp: 18,
         speed: 9,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🐝',
         attacks: [
-            { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, effect: 'poison', desc: '☠️ Inflige gran daño y envenena al rival (-1 HP/turno).' }
         ]
     },
 
@@ -307,7 +307,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🪨',
         attacks: [
-            { name: 'Lanzarrocas', type: 'Roca', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ El próximo ataque que reciba el usuario se reduce en 2 de daño.' }
         ]
     },
     {
@@ -323,7 +323,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🐦',
         attacks: [
-            { name: 'Picotazo', type: 'Volador', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Picotazo', type: 'Volador', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -339,7 +339,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🦡',
         attacks: [
-            { name: 'Excavar', type: 'Tierra', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Fijación Sísmica', type: 'Tierra', baseDmg: 5, fixedDmg: 5, effect: 'fixed_damage', desc: '🎯 Inflige 5 puntos de daño fijo garantizado sin tirada de dados.' }
         ]
     },
     {
@@ -355,7 +355,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🗿',
         attacks: [
-            { name: 'Rodar', type: 'Roca', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Golpe Fuerte', type: 'Roca', baseDmg: 5, diceCount: 1, effect: null, desc: 'Golpe directo de potencia media de Tier 2.' }
         ]
     },
     {
@@ -371,7 +371,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🦅',
         attacks: [
-            { name: 'Tajo Aéreo', type: 'Volador', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Ojo de Francotirador', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Los dados blancos (caras 0) cuentan como impactos críticos (+2 daño).' }
         ]
     },
     {
@@ -387,7 +387,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🌋',
         attacks: [
-            { name: 'Terremoto', type: 'Tierra', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Armadura Terrestre', type: 'Tierra', baseDmg: 5, diceCount: 1, effect: 'shield_next', desc: '🛡️ Reduce en 2 el próximo ataque recibido.' }
         ]
     },
     {
@@ -399,11 +399,11 @@ const MONSTERS_DATABASE = [
         hp: 22,
         maxHp: 22,
         speed: 3,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '⛰️',
         attacks: [
-            { name: 'Avalancha Titán', type: 'Roca', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Avalancha Titán', type: 'Roca', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -415,11 +415,11 @@ const MONSTERS_DATABASE = [
         hp: 17,
         maxHp: 17,
         speed: 10,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🕊️',
         attacks: [
-            { name: 'Huracán Cumbre', type: 'Volador', baseDmg: 4, diceCount: 3, desc: '4 base + 3 dados' }
+            { name: 'Tornado Expulsor', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Obliga al rival a cambiar a otro monstruo (aún juega su turno).' }
         ]
     },
 
@@ -437,7 +437,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '⚡',
         attacks: [
-            { name: 'Impactrueno', type: 'Eléctrico', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza al rival: su Velocidad pasa a ser 0.' }
         ]
     },
     {
@@ -453,7 +453,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🔥',
         attacks: [
-            { name: 'Ascua', type: 'Fuego', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -469,7 +469,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🦊',
         attacks: [
-            { name: 'Onda Trueno', type: 'Eléctrico', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Voltiocambio', type: 'Eléctrico', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataca y te permite cambiar de criatura inmediatamente.' }
         ]
     },
     {
@@ -485,7 +485,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🐎',
         attacks: [
-            { name: 'Rueda Fuego', type: 'Fuego', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Carga Ígnea', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: 'charge_next', desc: '⚡ El próximo ataque que realice el usuario inflige +3 de daño.' }
         ]
     },
     {
@@ -501,7 +501,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🦁',
         attacks: [
-            { name: 'Rayo Fulgor', type: 'Eléctrico', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Electroimpulso', type: 'Eléctrico', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ El daño base del ataque es igual a la Velocidad del atacante.' }
         ]
     },
     {
@@ -517,7 +517,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🦬',
         attacks: [
-            { name: 'Lanzallamas', type: 'Fuego', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Golpe Fuerte', type: 'Fuego', baseDmg: 5, diceCount: 1, effect: null, desc: 'Golpe directo de potencia media de Tier 2.' }
         ]
     },
     {
@@ -529,11 +529,11 @@ const MONSTERS_DATABASE = [
         hp: 19,
         maxHp: 19,
         speed: 9,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🐅',
         attacks: [
-            { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, effect: 'paralyze', desc: '⚡ Inflige gran daño y paraliza al rival (Velocidad pasa a 0).' }
         ]
     },
     {
@@ -545,11 +545,11 @@ const MONSTERS_DATABASE = [
         hp: 18,
         maxHp: 18,
         speed: 8,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🦚',
         attacks: [
-            { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
 
@@ -567,7 +567,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐸',
         attacks: [
-            { name: 'Pistola Agua', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -583,7 +583,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦆',
         attacks: [
-            { name: 'Burbujas', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Bostezo Sedante', type: 'Agua', baseDmg: 2, diceCount: 1, effect: 'drowsy', desc: '💤 Deja somnoliento al rival (+1 de daño recibido).' }
         ]
     },
     {
@@ -599,7 +599,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦦',
         attacks: [
-            { name: 'Aqua Cola', type: 'Agua', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Giro Rápido', type: 'Agua', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ El daño base del ataque es igual a la Velocidad del atacante.' }
         ]
     },
     {
@@ -615,7 +615,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐸',
         attacks: [
-            { name: 'Lodazo', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Lodazo Tóxico', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'poison', desc: '☠️ Envenena al rival (-1 HP al final de cada turno).' }
         ]
     },
     {
@@ -631,7 +631,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐊',
         attacks: [
-            { name: 'Mordisco Fluvial', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Mordisco Certero', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Los dados blancos (caras 0) cuentan como impactos críticos (+2 daño).' }
         ]
     },
     {
@@ -647,7 +647,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐍',
         attacks: [
-            { name: 'Hidropulso', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Maremoto Expulsor', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Obliga al rival a cambiar de criatura (aún juega su turno).' }
         ]
     },
     {
@@ -659,11 +659,11 @@ const MONSTERS_DATABASE = [
         hp: 20,
         maxHp: 20,
         speed: 7,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Hidrobomba', type: 'Agua', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Hidrobomba', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -675,11 +675,11 @@ const MONSTERS_DATABASE = [
         hp: 22,
         maxHp: 22,
         speed: 3,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐢',
         attacks: [
-            { name: 'Cañón Cascada', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Caparazón Espejo', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'shield_next', desc: '🛡️ Reduce en 2 el próximo ataque recibido.' }
         ]
     },
 
@@ -697,7 +697,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦀',
         attacks: [
-            { name: 'Pinza Tenaz', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Tenaza Férrea', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -713,7 +713,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐟',
         attacks: [
-            { name: 'Embestida Acuática', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Triple Aguijón', type: 'Agua', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Golpea 3 veces consecutivas en un solo turno.' }
         ]
     },
     {
@@ -729,7 +729,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🪼',
         attacks: [
-            { name: 'Descarga Marina', type: 'Agua', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Tentáculo Paralizante', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza al rival: su Velocidad pasa a ser 0.' }
         ]
     },
     {
@@ -745,7 +745,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐡',
         attacks: [
-            { name: 'Oleada', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Giro Marino', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataca y te permite cambiar de criatura inmediatamente.' }
         ]
     },
     {
@@ -761,7 +761,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦈',
         attacks: [
-            { name: 'Mandíbula Abisal', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Mandíbula Letal', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Los dados blancos (caras 0) cuentan como impactos críticos (+2 daño).' }
         ]
     },
     {
@@ -777,7 +777,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐙',
         attacks: [
-            { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'drowsy', desc: '💤 Deja somnoliento al rival (+1 de daño recibido).' }
         ]
     },
     {
@@ -789,11 +789,11 @@ const MONSTERS_DATABASE = [
         hp: 22,
         maxHp: 22,
         speed: 7,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐋',
         attacks: [
-            { name: 'Tsunami Abisal', type: 'Agua', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Tsunami Titánico', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -805,11 +805,11 @@ const MONSTERS_DATABASE = [
         hp: 21,
         maxHp: 21,
         speed: 8,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Aliento del Dragón', type: 'Dragón', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Furia Dragón', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🎯 Inflige 6 puntos de daño fijo garantizado sin tirada de dados.' }
         ]
     }
 ];
@@ -847,10 +847,10 @@ const ITEMS_DATABASE = [
         id: 'item_cap_4',
         name: 'Masterball Suprema',
         category: 'capture',
-        tier: 4,
+        tier: 3,
         cost: 22,
         icon: '🟣',
-        desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 4).'
+        desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 3).'
     },
 
     // --- OBJETOS DE COMBATE ---
@@ -938,11 +938,11 @@ const ITEMS_DATABASE = [
     },
     {
         id: 'item_utl_2',
-        name: 'Caña de Pescar',
+        name: 'Incienso Silvestre',
         category: 'utility',
         cost: 5,
-        icon: '🎣',
-        desc: 'Permite la acción "Buscar Monstruo" en casillas de Agua Dulce o Agua Salada.'
+        icon: '🪔',
+        desc: 'Al Buscar Monstruos, revela 1 criatura adicional para elegir.'
     },
     {
         id: 'item_utl_3',
@@ -950,7 +950,7 @@ const ITEMS_DATABASE = [
         category: 'utility',
         cost: 5,
         icon: '🗺️',
-        desc: 'Recibe +2 monedas de oro cada vez que visites cualquier Punto de Interés (POI).'
+        desc: 'Recibe +2 monedas de oro cada vez que descubres una nueva zona en el mapa.'
     },
     {
         id: 'item_utl_4',
@@ -969,14 +969,6 @@ const ITEMS_DATABASE = [
         desc: 'Gana +3 monedas adicionales al terminar cualquier combate (victoria o derrota).'
     },
     {
-        id: 'item_utl_6',
-        name: 'Poción de Campamento',
-        category: 'utility',
-        cost: 5,
-        icon: '🧪',
-        desc: 'Úsala fuera de combate para restaurar al máximo la salud de todo tu equipo.'
-    },
-    {
         id: 'item_utl_7',
         name: 'Telescopio Explorador',
         category: 'utility',
@@ -990,7 +982,7 @@ const ITEMS_DATABASE = [
         category: 'utility',
         cost: 7,
         icon: '🧲',
-        desc: 'Cada 3 turnos obtienes automáticamente 2 monedas de oro.'
+        desc: 'En cada uno de tus turnos obtienes automáticamente 1 moneda de oro.'
     }
 ];
 
@@ -1032,10 +1024,10 @@ const CHARACTERS_DATABASE = [
         startingCoins: 14,
         startingLuck: 3,
         startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_utl_2'],
+        startingItemIds: ['item_cap_1', 'item_utl_1'],
         starterMonsterId: 'mon_frw_2', // Patiloto (Agua)
         abilityName: 'Navegante Experta',
-        abilityDesc: 'Moverse por casillas de Agua Dulce no consume movimiento extra y ganas +1 Suerte al visitar aguas.'
+        abilityDesc: 'Moverse por casillas de Agua Dulce o Salada no consume movimiento extra y ganas +1 Suerte al visitar aguas.'
     },
     {
         id: 'char_brock',
@@ -1170,7 +1162,7 @@ const CITIES_DATABASE = [
         name: 'Ciudad Flama',
         gymId: 'gym_4',
         gymName: 'Gimnasio Volcán',
-        tier: 4,
+        tier: 3,
         badgeName: 'Medalla Volcán',
         badgeIcon: '🔥',
         leaderName: 'Líder Blaine',
@@ -1178,12 +1170,12 @@ const CITIES_DATABASE = [
         rewardLuck: 3,
         teamMonsterIds: ['mon_pln_6', 'mon_pln_7'],
         icon: '🏛️',
-        desc: 'Metrópolis volcánica. Tienda River disponible y desafío de Gimnasio Tier 4.',
+        desc: 'Metrópolis volcánica. Tienda River disponible y desafío de Gimnasio Tier 3.',
         gym: {
             id: 'gym_4',
             name: 'Gimnasio Volcán',
             cityName: 'Ciudad Flama',
-            tier: 4,
+            tier: 3,
             badgeName: 'Medalla Volcán',
             badgeIcon: '🔥',
             leaderName: 'Líder Blaine',
@@ -1455,66 +1447,25 @@ const LOCATION_CARDS_DATABASE = [
         locationAction: {
             name: 'Invocación Mítica',
             type: 'special',
-            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 4)!'
+            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 3)!'
         }
     }
 ];
 
-// Requirement 5: Three Expansion Decks added when Gyms are defeated
 const EXPANSION_DECKS = {
     tier2: {
         id: 'tier2',
         name: 'Expansión Tier 2: Vigor Silvestre',
         unlockAtGymsCount: 1,
         desc: 'Desbloqueada tras derrotar el 1er Gimnasio. Introduce criaturas y cartas de Tier 2.',
-        monsters: [
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_4')
-        ]
+        monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 2)
     },
     tier3: {
         id: 'tier3',
-        name: 'Expansión Tier 3: Poder Titánico',
+        name: 'Expansión Tier 3: Poder Titánico y Legendario',
         unlockAtGymsCount: 2,
         desc: 'Desbloqueada tras derrotar el 2do Gimnasio. Introduce criaturas y cartas de Tier 3.',
-        monsters: [
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_6')
-        ]
-    },
-    tier4: {
-        id: 'tier4',
-        name: 'Expansión Tier 4: Época Legendaria',
-        unlockAtGymsCount: 3,
-        desc: 'Desbloqueada tras derrotar el 3er Gimnasio. Introduce criaturas míticas y cartas Legendarias.',
-        monsters: [
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_8')
-        ]
+        monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 3)
     }
 };
 

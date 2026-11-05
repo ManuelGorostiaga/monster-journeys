@@ -261,8 +261,8 @@ main.main-workspace {
 /* Board Tabletop Area */
 .card-board-viewport {
     width: 100%;
-    min-height: 480px;
-    max-height: 560px;
+    min-height: 520px;
+    max-height: 720px;
     overflow: auto;
     background: radial-gradient(circle at center, #18202c 0%, #0c0f14 100%);
     position: relative;
@@ -274,9 +274,232 @@ main.main-workspace {
 
 .card-board-grid {
     position: relative;
-    min-width: 900px;
-    min-height: 460px;
+    width: 1040px;
+    height: 660px;
+    min-width: 1040px;
+    min-height: 660px;
     margin: auto;
+}
+
+/* Pokemon-Style Region Route Map Overlay */
+.pokemon-map-routes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1040px;
+    height: 660px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.route-casing {
+    stroke: #0b111e;
+    stroke-width: 12;
+    stroke-linecap: round;
+    opacity: 0.95;
+}
+
+.route-inner {
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke 0.3s ease;
+}
+
+.route-discovered {
+    stroke: #f59e0b;
+    stroke-dasharray: 8, 4;
+}
+
+.route-undiscovered {
+    stroke: #334155;
+    stroke-dasharray: 4, 6;
+    opacity: 0.6;
+}
+
+.route-adjacent-player {
+    stroke: #38bdf8;
+    stroke-width: 7;
+    stroke-dasharray: 8, 4;
+    animation: routeDashPulse 1.2s linear infinite;
+}
+
+@keyframes routeDashPulse {
+    to { stroke-dashoffset: -24; }
+}
+
+/* Pokemon Region Nodes */
+.pokemon-map-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: #1e293b;
+    border: 2px solid #475569;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.65);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    z-index: 10;
+    min-width: 110px;
+    user-select: none;
+}
+
+.pokemon-map-node:hover {
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.85);
+    border-color: #cbd5e1;
+    z-index: 25;
+}
+
+.pokemon-map-node.hub-node {
+    min-width: 180px;
+    border-color: #64748b;
+    background: linear-gradient(180deg, #1e293b 0%, #151e2e 100%);
+}
+
+.pokemon-map-node.current-player-node {
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 22px rgba(251, 191, 36, 0.7) !important;
+    z-index: 20;
+}
+
+.pokemon-map-node.adjacent-target-node {
+    border-color: #38bdf8;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+    animation: pulseBorder 1.5s infinite alternate;
+}
+
+.node-badge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+    padding: 2px 4px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 6px;
+}
+
+.node-name-text {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.node-hub-pill {
+    font-size: 0.58rem;
+    font-weight: 800;
+    background: #7c3aed;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.node-corner-pill {
+    font-size: 0.58rem;
+    font-weight: 800;
+    background: #059669;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.node-cards-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+.node-mini-card {
+    width: 82px;
+    height: 104px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    text-align: center;
+    position: relative;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+}
+
+.node-mini-card-add {
+    border: 1.5px dashed #34d399;
+    background: rgba(52, 211, 153, 0.08);
+    cursor: pointer;
+}
+
+.node-mini-card-add:hover {
+    background: rgba(52, 211, 153, 0.2);
+}
+
+.mini-card-icon {
+    font-size: 1.6rem;
+    margin-bottom: 2px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.mini-card-title {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.15;
+    max-height: 2.3em;
+    overflow: hidden;
+}
+
+.mini-card-gym {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    font-size: 0.58rem;
+    background: #000;
+    border: 1px solid #fbbf24;
+    color: #fbbf24;
+    padding: 0 3px;
+    border-radius: 3px;
+    font-weight: 800;
+}
+
+.mini-card-action {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    font-size: 0.65rem;
+}
+
+.node-empty-discoverable, .discoverable-slot {
+    border: 2px dashed #34d399 !important;
+    background: rgba(52, 211, 153, 0.08) !important;
+}
+
+.node-empty-discoverable:hover, .discoverable-slot:hover {
+    background: rgba(52, 211, 153, 0.18) !important;
+    transform: translate(-50%, -50%) scale(1.06);
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.45) !important;
+}
+
+.undiscovered-slot {
+    border: 2px dashed #475569 !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    opacity: 0.7;
+}
+
+.empty-slot-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 4px;
+    color: #94a3b8;
 }
 
 /* Placed Miniature Location Card on Board */
@@ -1534,6 +1757,22 @@ main.main-workspace {
     margin-bottom: 4px;
 }
 
+.combat-status-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    margin: 2px 2px 0 0;
+    white-space: nowrap;
+}
+
+.status-paralysis { background: #fef08a; color: #854d0e; border: 1px solid #eab308; }
+.status-poison { background: #f3e8ff; color: #6b21a8; border: 1px solid #a855f7; }
+.status-drowsy { background: #e0f2fe; color: #0369a1; border: 1px solid #38bdf8; }
+.status-shield { background: #dcfce7; color: #15803d; border: 1px solid #22c55e; }
+.status-charge { background: #ffedd5; color: #c2410c; border: 1px solid #f97316; }
+
 .combat-vs-divider {
     font-size: 1.6rem;
     font-weight: 900;
@@ -1881,9 +2120,6 @@ main.main-workspace {
                     <button id="btn-act-loc-action" class="btn-action btn-action-action">
                         🔄 Acción de Lugar
                     </button>
-                    <button id="btn-act-poi" class="btn-action btn-action-action">
-                        📍 Visitar POI
-                    </button>
                     <button id="btn-act-travel" class="btn-action">
                         ✈️ Viajar a otra Ciudad
                     </button>
@@ -2218,13 +2454,13 @@ main.main-workspace {
                     <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate + 1 en reserva (4 en tablero personal).</li>
                     <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
                     <li><strong>Mazos de Biomas:</strong> Salen de biomas temáticos (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada).</li>
-                    <li><strong>Herramientas de Captura:</strong> Cada criatura tiene un tier de captura (1 a 4). Sin la herramienta no puede ser capturada.</li>
+                    <li><strong>Herramientas de Captura:</strong> Cada criatura tiene un tier de captura (1 a 3). Sin la herramienta no puede ser capturada.</li>
                     <li><strong>Mazo de Encuentro:</strong> Al buscar miras las primeras 3 cartas del mazo del bioma y eliges una.</li>
-                    <li><strong>Mapa de Nodos de Cartas:</strong> Empieza vacío con el Pueblo de Inicio. Los jugadores roban cartas de entorno a su mano (máx 5) y las van colocando adyacentemente al explorar.</li>
-                    <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador. La tienda solo es accesible desde Ciudades.</li>
+                    <li><strong>Mapa de Región Estilo Pokémon:</strong> Mapa con nodos y rutas interconectadas. Los jugadores inician en diferentes esquinas del mapa (SO, NE, NO, SE). La mayoría de nodos alojan 1 carta de entorno, mientras que los grandes cruces (hubs) alojan hasta 2 cartas.</li>
+                    <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador en cualquier nodo conectado. La tienda solo es accesible desde Ciudades.</li>
                     <li><strong>Objetos Equipados:</strong> Máximo un objeto equipado por monstruo.</li>
                     <li><strong>Sistema de Suerte:</strong> Los puntos de Suerte 🍀 permiten sumar +1 al dado en combate, draftear 3 cartas de entorno en vez de robar 1, o redibujar los 3 monstruos salvajes vistos.</li>
-                    <li><strong>Puntos de Interés:</strong> En el 50% de las cartas de entorno hay POIs visitables.</li>
+                    <li><strong>Enseñar Ataques:</strong> Al encontrar un monstruo salvaje, puedes elegir capturarlo o que enseñe su técnica de ataque a cualquier criatura de tu equipo.</li>
                     <li><strong>Recuperación:</strong> Los monstruos recuperan toda su salud tras una pelea.</li>
                     <li><strong>Recompensa de Derrota:</strong> Al perder una pelea, obtienes dinero de todas maneras como si hubieras ganado.</li>
                     <li><strong>Viaje Rápido:</strong> Se puede viajar de una ciudad a otra si estás en una ciudad.</li>
@@ -2232,7 +2468,7 @@ main.main-workspace {
                     <li><strong>Habilidades de Overworld:</strong> Los tipos otorgan habilidades especiales en el mapa en vez de la acción normal.</li>
                     <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
                     <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas con tirada de dados de ataque.</li>
-                    <li><strong>Expansiones de Mazos:</strong> Al derrotar cada gimnasio se desbloquea una nueva expansión (Tier 2, Tier 3, Tier 4).</li>
+                    <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, y derrotar al 2do gimnasio añade Tier 3. Hay 3 tiers en total (1, 2 y 3).</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 20 rondas) activa el Gran Torneo Final!</li>
                 </ol>
             </div>
@@ -2501,13 +2737,13 @@ const OVERWORLD_ABILITIES = {
     rock: {
         id: 'rock',
         name: 'Romperrocas',
-        desc: 'Permite atravesar terrenos montañosos y ganar +2 monedas al visitar POIs de montaña.',
+        desc: 'Permite atravesar terrenos montañosos y genera +2 monedas al activarse.',
         mountainPass: true
     },
     ground: {
         id: 'ground',
         name: 'Excavación',
-        desc: 'Teletranspórtate a la casilla con Punto de Interés no visitado más cercana.',
+        desc: 'Muévete instantáneamente a cualquier nodo conectado del mapa sin gastar tu movimiento normal.',
         burrow: true
     },
     bug: {
@@ -2533,7 +2769,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌱',
         attacks: [
-            { name: 'Látigo Cepa', type: 'Planta', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -2549,7 +2785,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🐛',
         attacks: [
-            { name: 'Picadura', type: 'Bicho', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Envenena al rival (-1 HP al final de cada turno).' }
         ]
     },
     {
@@ -2565,7 +2801,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌵',
         attacks: [
-            { name: 'Espina Aguda', type: 'Planta', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Trío de Espinas', type: 'Planta', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Golpea 3 veces consecutivas en un solo turno.' }
         ]
     },
     {
@@ -2581,7 +2817,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🦗',
         attacks: [
-            { name: 'Corte Rápido', type: 'Bicho', baseDmg: 2, diceCount: 2, desc: '2 base + 2 dados' }
+            { name: 'Ida y Vuelta', type: 'Bicho', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataca y te permite cambiar de criatura inmediatamente.' }
         ]
     },
     {
@@ -2597,7 +2833,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🍄',
         attacks: [
-            { name: 'Esporas Tóxicas', type: 'Planta', baseDmg: 4, diceCount: 1, desc: '4 base + 1 dado' }
+            { name: 'Espora Somnífera', type: 'Planta', baseDmg: 4, diceCount: 1, effect: 'drowsy', desc: '💤 Deja somnoliento al rival (+1 de daño recibido).' }
         ]
     },
     {
@@ -2613,7 +2849,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🪲',
         attacks: [
-            { name: 'Cuerno Titán', type: 'Bicho', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Furia Agónica', type: 'Bicho', baseDmg: 4, diceCount: 1, effect: 'facade_status', desc: '🔥 Inflige +4 de daño si el usuario sufre algún estado alterado.' }
         ]
     },
     {
@@ -2625,11 +2861,11 @@ const MONSTERS_DATABASE = [
         hp: 20,
         maxHp: 20,
         speed: 6,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌳',
         attacks: [
-            { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -2641,11 +2877,11 @@ const MONSTERS_DATABASE = [
         hp: 18,
         maxHp: 18,
         speed: 9,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🐝',
         attacks: [
-            { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, effect: 'poison', desc: '☠️ Inflige gran daño y envenena al rival (-1 HP/turno).' }
         ]
     },
 
@@ -2663,7 +2899,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🪨',
         attacks: [
-            { name: 'Lanzarrocas', type: 'Roca', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ El próximo ataque que reciba el usuario se reduce en 2 de daño.' }
         ]
     },
     {
@@ -2679,7 +2915,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🐦',
         attacks: [
-            { name: 'Picotazo', type: 'Volador', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Picotazo', type: 'Volador', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -2695,7 +2931,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🦡',
         attacks: [
-            { name: 'Excavar', type: 'Tierra', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Fijación Sísmica', type: 'Tierra', baseDmg: 5, fixedDmg: 5, effect: 'fixed_damage', desc: '🎯 Inflige 5 puntos de daño fijo garantizado sin tirada de dados.' }
         ]
     },
     {
@@ -2711,7 +2947,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🗿',
         attacks: [
-            { name: 'Rodar', type: 'Roca', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Golpe Fuerte', type: 'Roca', baseDmg: 5, diceCount: 1, effect: null, desc: 'Golpe directo de potencia media de Tier 2.' }
         ]
     },
     {
@@ -2727,7 +2963,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🦅',
         attacks: [
-            { name: 'Tajo Aéreo', type: 'Volador', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Ojo de Francotirador', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Los dados blancos (caras 0) cuentan como impactos críticos (+2 daño).' }
         ]
     },
     {
@@ -2743,7 +2979,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🌋',
         attacks: [
-            { name: 'Terremoto', type: 'Tierra', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Armadura Terrestre', type: 'Tierra', baseDmg: 5, diceCount: 1, effect: 'shield_next', desc: '🛡️ Reduce en 2 el próximo ataque recibido.' }
         ]
     },
     {
@@ -2755,11 +2991,11 @@ const MONSTERS_DATABASE = [
         hp: 22,
         maxHp: 22,
         speed: 3,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '⛰️',
         attacks: [
-            { name: 'Avalancha Titán', type: 'Roca', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Avalancha Titán', type: 'Roca', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -2771,11 +3007,11 @@ const MONSTERS_DATABASE = [
         hp: 17,
         maxHp: 17,
         speed: 10,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🕊️',
         attacks: [
-            { name: 'Huracán Cumbre', type: 'Volador', baseDmg: 4, diceCount: 3, desc: '4 base + 3 dados' }
+            { name: 'Tornado Expulsor', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Obliga al rival a cambiar a otro monstruo (aún juega su turno).' }
         ]
     },
 
@@ -2793,7 +3029,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '⚡',
         attacks: [
-            { name: 'Impactrueno', type: 'Eléctrico', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza al rival: su Velocidad pasa a ser 0.' }
         ]
     },
     {
@@ -2809,7 +3045,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🔥',
         attacks: [
-            { name: 'Ascua', type: 'Fuego', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -2825,7 +3061,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🦊',
         attacks: [
-            { name: 'Onda Trueno', type: 'Eléctrico', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Voltiocambio', type: 'Eléctrico', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataca y te permite cambiar de criatura inmediatamente.' }
         ]
     },
     {
@@ -2841,7 +3077,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🐎',
         attacks: [
-            { name: 'Rueda Fuego', type: 'Fuego', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Carga Ígnea', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: 'charge_next', desc: '⚡ El próximo ataque que realice el usuario inflige +3 de daño.' }
         ]
     },
     {
@@ -2857,7 +3093,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🦁',
         attacks: [
-            { name: 'Rayo Fulgor', type: 'Eléctrico', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Electroimpulso', type: 'Eléctrico', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ El daño base del ataque es igual a la Velocidad del atacante.' }
         ]
     },
     {
@@ -2873,7 +3109,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🦬',
         attacks: [
-            { name: 'Lanzallamas', type: 'Fuego', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Golpe Fuerte', type: 'Fuego', baseDmg: 5, diceCount: 1, effect: null, desc: 'Golpe directo de potencia media de Tier 2.' }
         ]
     },
     {
@@ -2885,11 +3121,11 @@ const MONSTERS_DATABASE = [
         hp: 19,
         maxHp: 19,
         speed: 9,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🐅',
         attacks: [
-            { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, effect: 'paralyze', desc: '⚡ Inflige gran daño y paraliza al rival (Velocidad pasa a 0).' }
         ]
     },
     {
@@ -2901,11 +3137,11 @@ const MONSTERS_DATABASE = [
         hp: 18,
         maxHp: 18,
         speed: 8,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🦚',
         attacks: [
-            { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
 
@@ -2923,7 +3159,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐸',
         attacks: [
-            { name: 'Pistola Agua', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -2939,7 +3175,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦆',
         attacks: [
-            { name: 'Burbujas', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Bostezo Sedante', type: 'Agua', baseDmg: 2, diceCount: 1, effect: 'drowsy', desc: '💤 Deja somnoliento al rival (+1 de daño recibido).' }
         ]
     },
     {
@@ -2955,7 +3191,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦦',
         attacks: [
-            { name: 'Aqua Cola', type: 'Agua', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Giro Rápido', type: 'Agua', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ El daño base del ataque es igual a la Velocidad del atacante.' }
         ]
     },
     {
@@ -2971,7 +3207,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐸',
         attacks: [
-            { name: 'Lodazo', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Lodazo Tóxico', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'poison', desc: '☠️ Envenena al rival (-1 HP al final de cada turno).' }
         ]
     },
     {
@@ -2987,7 +3223,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐊',
         attacks: [
-            { name: 'Mordisco Fluvial', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Mordisco Certero', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Los dados blancos (caras 0) cuentan como impactos críticos (+2 daño).' }
         ]
     },
     {
@@ -3003,7 +3239,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐍',
         attacks: [
-            { name: 'Hidropulso', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Maremoto Expulsor', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Obliga al rival a cambiar de criatura (aún juega su turno).' }
         ]
     },
     {
@@ -3015,11 +3251,11 @@ const MONSTERS_DATABASE = [
         hp: 20,
         maxHp: 20,
         speed: 7,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Hidrobomba', type: 'Agua', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Hidrobomba', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -3031,11 +3267,11 @@ const MONSTERS_DATABASE = [
         hp: 22,
         maxHp: 22,
         speed: 3,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐢',
         attacks: [
-            { name: 'Cañón Cascada', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Caparazón Espejo', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'shield_next', desc: '🛡️ Reduce en 2 el próximo ataque recibido.' }
         ]
     },
 
@@ -3053,7 +3289,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦀',
         attacks: [
-            { name: 'Pinza Tenaz', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Tenaza Férrea', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: 'Ataque base directo de Tier 1.' }
         ]
     },
     {
@@ -3069,7 +3305,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐟',
         attacks: [
-            { name: 'Embestida Acuática', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+            { name: 'Triple Aguijón', type: 'Agua', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Golpea 3 veces consecutivas en un solo turno.' }
         ]
     },
     {
@@ -3085,7 +3321,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🪼',
         attacks: [
-            { name: 'Descarga Marina', type: 'Agua', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+            { name: 'Tentáculo Paralizante', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza al rival: su Velocidad pasa a ser 0.' }
         ]
     },
     {
@@ -3101,7 +3337,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐡',
         attacks: [
-            { name: 'Oleada', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+            { name: 'Giro Marino', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataca y te permite cambiar de criatura inmediatamente.' }
         ]
     },
     {
@@ -3117,7 +3353,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦈',
         attacks: [
-            { name: 'Mandíbula Abisal', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Mandíbula Letal', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Los dados blancos (caras 0) cuentan como impactos críticos (+2 daño).' }
         ]
     },
     {
@@ -3133,7 +3369,7 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐙',
         attacks: [
-            { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+            { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'drowsy', desc: '💤 Deja somnoliento al rival (+1 de daño recibido).' }
         ]
     },
     {
@@ -3145,11 +3381,11 @@ const MONSTERS_DATABASE = [
         hp: 22,
         maxHp: 22,
         speed: 7,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐋',
         attacks: [
-            { name: 'Tsunami Abisal', type: 'Agua', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Tsunami Titánico', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: 'Ataque devastador directo de Tier 3.' }
         ]
     },
     {
@@ -3161,11 +3397,11 @@ const MONSTERS_DATABASE = [
         hp: 21,
         maxHp: 21,
         speed: 8,
-        captureTier: 4,
+        captureTier: 3,
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Aliento del Dragón', type: 'Dragón', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+            { name: 'Furia Dragón', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🎯 Inflige 6 puntos de daño fijo garantizado sin tirada de dados.' }
         ]
     }
 ];
@@ -3203,10 +3439,10 @@ const ITEMS_DATABASE = [
         id: 'item_cap_4',
         name: 'Masterball Suprema',
         category: 'capture',
-        tier: 4,
+        tier: 3,
         cost: 22,
         icon: '🟣',
-        desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 4).'
+        desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 3).'
     },
 
     // --- OBJETOS DE COMBATE ---
@@ -3294,11 +3530,11 @@ const ITEMS_DATABASE = [
     },
     {
         id: 'item_utl_2',
-        name: 'Caña de Pescar',
+        name: 'Incienso Silvestre',
         category: 'utility',
         cost: 5,
-        icon: '🎣',
-        desc: 'Permite la acción "Buscar Monstruo" en casillas de Agua Dulce o Agua Salada.'
+        icon: '🪔',
+        desc: 'Al Buscar Monstruos, revela 1 criatura adicional para elegir.'
     },
     {
         id: 'item_utl_3',
@@ -3306,7 +3542,7 @@ const ITEMS_DATABASE = [
         category: 'utility',
         cost: 5,
         icon: '🗺️',
-        desc: 'Recibe +2 monedas de oro cada vez que visites cualquier Punto de Interés (POI).'
+        desc: 'Recibe +2 monedas de oro cada vez que descubres una nueva zona en el mapa.'
     },
     {
         id: 'item_utl_4',
@@ -3325,14 +3561,6 @@ const ITEMS_DATABASE = [
         desc: 'Gana +3 monedas adicionales al terminar cualquier combate (victoria o derrota).'
     },
     {
-        id: 'item_utl_6',
-        name: 'Poción de Campamento',
-        category: 'utility',
-        cost: 5,
-        icon: '🧪',
-        desc: 'Úsala fuera de combate para restaurar al máximo la salud de todo tu equipo.'
-    },
-    {
         id: 'item_utl_7',
         name: 'Telescopio Explorador',
         category: 'utility',
@@ -3346,7 +3574,7 @@ const ITEMS_DATABASE = [
         category: 'utility',
         cost: 7,
         icon: '🧲',
-        desc: 'Cada 3 turnos obtienes automáticamente 2 monedas de oro.'
+        desc: 'En cada uno de tus turnos obtienes automáticamente 1 moneda de oro.'
     }
 ];
 
@@ -3388,10 +3616,10 @@ const CHARACTERS_DATABASE = [
         startingCoins: 14,
         startingLuck: 3,
         startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_utl_2'],
+        startingItemIds: ['item_cap_1', 'item_utl_1'],
         starterMonsterId: 'mon_frw_2', // Patiloto (Agua)
         abilityName: 'Navegante Experta',
-        abilityDesc: 'Moverse por casillas de Agua Dulce no consume movimiento extra y ganas +1 Suerte al visitar aguas.'
+        abilityDesc: 'Moverse por casillas de Agua Dulce o Salada no consume movimiento extra y ganas +1 Suerte al visitar aguas.'
     },
     {
         id: 'char_brock',
@@ -3526,7 +3754,7 @@ const CITIES_DATABASE = [
         name: 'Ciudad Flama',
         gymId: 'gym_4',
         gymName: 'Gimnasio Volcán',
-        tier: 4,
+        tier: 3,
         badgeName: 'Medalla Volcán',
         badgeIcon: '🔥',
         leaderName: 'Líder Blaine',
@@ -3534,12 +3762,12 @@ const CITIES_DATABASE = [
         rewardLuck: 3,
         teamMonsterIds: ['mon_pln_6', 'mon_pln_7'],
         icon: '🏛️',
-        desc: 'Metrópolis volcánica. Tienda River disponible y desafío de Gimnasio Tier 4.',
+        desc: 'Metrópolis volcánica. Tienda River disponible y desafío de Gimnasio Tier 3.',
         gym: {
             id: 'gym_4',
             name: 'Gimnasio Volcán',
             cityName: 'Ciudad Flama',
-            tier: 4,
+            tier: 3,
             badgeName: 'Medalla Volcán',
             badgeIcon: '🔥',
             leaderName: 'Líder Blaine',
@@ -3811,66 +4039,25 @@ const LOCATION_CARDS_DATABASE = [
         locationAction: {
             name: 'Invocación Mítica',
             type: 'special',
-            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 4)!'
+            desc: 'Gasta 2 Suerte 🍀 para buscar inmediatamente entre monstruos Legendarios (Tier 3)!'
         }
     }
 ];
 
-// Requirement 5: Three Expansion Decks added when Gyms are defeated
 const EXPANSION_DECKS = {
     tier2: {
         id: 'tier2',
         name: 'Expansión Tier 2: Vigor Silvestre',
         unlockAtGymsCount: 1,
         desc: 'Desbloqueada tras derrotar el 1er Gimnasio. Introduce criaturas y cartas de Tier 2.',
-        monsters: [
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_4'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_3'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_4')
-        ]
+        monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 2)
     },
     tier3: {
         id: 'tier3',
-        name: 'Expansión Tier 3: Poder Titánico',
+        name: 'Expansión Tier 3: Poder Titánico y Legendario',
         unlockAtGymsCount: 2,
         desc: 'Desbloqueada tras derrotar el 2do Gimnasio. Introduce criaturas y cartas de Tier 3.',
-        monsters: [
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_6'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_5'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_6')
-        ]
-    },
-    tier4: {
-        id: 'tier4',
-        name: 'Expansión Tier 4: Época Legendaria',
-        unlockAtGymsCount: 3,
-        desc: 'Desbloqueada tras derrotar el 3er Gimnasio. Introduce criaturas míticas y cartas Legendarias.',
-        monsters: [
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_for_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_pln_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_frw_8'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_7'),
-            MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_8')
-        ]
+        monsters: MONSTERS_DATABASE.filter(m => m.captureTier === 3)
     }
 };
 
@@ -3890,20 +4077,14 @@ window.EXPANSION_DECKS = EXPANSION_DECKS;
 window.GYMS_DATABASE = CITIES_DATABASE;
 class CardMap {
     constructor() {
-        this.nodes = {}; // Key: 'x,y' -> { x, y, card, poi, visitedBy: [] }
-        this.initStartingBoard();
-    }
-
-    key(x, y) {
-        return `${x},${y}`;
-    }
-
-    initStartingBoard() {
         this.nodes = {};
-        // Place Starting Town at (0, 0)
-        const startingTown = {
-            id: 'loc_start_town',
-            name: 'Pueblo de Inicio',
+        this.initRegionMap();
+    }
+
+    createStartingTownCard(name, townId) {
+        return {
+            id: townId,
+            name: name,
             biome: 'city',
             icon: '🏡',
             isStart: true,
@@ -3915,104 +4096,369 @@ class CardMap {
                 desc: 'Cura por completo a todo tu equipo y recupera +1 Suerte 🍀 gratis.'
             }
         };
-
-        this.nodes[this.key(0, 0)] = {
-            x: 0,
-            y: 0,
-            card: startingTown,
-            poi: null,
-            visitedBy: []
-        };
     }
 
-    getNode(x, y) {
-        return this.nodes[this.key(x, y)] || null;
+    initRegionMap() {
+        this.nodes = {
+            // --- CORNER 1: SOUTHEAST (Player 1 Start) ---
+            node_sw: {
+                id: 'node_sw',
+                name: 'Pueblo Hoja',
+                x: 100,
+                y: 490,
+                gridX: 0,
+                gridY: 0,
+                corner: 'SW',
+                isStart: true,
+                maxCards: 1,
+                connections: ['node_w_cross', 'node_s_valley', 'node_w_route', 'node_sw_secret'],
+                cards: [this.createStartingTownCard('Pueblo Hoja', 'loc_start_sw')]
+            },
+            node_sw_secret: {
+                id: 'node_sw_secret',
+                name: 'Cueva Origen',
+                x: 35,
+                y: 490,
+                gridX: -1,
+                gridY: 0,
+                corner: 'SW',
+                maxCards: 1,
+                connections: ['node_sw'],
+                cards: []
+            },
+
+            // --- CORNER 2: NORTHEAST (Player 2 Start) ---
+            node_ne: {
+                id: 'node_ne',
+                name: 'Pueblo Brisa',
+                x: 880,
+                y: 110,
+                gridX: 6,
+                gridY: 6,
+                corner: 'NE',
+                isStart: true,
+                maxCards: 1,
+                connections: ['node_n_route', 'node_ne_plateau'],
+                cards: [this.createStartingTownCard('Pueblo Brisa', 'loc_start_ne')]
+            },
+
+            // --- CORNER 3: NORTHWEST (Player 3 Start) ---
+            node_nw: {
+                id: 'node_nw',
+                name: 'Pueblo Puerto',
+                x: 100,
+                y: 110,
+                gridX: 0,
+                gridY: 6,
+                corner: 'NW',
+                isStart: true,
+                maxCards: 1,
+                connections: ['node_n_route', 'node_nw_bay'],
+                cards: [this.createStartingTownCard('Pueblo Puerto', 'loc_start_nw')]
+            },
+
+            // --- CORNER 4: SOUTHEAST (Player 4 Start) ---
+            node_se: {
+                id: 'node_se',
+                name: 'Pueblo Alba',
+                x: 880,
+                y: 490,
+                gridX: 6,
+                gridY: 0,
+                corner: 'SE',
+                isStart: true,
+                maxCards: 1,
+                connections: ['node_se_cross', 'node_e_coast'],
+                cards: [this.createStartingTownCard('Pueblo Alba', 'loc_start_se')]
+            },
+
+            // --- 2-CARD HUBS / CROSSROADS ---
+            node_w_cross: {
+                id: 'node_w_cross',
+                name: 'Encrucijada Poniente',
+                x: 310,
+                y: 350,
+                gridX: 1,
+                gridY: 0,
+                maxCards: 2,
+                connections: ['node_sw', 'node_nw_bay', 'node_s_valley', 'node_center_hub'],
+                cards: []
+            },
+            node_center_hub: {
+                id: 'node_center_hub',
+                name: 'Gran Plaza Central',
+                x: 500,
+                y: 280,
+                gridX: 3,
+                gridY: 3,
+                maxCards: 2,
+                connections: ['node_w_cross', 'node_n_route', 'node_se_cross', 'node_ne_plateau'],
+                cards: []
+            },
+            node_se_cross: {
+                id: 'node_se_cross',
+                name: 'Cruce del Alba',
+                x: 680,
+                y: 430,
+                gridX: 4,
+                gridY: 1,
+                maxCards: 2,
+                connections: ['node_s_valley', 'node_center_hub', 'node_se', 'node_e_coast'],
+                cards: []
+            },
+
+            // --- STANDARD & DEAD-END ROUTES ---
+            node_s_valley: {
+                id: 'node_s_valley',
+                name: 'Valle Rocoso',
+                x: 310,
+                y: 490,
+                gridX: 1,
+                gridY: 1,
+                maxCards: 1,
+                connections: ['node_sw', 'node_w_cross', 'node_s_abyss', 'node_se_cross'],
+                cards: []
+            },
+            node_s_abyss: {
+                id: 'node_s_abyss',
+                name: 'Fosa Abisal',
+                x: 310,
+                y: 585,
+                gridX: 2,
+                gridY: -1,
+                maxCards: 1,
+                connections: ['node_s_valley'],
+                cards: []
+            },
+            node_w_route: {
+                id: 'node_w_route',
+                name: 'Ruta Poniente',
+                x: 100,
+                y: 300,
+                gridX: 0,
+                gridY: 1,
+                maxCards: 1,
+                connections: ['node_sw', 'node_nw_bay'],
+                cards: []
+            },
+            node_nw_bay: {
+                id: 'node_nw_bay',
+                name: 'Bahía Bruma',
+                x: 210,
+                y: 200,
+                gridX: 1,
+                gridY: 4,
+                maxCards: 1,
+                connections: ['node_nw', 'node_w_route', 'node_w_cross'],
+                cards: []
+            },
+            node_n_route: {
+                id: 'node_n_route',
+                name: 'Ruta Septentrional',
+                x: 420,
+                y: 110,
+                gridX: 3,
+                gridY: 6,
+                maxCards: 1,
+                connections: ['node_nw', 'node_ne', 'node_n_peak', 'node_center_hub'],
+                cards: []
+            },
+            node_n_peak: {
+                id: 'node_n_peak',
+                name: 'Pico Nevado',
+                x: 550,
+                y: 35,
+                gridX: 4,
+                gridY: 7,
+                maxCards: 1,
+                connections: ['node_n_route'],
+                cards: []
+            },
+            node_ne_plateau: {
+                id: 'node_ne_plateau',
+                name: 'Meseta Oriental',
+                x: 730,
+                y: 200,
+                gridX: 5,
+                gridY: 4,
+                maxCards: 1,
+                connections: ['node_center_hub', 'node_ne', 'node_e_coast'],
+                cards: []
+            },
+            node_e_coast: {
+                id: 'node_e_coast',
+                name: 'Ruta Marina Este',
+                x: 880,
+                y: 320,
+                gridX: 6,
+                gridY: 3,
+                maxCards: 1,
+                connections: ['node_se', 'node_se_cross', 'node_ne_plateau', 'node_e_reef'],
+                cards: []
+            },
+            node_e_reef: {
+                id: 'node_e_reef',
+                name: 'Arrecife del Sol',
+                x: 965,
+                y: 320,
+                gridX: 7,
+                gridY: 3,
+                maxCards: 1,
+                connections: ['node_e_coast'],
+                cards: []
+            }
+        };
+
+        // Attach dynamic card getter and keep mapX/mapY
+        Object.values(this.nodes).forEach(node => {
+            node.mapX = node.x;
+            node.mapY = node.y;
+            node.x = node.gridX;
+            node.y = node.gridY;
+            Object.defineProperty(node, 'card', {
+                get() {
+                    return this.cards[0] || null;
+                },
+                configurable: true
+            });
+            Object.defineProperty(node, 'poi', {
+                get() {
+                    return null;
+                },
+                configurable: true
+            });
+        });
+    }
+
+    initStartingBoard() {
+        this.initRegionMap();
+    }
+
+    key(x, y) {
+        return `${x},${y}`;
+    }
+
+    getNode(arg1, arg2) {
+        if (typeof arg1 === 'string' && this.nodes[arg1]) {
+            return this.nodes[arg1];
+        }
+        if (arg2 !== undefined) {
+            return Object.values(this.nodes).find(n => n.gridX === arg1 && n.gridY === arg2) || null;
+        }
+        if (typeof arg1 === 'string' && arg1.includes(',')) {
+            const [gx, gy] = arg1.split(',').map(Number);
+            return Object.values(this.nodes).find(n => n.gridX === gx && n.gridY === gy) || null;
+        }
+        return Object.values(this.nodes).find(n => n.id === arg1) || null;
     }
 
     hasCard(x, y) {
-        return !!this.nodes[this.key(x, y)];
+        const node = this.getNode(x, y);
+        return Boolean(node && node.cards.length > 0);
     }
 
     placeCard(x, y, cardData) {
-        const k = this.key(x, y);
-        if (this.nodes[k]) {
-            throw new Error(`El casillero (${x}, ${y}) ya contiene una carta: ${this.nodes[k].card.name}`);
+        const node = this.getNode(x, y);
+        if (!node) {
+            throw new Error(`Casillero (${x}, ${y}) no existe en el mapa.`);
+        }
+        if (node.cards.length >= node.maxCards) {
+            throw new Error(`El casillero (${x}, ${y}) ya contiene el máximo de cartas (${node.maxCards}): ${node.card.name}`);
+        }
+        node.cards.push(cardData);
+        return node;
+    }
+
+    placeCardOnNode(nodeId, cardData) {
+        const node = this.getNode(nodeId);
+        if (!node) {
+            throw new Error(`Nodo ${nodeId} no encontrado en el mapa.`);
+        }
+        if (node.cards.length >= node.maxCards) {
+            throw new Error(`El nodo ${node.name} ya alcanzó su capacidad máxima de ${node.maxCards} cartas.`);
+        }
+        node.cards.push(cardData);
+        return node;
+    }
+
+    getConnectedNodes(nodeIdOrNode) {
+        const node = typeof nodeIdOrNode === 'string' ? this.getNode(nodeIdOrNode) : nodeIdOrNode;
+        if (!node) return [];
+        return node.connections.map(id => this.getNode(id)).filter(Boolean);
+    }
+
+    getReachableNodes(startNodeId, maxSteps = 1) {
+        const startNode = this.getNode(startNodeId);
+        const reachableDiscovered = new Map();
+        const reachableUndiscovered = new Map();
+
+        if (!startNode || maxSteps <= 0) {
+            return { reachableDiscovered, reachableUndiscovered };
         }
 
-        // 50% chance of Point of Interest if not a city
-        let poi = null;
-        if (cardData.biome !== 'city' && Math.random() < 0.5) {
-            poi = this.generatePoi(cardData.biome);
-        }
+        const visitedMinSteps = new Map();
+        visitedMinSteps.set(startNode.id, 0);
 
-        this.nodes[k] = {
-            x,
-            y,
-            card: cardData,
-            poi,
-            visitedBy: []
-        };
+        const queue = [{ nodeId: startNode.id, steps: 0, path: [startNode.id] }];
 
-        return this.nodes[k];
-    }
+        while (queue.length > 0) {
+            const { nodeId, steps, path } = queue.shift();
+            const curr = this.getNode(nodeId);
+            if (!curr) continue;
 
-    generatePoi(biome) {
-        const poiTypes = [
-            { type: 'item_cache', name: 'Alijo Oculto', icon: '🎁', desc: 'Encuentras un cofre con 3 Monedas 🪙 y 1 Suerte 🍀.' },
-            { type: 'fountain', name: 'Fuente Sanadora', icon: '⛲', desc: 'Restaura todos los PS de tus monstruos debilitados.' },
-            { type: 'trainer', name: 'Entrenador Errante', icon: '🤠', desc: 'Un retador te desafía a una batalla 1v1 rápida.' },
-            { type: 'shrine', name: 'Altar Místico', icon: '🔮', desc: 'Otorga +2 puntos de Suerte 🍀 permanentes.' }
-        ];
-        const choice = poiTypes[Math.floor(Math.random() * poiTypes.length)];
-        return { ...choice, claimed: false };
-    }
+            if (steps >= maxSteps) continue;
 
-    getOrthogonalNeighbors(x, y) {
-        return [
-            { x: x, y: y - 1, dir: 'Norte' },
-            { x: x + 1, y: y, dir: 'Este' },
-            { x: x, y: y + 1, dir: 'Sur' },
-            { x: x - 1, y: y, dir: 'Oeste' }
-        ];
-    }
+            for (const connId of curr.connections) {
+                const nextNode = this.getNode(connId);
+                if (!nextNode) continue;
 
-    getAdjacentPlacedCards(x, y) {
-        const neighbors = this.getOrthogonalNeighbors(x, y);
-        const placed = [];
-        for (const n of neighbors) {
-            const node = this.getNode(n.x, n.y);
-            if (node) {
-                placed.push({ ...n, node });
-            }
-        }
-        return placed;
-    }
+                const nextSteps = steps + 1;
+                const prevBest = visitedMinSteps.get(connId);
 
-    getAdjacentEmptySlots(x, y) {
-        const neighbors = this.getOrthogonalNeighbors(x, y);
-        const empties = [];
-        for (const n of neighbors) {
-            if (!this.hasCard(n.x, n.y)) {
-                empties.push(n);
-            }
-        }
-        return empties;
-    }
-
-    getAllEmptyBorderSlots() {
-        // Find all empty slots that are adjacent to at least one placed card
-        const borderMap = {};
-        for (const key in this.nodes) {
-            const node = this.nodes[key];
-            const neighbors = this.getOrthogonalNeighbors(node.x, node.y);
-            for (const n of neighbors) {
-                const nKey = this.key(n.x, n.y);
-                if (!this.nodes[nKey]) {
-                    borderMap[nKey] = { x: n.x, y: n.y };
+                if (nextNode.cards.length === 0) {
+                    if (prevBest === undefined || nextSteps < prevBest) {
+                        visitedMinSteps.set(connId, nextSteps);
+                        reachableUndiscovered.set(connId, { node: nextNode, distance: nextSteps, path: [...path, connId] });
+                    }
+                } else {
+                    if (prevBest === undefined || nextSteps < prevBest) {
+                        visitedMinSteps.set(connId, nextSteps);
+                        reachableDiscovered.set(connId, { node: nextNode, distance: nextSteps, path: [...path, connId] });
+                        queue.push({ nodeId: connId, steps: nextSteps, path: [...path, connId] });
+                    }
                 }
             }
         }
-        return Object.values(borderMap);
+
+        return { reachableDiscovered, reachableUndiscovered };
+    }
+
+    getAdjacentEmptySlots(x, y) {
+        const node = this.getNode(x, y);
+        if (!node) return [];
+        const connected = this.getConnectedNodes(node);
+        return connected
+            .filter(n => n.cards.length < n.maxCards)
+            .map(n => ({ x: n.gridX, y: n.gridY, nodeId: n.id, node: n }));
+    }
+
+    getAllEmptyBorderSlots() {
+        const placed = Object.values(this.nodes).filter(n => n.cards.length > 0);
+        const candidates = new Map();
+        placed.forEach(pNode => {
+            const connected = this.getConnectedNodes(pNode);
+            connected.forEach(cNode => {
+                if (cNode.cards.length < cNode.maxCards) {
+                    candidates.set(cNode.id, {
+                        x: cNode.gridX,
+                        y: cNode.gridY,
+                        nodeId: cNode.id,
+                        node: cNode
+                    });
+                }
+            });
+        });
+        return Array.from(candidates.values());
     }
 
     getAllNodes() {
@@ -4020,16 +4466,7 @@ class CardMap {
     }
 
     getBoundingBox() {
-        const nodes = this.getAllNodes();
-        if (nodes.length === 0) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        for (const n of nodes) {
-            if (n.x < minX) minX = n.x;
-            if (n.x > maxX) maxX = n.x;
-            if (n.y < minY) minY = n.y;
-            if (n.y > maxY) maxY = n.y;
-        }
-        return { minX, maxX, minY, maxY };
+        return { minX: 0, maxX: 7, minY: -1, maxY: 7 };
     }
 }
 
@@ -4121,12 +4558,16 @@ class CombatEngine {
             hp: m.hp,
             maxHp: m.maxHp,
             speed: m.speed,
+            baseSpeed: m.speed,
             captureTier: m.captureTier,
             icon: m.icon,
             attacks: JSON.parse(JSON.stringify(m.attacks)),
             equippedItem: m.equippedItem ? JSON.parse(JSON.stringify(m.equippedItem)) : null,
             focusSashUsed: false,
-            berryUsed: false
+            berryUsed: false,
+            status: null, // 'paralysis', 'poison', 'drowsy'
+            shieldNextTurn: 0,
+            chargeNextTurn: 0
         };
     }
 
@@ -4216,9 +4657,9 @@ class CombatEngine {
         // Opponent attack choice (NPCs use attack 0; in PvP player 2 chooses)
         const p2Attack = p2Mon.attacks[0];
 
-        // Calculate initiative (Speed + item + abilities)
-        let p1Speed = p1Mon.speed;
-        let p2Speed = p2Mon.speed;
+        // Calculate initiative (Paralysis sets effective speed to 0)
+        let p1Speed = (p1Mon.status === 'paralysis') ? 0 : p1Mon.speed;
+        let p2Speed = (p2Mon.status === 'paralysis') ? 0 : p2Mon.speed;
 
         if (p1Mon.equippedItem && p1Mon.equippedItem.id === 'item_cmb_3') p1Speed += 2; // Garra Rápida
         if (p2Mon.equippedItem && p2Mon.equippedItem.id === 'item_cmb_3') p2Speed += 2;
@@ -4258,6 +4699,7 @@ class CombatEngine {
 
             if (firstTargetFainted) {
                 this.handleFaint(firstStrike.defender, firstStrike.defenderPlayer);
+                this.endTurnPoisonPhase();
                 this.turnNumber++;
                 this.isProcessing = false;
                 if (window.UI) UI.renderCombatArena();
@@ -4266,13 +4708,25 @@ class CombatEngine {
 
             // Step 2: Second strike
             setTimeout(() => {
-                this.executeAttack(secondStrike);
-                if (window.UI) UI.renderCombatArena();
-
-                const secondTargetFainted = secondStrike.defender.hp <= 0;
-                if (secondTargetFainted) {
-                    this.handleFaint(secondStrike.defender, secondStrike.defenderPlayer);
+                // If defender was force-switched or pivoted, make sure second strike uses current active attacker
+                const activeSecondAttacker = (secondStrike.attackerPlayer === this.player1) ? this.getP1Active() : this.getP2Active();
+                if (secondStrike.attacker !== activeSecondAttacker) {
+                    secondStrike.attacker = activeSecondAttacker;
+                    secondStrike.attack = activeSecondAttacker.attacks[0];
                 }
+
+                if (secondStrike.attacker && secondStrike.attacker.hp > 0) {
+                    this.executeAttack(secondStrike);
+                    if (window.UI) UI.renderCombatArena();
+
+                    const secondTargetFainted = secondStrike.defender.hp <= 0;
+                    if (secondTargetFainted) {
+                        this.handleFaint(secondStrike.defender, secondStrike.defenderPlayer);
+                    }
+                }
+
+                // End of turn poison damage phase
+                this.endTurnPoisonPhase();
 
                 this.turnNumber++;
                 this.isProcessing = false;
@@ -4282,12 +4736,76 @@ class CombatEngine {
         }, 700);
     }
 
-    // Rule 31: "Los ataques tiran dados de ataque de 0 1 1 1 1 2 caras. Y eso determina eldanio total."
-    // Rule 18: "En combate existe una tabla de debilidades. Si un monstruo ataca a uno contra el que tiene ventaja, el que recibe el ataque recibe 2 puntos adicionales de danio. Las cartas tienen que indicar weak +2 en su propia carta. No hay resistencias ni inmunidades"
+    endTurnPoisonPhase() {
+        const checkPoison = (mon, player) => {
+            if (mon && mon.status === 'poison' && mon.hp > 0) {
+                mon.hp = Math.max(0, mon.hp - 1);
+                this.log(`☠️ ¡${mon.name} sufre 1 de daño por veneno (${mon.hp}/${mon.maxHp} HP)!`);
+                if (mon.hp <= 0) {
+                    this.handleFaint(mon, player);
+                }
+            }
+        };
+        checkPoison(this.getP1Active(), this.player1);
+        checkPoison(this.getP2Active(), this.player2);
+    }
+
     executeAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first = false, isFreeAttackOnSwitch = false }) {
         this.log(`💥 ${attacker.name} usa **${attack.name}** contra ${defender.name}!`);
 
-        // Roll dice
+        // Attack Effect: Multiple hits (3 hits)
+        if (attack.effect === 'multi_hit') {
+            this.executeMultiHitAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first });
+            this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer);
+            return;
+        }
+
+        // Attack Effect: Fixed damage (ignores dice rolls and variances)
+        if (attack.effect === 'fixed_damage') {
+            let fixedDmg = attack.fixedDmg || attack.baseDmg || 5;
+            this.log(`🎯 ¡Daño Fijo! Inflige ${fixedDmg} de daño base garantizado.`);
+
+            if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_1') {
+                fixedDmg += 1;
+                this.log(`🥊 Banda Fuerza añade +1 al daño fijo.`);
+            }
+
+            if (first && attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_6') {
+                fixedDmg += 2;
+                this.log(`🦷 Colmillo Afilado inflige +2 daño fijo por atacar primero.`);
+            }
+
+            if (attacker.chargeNextTurn > 0) {
+                fixedDmg += attacker.chargeNextTurn;
+                this.log(`⚡ ¡Carga previa! Suma +${attacker.chargeNextTurn} de daño a este ataque.`);
+                attacker.chargeNextTurn = 0;
+            }
+
+            if (defender.status === 'drowsy') {
+                fixedDmg += 1;
+                this.log(`💤 ¡Somnoliento! ${defender.name} sufre +1 de daño adicional.`);
+            }
+
+            if (defender.shieldNextTurn > 0) {
+                const reduction = Math.min(fixedDmg - 1, defender.shieldNextTurn);
+                if (reduction > 0) {
+                    fixedDmg -= reduction;
+                    this.log(`🛡️ ¡Barrera Protectora! Absorbe ${reduction} de daño.`);
+                }
+                defender.shieldNextTurn = 0;
+            }
+
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_2') {
+                fixedDmg = Math.max(1, fixedDmg - 1);
+                this.log(`🦺 Chaleco Defensivo reduce el daño fijo en 1.`);
+            }
+
+            this.applyDamageToDefender(attacker, defender, fixedDmg);
+            this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer);
+            return;
+        }
+
+        // Standard dice rolling
         const diceCount = attack.diceCount || 1;
         let { rolls, total: diceSum } = rollDice(diceCount);
 
@@ -4298,7 +4816,62 @@ class CombatEngine {
             this.log(`🎯 Lente Preciso convierte las tiradas mínimas a 1.`);
         }
 
-        let damage = (attack.baseDmg || 1) + diceSum;
+        // Check Flauta Mágica (item_utl_4): rerolls lowest die if <= 1
+        const hasFlute = (attackerPlayer && attackerPlayer.inventory && attackerPlayer.inventory.some(i => i.id === 'item_utl_4')) ||
+                         (attacker.equippedItem && attacker.equippedItem.id === 'item_utl_4');
+        if (hasFlute && rolls.length > 0) {
+            const minRoll = Math.min(...rolls);
+            if (minRoll < 2) {
+                const minIdx = rolls.indexOf(minRoll);
+                const reroll = rollAttackDie();
+                if (reroll > minRoll) {
+                    rolls[minIdx] = reroll;
+                    diceSum = rolls.reduce((a, b) => a + b, 0);
+                    this.log(`🪈 ¡Flauta Mágica relanza el dado más bajo (${minRoll} ➡️ ${reroll})!`);
+                }
+            }
+        }
+
+        // Attack Effect: White dice count as Critical Hits (+2 damage per 0 face)
+        if (attack.effect === 'white_dice_crit') {
+            let zeroCount = 0;
+            rolls.forEach(r => {
+                if (r === 0) zeroCount++;
+            });
+            if (zeroCount > 0) {
+                const critBonus = zeroCount * 2;
+                diceSum += critBonus;
+                this.log(`🎯 ¡CRÍTICO EN DADO BLANCO! ${zeroCount} dado(s) blanco(s) (0) se convierten en impactos críticos (+${critBonus} daño total)!`);
+                SoundFX.weaknessHit();
+            }
+        }
+
+        // Calculate base damage
+        let baseDmg = attack.baseDmg || 1;
+
+        // Attack Effect: Damage equal to speed attribute
+        if (attack.effect === 'speed_damage') {
+            let effSpeed = (attacker.status === 'paralysis') ? 1 : Math.max(1, attacker.speed);
+            if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_3') {
+                effSpeed += 2;
+            }
+            baseDmg = effSpeed;
+            this.log(`⚡ ¡Velocidad Ofensiva! Daño base calculado a partir de la Velocidad del atacante (${effSpeed}).`);
+        } else if (attack.effect === 'facade_status') {
+            if (attacker.status) {
+                baseDmg += 4;
+                this.log(`🔥 ¡Furia Agónica! Por sufrir estado alterado (${attacker.status.toUpperCase()}), ¡inflige +4 de daño base!`);
+            }
+        }
+
+        let damage = baseDmg + diceSum;
+
+        // User bonus: Charge stored from previous attack
+        if (attacker.chargeNextTurn > 0) {
+            damage += attacker.chargeNextTurn;
+            this.log(`⚡ ¡Carga previa! Suma +${attacker.chargeNextTurn} de daño a este ataque.`);
+            attacker.chargeNextTurn = 0;
+        }
 
         // Requirement 3: Luck point spent to add +1 to roll
         let luckBonus = 0;
@@ -4340,6 +4913,22 @@ class CombatEngine {
             this.log(`🔥 Determinación de Red aumenta el daño en +1.`);
         }
 
+        // Status on defender: Drowsy (+1 damage received)
+        if (defender.status === 'drowsy') {
+            damage += 1;
+            this.log(`💤 ¡Somnoliento! ${defender.name} sufre +1 de daño adicional.`);
+        }
+
+        // Status on defender: Shield from previous move (-2 damage received, min 1)
+        if (defender.shieldNextTurn > 0) {
+            const reduction = Math.min(damage - 1, defender.shieldNextTurn);
+            if (reduction > 0) {
+                damage -= reduction;
+                this.log(`🛡️ ¡Barrera Protectora! Absorbe ${reduction} de daño.`);
+            }
+            defender.shieldNextTurn = 0;
+        }
+
         // Defender items: Chaleco Defensivo (-1 daño recibido, min 1)
         if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_2') {
             damage = Math.max(1, damage - 1);
@@ -4348,11 +4937,73 @@ class CombatEngine {
 
         this.log(`Ataque de **${attack.name}**: ${damage} de daño total.${weaknessBonus > 0 ? ' (¡+2 por debilidad!)' : ''}`);
 
-        // Apply damage to defender
+        this.applyDamageToDefender(attacker, defender, damage);
+        this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer);
+    }
+
+    executeMultiHitAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first }) {
+        const hits = attack.hits || 3;
+        let totalMultiDamage = 0;
+        this.log(`💥 ¡Ataque Múltiple! ${attacker.name} descarga una ráfaga de ${hits} golpes.`);
+
+        for (let h = 1; h <= hits; h++) {
+            if (defender.hp <= 0) break;
+
+            let roll = rollAttackDie();
+            if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_5' && roll === 0) {
+                roll = 1;
+            }
+
+            let hitDmg = (attack.baseDmg || 1) + roll;
+
+            if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_1') {
+                hitDmg += 1;
+            }
+
+            if (defender.status === 'drowsy') hitDmg += 1;
+            if (defender.shieldNextTurn > 0) {
+                hitDmg = Math.max(1, hitDmg - defender.shieldNextTurn);
+                defender.shieldNextTurn = 0;
+            }
+
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_2') {
+                hitDmg = Math.max(1, hitDmg - 1);
+            }
+
+            const prevHp = defender.hp;
+            let afterHp = prevHp - hitDmg;
+
+            if (afterHp <= 0 && defender.equippedItem && defender.equippedItem.id === 'item_cmb_7' && !defender.berryUsed) {
+                defender.berryUsed = true;
+                afterHp = 3;
+                this.log(`🫐 ¡Baya Aranja se activa durante el combo! ${defender.name} recupera 3 HP.`);
+            }
+
+            if (afterHp <= 0 && defender.equippedItem && defender.equippedItem.id === 'item_cmb_4' && !defender.focusSashUsed) {
+                defender.focusSashUsed = true;
+                afterHp = 1;
+                this.log(`🎗️ ¡Cinta Focus activada durante el combo! ${defender.name} sobrevive con 1 HP.`);
+            }
+
+            defender.hp = Math.max(0, afterHp);
+            totalMultiDamage += hitDmg;
+            this.log(`  ➡️ Golpe ${h}/${hits}: ${hitDmg} daño (Dado: ${roll}). [${defender.name}: ${defender.hp}/${defender.maxHp} HP]`);
+            SoundFX.hit();
+
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_8' && attacker.hp > 0) {
+                attacker.hp = Math.max(0, attacker.hp - 1);
+                this.log(`🪖 ¡Casco Dentado hiere a ${attacker.name} por 1 punto de daño reflejado!`);
+            }
+        }
+
+        this.log(`💥 Total de la ráfaga múltiple: ${totalMultiDamage} de daño.`);
+    }
+
+    applyDamageToDefender(attacker, defender, damage) {
         const initialHp = defender.hp;
         let newHp = initialHp - damage;
 
-        // Requirement 2: Baya Aranja triggers when reaching 0 HP
+        // Baya Aranja triggers when reaching 0 HP
         if (newHp <= 0 && defender.equippedItem && defender.equippedItem.id === 'item_cmb_7' && !defender.berryUsed) {
             defender.berryUsed = true;
             newHp = 3;
@@ -4374,6 +5025,93 @@ class CombatEngine {
             attacker.hp = Math.max(0, attacker.hp - 1);
             this.log(`🪖 ¡Casco Dentado hiere a ${attacker.name} por 1 punto de daño reflejado!`);
         }
+    }
+
+    applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer) {
+        if (!attack.effect) return;
+
+        // 1. Paralizar (0 speed)
+        if (attack.effect === 'paralyze' && defender.hp > 0) {
+            defender.status = 'paralysis';
+            defender.speed = 0;
+            this.log(`⚡ ¡${defender.name} ha sido PARALIZADO! Su Velocidad queda reducida a 0.`);
+            SoundFX.weaknessHit();
+        }
+
+        // 2. Envenenar (-1 hp por turno)
+        if (attack.effect === 'poison' && defender.hp > 0) {
+            defender.status = 'poison';
+            this.log(`☠️ ¡${defender.name} ha sido ENVENENADO! Perderá 1 HP al final de cada turno.`);
+        }
+
+        // 3. Somnoliento (recibe +1 dmg)
+        if (attack.effect === 'drowsy' && defender.hp > 0) {
+            defender.status = 'drowsy';
+            this.log(`💤 ¡${defender.name} ha caído en SOMNOLENCIA! Recibirá +1 de daño de todos los ataques.`);
+        }
+
+        // 4. Escudo próximo turno (-2 daño recibido)
+        if (attack.effect === 'shield_next' && attacker.hp > 0) {
+            attacker.shieldNextTurn = 2;
+            this.log(`🛡️ ¡${attacker.name} levanta un Escudo! El próximo ataque que reciba se reducirá en 2 de daño.`);
+        }
+
+        // 5. Carga próximo turno (+3 daño al próximo ataque)
+        if (attack.effect === 'charge_next' && attacker.hp > 0) {
+            attacker.chargeNextTurn = 3;
+            this.log(`⚡ ¡${attacker.name} carga su poder! Su próximo ataque infligirá +3 de daño adicional.`);
+        }
+
+        // 6. Pivot switch (te permite cambiar de monstruo inmediatamente sin penalización)
+        if (attack.effect === 'pivot_switch' && attacker.hp > 0) {
+            if (attackerPlayer === this.player1) {
+                const otherAlive = this.p1Team.some((m, idx) => idx !== this.p1ActiveIndex && m.hp > 0);
+                if (otherAlive) {
+                    this.log(`🔄 ¡${attack.name} activa el cambio táctico! ${attackerPlayer.name} puede cambiar de monstruo sin recibir daño.`);
+                    if (window.UI) {
+                        setTimeout(() => {
+                            UI.promptPivotSwitch();
+                        }, 500);
+                    }
+                }
+            }
+        }
+
+        // 7. Force switch (obliga al rival a cambiar, jugando todavía su turno)
+        if (attack.effect === 'force_switch') {
+            const isDefenderP1 = (defenderPlayer === this.player1) || (defender === this.getP1Active());
+            const team = isDefenderP1 ? this.p1Team : this.p2Team;
+            const currentIdx = isDefenderP1 ? this.p1ActiveIndex : this.p2ActiveIndex;
+            const nextIdx = team.findIndex((m, idx) => idx !== currentIdx && m.hp > 0);
+
+            if (nextIdx >= 0) {
+                if (isDefenderP1) {
+                    this.p1ActiveIndex = nextIdx;
+                    this.log(`🌪️ ¡${attack.name} expulsa a ${defender.name}! ${this.player1 ? this.player1.name : 'Jugador 1'} es forzado a sacar a **${this.getP1Active().name}**.`);
+                } else {
+                    this.p2ActiveIndex = nextIdx;
+                    this.log(`🌪️ ¡${attack.name} expulsa a ${defender.name}! ${this.getOpponentDisplayName()} es forzado a sacar a **${this.getP2Active().name}**.`);
+                }
+                this.log(`➡️ El nuevo monstruo continúa jugando su turno.`);
+            } else {
+                this.log(`🌪️ ¡${attack.name} intentó expulsar a ${defender.name}, pero el rival no tiene reservas vivas!`);
+            }
+        }
+    }
+
+    playerPivotSwitch(newIndex) {
+        if (newIndex === this.p1ActiveIndex) return;
+        if (this.p1Team[newIndex].hp <= 0) {
+            alert('¡Ese monstruo está debilitado!');
+            return;
+        }
+        const oldMon = this.getP1Active();
+        this.p1ActiveIndex = newIndex;
+        const newMon = this.getP1Active();
+        const pName = this.player1 ? this.player1.name : 'Jugador 1';
+        this.log(`🔄 ¡Retirada táctica! ${pName} envía a **${newMon.name}** al combate.`);
+        SoundFX.step();
+        if (window.UI) UI.renderCombatArena();
     }
 
     checkFaints() {
@@ -4487,11 +5225,22 @@ class CombatEngine {
             this.log(`🪙 REGLA 14: A pesar de la derrota, ¡obtienes ${rewardCoins} monedas de recompensa para recuperarte!`);
         }
 
-        // RULE 13: Monsters fully recover HP after a fight!
+        // RULE 13: Monsters fully recover HP and cleanse statuses after a fight!
         this.player1.monsters.forEach(m => {
             m.hp = m.maxHp;
+            m.status = null;
+            m.shieldNextTurn = 0;
+            m.chargeNextTurn = 0;
         });
-        this.log(`🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud.`);
+        if (this.player2 && this.player2.monsters) {
+            this.player2.monsters.forEach(m => {
+                m.hp = m.maxHp;
+                m.status = null;
+                m.shieldNextTurn = 0;
+                m.chargeNextTurn = 0;
+            });
+        }
+        this.log(`🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud y estados.`);
 
         if (window.UI) {
             UI.renderCombatArena();
@@ -4781,10 +5530,10 @@ class MonsterJourneyGame {
 
         // Expansion deck unlock tracking
         this.totalGymsDefeated = 0;
+        this.defeatedGymTiers = new Set();
         this.expansionsUnlocked = {
             tier2: false,
-            tier3: false,
-            tier4: false
+            tier3: false
         };
 
         // Active search state
@@ -4805,7 +5554,8 @@ class MonsterJourneyGame {
         this.movementPoints = 1;
         this.isGameOver = false;
         this.totalGymsDefeated = 0;
-        this.expansionsUnlocked = { tier2: false, tier3: false, tier4: false };
+        this.defeatedGymTiers = new Set();
+        this.expansionsUnlocked = { tier2: false, tier3: false };
 
         // Initialize Card Map with Starting Town at (0, 0)
         this.cardMap.initStartingBoard();
@@ -4819,6 +5569,8 @@ class MonsterJourneyGame {
 
         // Initialize River Shop (8 unique items)
         this.initShopRiver();
+
+        const cornerNodeIds = ['node_sw', 'node_ne', 'node_nw', 'node_se'];
 
         // Setup players
         playerConfigs.forEach((cfg, idx) => {
@@ -4838,7 +5590,10 @@ class MonsterJourneyGame {
                 return JSON.parse(JSON.stringify(item));
             });
 
-            // Player starts at (0, 0) - Starting Town
+            const startNodeId = cornerNodeIds[idx % cornerNodeIds.length];
+            const startNode = this.cardMap.getNode(startNodeId);
+
+            // Player starts at their respective corner node
             const player = {
                 id: `p${idx + 1}`,
                 num: idx + 1,
@@ -4846,11 +5601,13 @@ class MonsterJourneyGame {
                 characterId: charData.id,
                 character: charData,
                 color: ['#e53935', '#1e88e5', '#43a047', '#8e24aa'][idx % 4],
-                x: 0,
-                y: 0,
+                currentNodeId: startNode.id,
+                x: startNode.gridX,
+                y: startNode.gridY,
                 coins: charData.startingCoins,
                 luck: charData.startingLuck !== undefined ? charData.startingLuck : 3,
-                badges: [], // Array of defeated gym tiers: [1, 2, 3, 4]
+                badges: [], // Array of defeated gym tiers: [1, 2, 3]
+                defeatedGymIds: [],
                 monsters: [starterMonster], // Up to 4 on board (3 active + 1 reserve)
                 storageMonsters: [],
                 inventory: startingItems, // Hand of item cards
@@ -4959,12 +5716,37 @@ class MonsterJourneyGame {
         };
     }
 
+    getUnlockedTiers() {
+        const tiers = [1];
+        if (this.expansionsUnlocked.tier2) tiers.push(2);
+        if (this.expansionsUnlocked.tier3) tiers.push(3);
+        return tiers;
+    }
+
     initBiomeDecks() {
         this.biomeDecks = {};
+        const allowedTiers = this.getUnlockedTiers();
         Object.keys(BIOMES).forEach(biomeKey => {
-            const list = MONSTERS_DATABASE.filter(m => m.biome === biomeKey);
-            this.biomeDecks[biomeKey] = [...list, ...list].sort(() => Math.random() - 0.5);
+            const list = MONSTERS_DATABASE.filter(m => m.biome === biomeKey && allowedTiers.includes(m.captureTier));
+            this.biomeDecks[biomeKey] = [...list, ...list, ...list].sort(() => Math.random() - 0.5);
         });
+    }
+
+    refillBiomeDeck(biome) {
+        const allowedTiers = this.getUnlockedTiers();
+        const available = MONSTERS_DATABASE.filter(m => m.biome === biome && allowedTiers.includes(m.captureTier));
+        const newCards = [...available, ...available, ...available].sort(() => Math.random() - 0.5);
+        if (!this.biomeDecks[biome]) {
+            this.biomeDecks[biome] = [];
+        }
+        this.biomeDecks[biome].push(...newCards);
+    }
+
+    drawMonsterCard(biome) {
+        if (!this.biomeDecks[biome] || this.biomeDecks[biome].length === 0) {
+            this.refillBiomeDeck(biome);
+        }
+        return this.instantiateMonster(this.biomeDecks[biome].pop());
     }
 
     // Rule 16: River Shop with 8 unique items
@@ -5004,16 +5786,16 @@ class MonsterJourneyGame {
         player.temporaryModifiers.searchBonus = 0;
         player.temporaryModifiers.captureTierBonus = 0;
 
-        // Check for Light Boots
-        const hasBoots = player.inventory.some(i => i.id === 'item_utl_1');
+        // Check for Light Boots (Zapatillas)
+        const hasBoots = player.inventory.some(i => i.id === 'item_utl_1') || player.monsters.some(m => m.equippedItem && m.equippedItem.id === 'item_utl_1');
         if (hasBoots) {
             this.movementPoints = 2;
         }
 
-        // Check Treasure Magnet
+        // Check Treasure Magnet: +1 gold coin every turn!
         const hasMagnet = player.inventory.some(i => i.id === 'item_utl_8');
-        if (hasMagnet && this.currentRound % 3 === 0) {
-            player.coins += 2;
+        if (hasMagnet) {
+            player.coins += 1;
             SoundFX.coin();
         }
 
@@ -5026,98 +5808,159 @@ class MonsterJourneyGame {
         }
     }
 
-    // Movement on placed card node
-    movePlayerToNode(destX, destY) {
+    // Movement on connected graph route
+    movePlayerToNode(targetXOrId, maybeY) {
         const player = this.getActivePlayer();
         if (this.hasMoved) {
             alert('Ya has realizado tu movimiento en este turno.');
             return false;
         }
+        if (!this.movementPoints || this.movementPoints <= 0) {
+            this.movementPoints = 1;
+        }
 
-        const targetNode = this.cardMap.getNode(destX, destY);
+        const targetNode = this.cardMap.getNode(targetXOrId, maybeY);
         if (!targetNode) {
-            alert('No hay ninguna carta colocada en ese casillero.');
+            alert('No se encontró el nodo destino en el mapa.');
             return false;
         }
 
-        // Distance check in card grid: orthogonal distance
-        const dist = Math.abs(player.x - destX) + Math.abs(player.y - destY);
-        if (dist > this.movementPoints) {
-            alert(`Esa carta está a ${dist} pasos de distancia. Tu movimiento máximo es de ${this.movementPoints}.`);
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode) {
+            throw new Error('Nodo actual del jugador no encontrado en el mapa');
+        }
+
+        if (currentNode.id === targetNode.id) {
             return false;
         }
 
-        player.x = destX;
-        player.y = destY;
-        this.hasMoved = true;
+        if (targetNode.cards.length === 0) {
+            alert(`El nodo ${targetNode.name} aún no ha sido descubierto.`);
+            return false;
+        }
+
+        const { reachableDiscovered } = this.cardMap.getReachableNodes(currentNode.id, this.movementPoints);
+        const reachInfo = reachableDiscovered.get(targetNode.id);
+
+        const isDirectConnection = currentNode.connections.includes(targetNode.id);
+        const gridDist = Math.abs(currentNode.gridX - targetNode.gridX) + Math.abs(currentNode.gridY - targetNode.gridY);
+        const canTraverseFallback = isDirectConnection || (gridDist > 0 && gridDist <= this.movementPoints);
+
+        if (!reachInfo && !canTraverseFallback) {
+            alert(`No hay una ruta transitable hasta ${targetNode.name} con tus puntos de movimiento disponibles (${this.movementPoints}).`);
+            return false;
+        }
+
+        const cost = reachInfo ? reachInfo.distance : 1;
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.movementPoints = Math.max(0, this.movementPoints - cost);
+        if (this.movementPoints <= 0) {
+            this.hasMoved = true;
+        }
         SoundFX.step();
 
         if (window.UI) {
-            UI.logGame(`${player.name} se desplazó a **${targetNode.card.name}** (${targetNode.x}, ${targetNode.y}).`);
+            const remainingNotice = this.movementPoints > 0 ? ` (${this.movementPoints} paso restante)` : '';
+            UI.logGame(`${player.name} se desplazó por la ruta hasta **${targetNode.name}**${remainingNotice}.`);
             UI.renderAll();
         }
         return true;
     }
 
-    // Placing a location card from hand into an empty adjacent slot, and moving onto it!
-    placeLocationCardAndMove(cardIndexInHand, targetX, targetY) {
+    // Placing a location card from hand into an adjacent connected slot
+    placeLocationCardAndMove(cardIndexInHand, targetXOrId, maybeY) {
         const player = this.getActivePlayer();
         if (this.hasMoved) {
             alert('Ya has realizado tu movimiento en este turno.');
             return false;
         }
+        if (!this.movementPoints || this.movementPoints <= 0) {
+            this.movementPoints = 1;
+        }
 
-        if (this.cardMap.hasCard(targetX, targetY)) {
-            alert('Ese casillero ya tiene una carta colocada.');
+        const targetNode = this.cardMap.getNode(targetXOrId, maybeY);
+        if (!targetNode) {
+            alert('Nodo no encontrado en el mapa.');
             return false;
         }
 
-        // Must be orthogonally adjacent to player
-        const dist = Math.abs(player.x - targetX) + Math.abs(player.y - targetY);
-        if (dist !== 1) {
-            alert('Solo puedes colocar una carta en un espacio adyacente (a 1 casilla).');
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const isConnected = currentNode ? currentNode.connections.includes(targetNode.id) : true;
+        const gridDist = currentNode ? (Math.abs(currentNode.gridX - targetNode.gridX) + Math.abs(currentNode.gridY - targetNode.gridY)) : 1;
+        const isAdjacent = isConnected || (gridDist === 1);
+        const isSameNodeWithRoom = (currentNode && currentNode.id === targetNode.id && targetNode.cards.length < targetNode.maxCards);
+
+        if (!isAdjacent && !isSameNodeWithRoom) {
+            alert('Solo puedes colocar cartas en nodos conectados a tu posición actual.');
+            return false;
+        }
+
+        if (targetNode.cards.length >= targetNode.maxCards) {
+            alert(`El nodo ${targetNode.name} ya tiene su capacidad máxima (${targetNode.maxCards} carta${targetNode.maxCards > 1 ? 's' : ''}).`);
             return false;
         }
 
         const card = player.locationHand[cardIndexInHand];
         if (!card) return false;
 
-        // Remove from hand and place on board
         player.locationHand.splice(cardIndexInHand, 1);
-        const placedNode = this.cardMap.placeCard(targetX, targetY, card);
+        this.cardMap.placeCardOnNode(targetNode.id, card);
 
-        // Move player onto the newly placed card
-        player.x = targetX;
-        player.y = targetY;
-        this.hasMoved = true;
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.movementPoints = Math.max(0, this.movementPoints - 1);
+        if (this.movementPoints <= 0) {
+            this.hasMoved = true;
+        }
         SoundFX.step();
 
-        // Refill hand up to 5 cards
+        if (player.inventory.some(i => i.id === 'item_utl_3')) {
+            player.coins += 2;
+            SoundFX.coin();
+        }
+
         this.refillLocationHand(player);
 
         if (window.UI) {
-            UI.logGame(`🗺️ ${player.name} descubrió y colocó **${card.name}** (${BIOMES[card.biome].name}) en (${targetX}, ${targetY}) y avanzó hacia ella.`);
+            UI.logGame(`🗺️ ${player.name} descubrió **${card.name}** en ${targetNode.name} (${targetNode.cards.length}/${targetNode.maxCards} cartas) y avanzó hacia allí.`);
             UI.renderAll();
         }
         return true;
     }
 
-    // Requirement 6: Place top of Cities Deck into empty adjacent slot
-    placeCityCardAndMove(targetX, targetY) {
+    // Place top of Cities Deck into adjacent connected slot
+    placeCityCardAndMove(targetXOrId, maybeY) {
         const player = this.getActivePlayer();
         if (this.hasMoved) {
             alert('Ya has realizado tu movimiento en este turno.');
             return false;
         }
+        if (!this.movementPoints || this.movementPoints <= 0) {
+            this.movementPoints = 1;
+        }
 
-        if (this.cardMap.hasCard(targetX, targetY)) {
-            alert('Ese casillero ya tiene una carta colocada.');
+        const targetNode = this.cardMap.getNode(targetXOrId, maybeY);
+        if (!targetNode) {
+            alert('Nodo no encontrado en el mapa.');
             return false;
         }
 
-        const dist = Math.abs(player.x - targetX) + Math.abs(player.y - targetY);
-        if (dist !== 1) {
-            alert('Solo puedes fundar una ciudad en un espacio adyacente (a 1 casilla).');
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const isConnected = currentNode ? currentNode.connections.includes(targetNode.id) : true;
+        const gridDist = currentNode ? (Math.abs(currentNode.gridX - targetNode.gridX) + Math.abs(currentNode.gridY - targetNode.gridY)) : 1;
+        const isAdjacent = isConnected || (gridDist === 1);
+        const isSameNodeWithRoom = (currentNode && currentNode.id === targetNode.id && targetNode.cards.length < targetNode.maxCards);
+
+        if (!isAdjacent && !isSameNodeWithRoom) {
+            alert('Solo puedes fundar una ciudad en nodos conectados a tu posición actual.');
+            return false;
+        }
+
+        if (targetNode.cards.length >= targetNode.maxCards) {
+            alert(`El nodo ${targetNode.name} ya tiene su capacidad máxima (${targetNode.maxCards} carta${targetNode.maxCards > 1 ? 's' : ''}).`);
             return false;
         }
 
@@ -5127,44 +5970,54 @@ class MonsterJourneyGame {
         }
 
         const cityCard = this.citiesDeck.shift();
-        const placedNode = this.cardMap.placeCard(targetX, targetY, cityCard);
+        this.cardMap.placeCardOnNode(targetNode.id, cityCard);
 
-        player.x = targetX;
-        player.y = targetY;
-        this.hasMoved = true;
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.movementPoints = Math.max(0, this.movementPoints - 1);
+        if (this.movementPoints <= 0) {
+            this.hasMoved = true;
+        }
         SoundFX.victory();
+
+        if (player.inventory.some(i => i.id === 'item_utl_3')) {
+            player.coins += 2;
+            SoundFX.coin();
+        }
 
         const leader = (cityCard.gym && cityCard.gym.leaderName) || cityCard.leaderName || 'Líder de Gimnasio';
         if (window.UI) {
-            UI.logGame(`🏛️ ¡${player.name} fundó la metrópoli **${cityCard.name}** en (${targetX}, ${targetY})! Alberga el Gimnasio de ${leader}.`);
+            UI.logGame(`🏛️ ¡${player.name} fundó la ciudad de **${cityCard.name}** en ${targetNode.name}! Alberga el Gimnasio de ${leader}.`);
             UI.renderAll();
         }
         return true;
     }
 
     // Rule 15: Fast Travel between Cities
-    fastTravelToCity(targetCityNodeKey) {
+    fastTravelToCity(targetCityNodeId) {
         const player = this.getActivePlayer();
-        const currentNode = this.cardMap.getNode(player.x, player.y);
-        if (!currentNode || currentNode.card.biome !== 'city') {
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        if (!currentNode || !currentNode.cards.some(c => c.biome === 'city')) {
             alert('Debes estar en una Ciudad para viajar rápidamente a otra.');
-            return false;
+            return;
         }
 
-        const targetNode = this.cardMap.nodes[targetCityNodeKey];
-        if (!targetNode || targetNode.card.biome !== 'city') {
-            alert('Destino no válido.');
-            return false;
+        const targetNode = this.cardMap.getNode(targetCityNodeId);
+        if (!targetNode || !targetNode.cards.some(c => c.biome === 'city')) {
+            alert('Solo puedes viajar a nodos que contengan una Ciudad.');
+            return;
         }
 
-        player.x = targetNode.x;
-        player.y = targetNode.y;
-        this.hasActed = true;
-        SoundFX.step();
+        player.currentNodeId = targetNode.id;
+        player.x = targetNode.gridX;
+        player.y = targetNode.gridY;
+        this.hasMoved = true;
+        SoundFX.victory();
 
         if (window.UI) {
-            UI.logGame(`✈️ ${player.name} viajó rápidamente de ${currentNode.card.name} a **${targetNode.card.name}**.`);
             UI.hideCityTravelModal();
+            UI.logGame(`✈️ ${player.name} usó el viaje rápido hacia **${targetNode.name}**.`);
             UI.renderAll();
         }
         return true;
@@ -5290,10 +6143,10 @@ class MonsterJourneyGame {
         }
     }
 
-    // Searching specifically for Tier 4 Legendaries
+    // Searching specifically for Tier 3 Legendaries
     searchLegendaryMonsters() {
         const player = this.getActivePlayer();
-        const legendaries = MONSTERS_DATABASE.filter(m => m.captureTier >= 4);
+        const legendaries = MONSTERS_DATABASE.filter(m => m.captureTier >= 3);
         const drawnCards = [...legendaries].sort(() => Math.random() - 0.5).slice(0, 3).map(m => this.instantiateMonster(m));
 
         this.activeSearchCards = drawnCards;
@@ -5343,21 +6196,17 @@ class MonsterJourneyGame {
             return;
         }
 
-        // Draw 3 cards (or 4 if telescope / grass ability)
         let drawCount = 3 + (player.temporaryModifiers.searchBonus || 0);
+        if (player.inventory.some(i => i.id === 'item_utl_2')) {
+            drawCount += 1;
+        }
         if (player.inventory.some(i => i.id === 'item_utl_7')) {
             drawCount += 1;
         }
 
-        const deck = this.biomeDecks[biome];
-        if (!deck || deck.length < drawCount) {
-            this.initBiomeDecks();
-        }
-
         const drawnCards = [];
         for (let i = 0; i < drawCount; i++) {
-            if (this.biomeDecks[biome].length === 0) this.initBiomeDecks();
-            drawnCards.push(this.instantiateMonster(this.biomeDecks[biome].pop()));
+            drawnCards.push(this.drawMonsterCard(biome));
         }
 
         this.activeSearchCards = drawnCards;
@@ -5388,12 +6237,12 @@ class MonsterJourneyGame {
         SoundFX.diceRoll();
 
         let drawCount = 3 + (player.temporaryModifiers.searchBonus || 0);
+        if (player.inventory.some(i => i.id === 'item_utl_2')) drawCount += 1;
         if (player.inventory.some(i => i.id === 'item_utl_7')) drawCount += 1;
 
         const drawnCards = [];
         for (let i = 0; i < drawCount; i++) {
-            if (!this.biomeDecks[biome] || this.biomeDecks[biome].length === 0) this.initBiomeDecks();
-            drawnCards.push(this.instantiateMonster(this.biomeDecks[biome].pop()));
+            drawnCards.push(this.drawMonsterCard(biome));
         }
 
         this.activeSearchCards = drawnCards;
@@ -5455,14 +6304,6 @@ class MonsterJourneyGame {
         const player = this.getActivePlayer();
         const wildMon = this.activeSearchCards[monsterIndex];
         if (!wildMon) return;
-
-        const maxGymBadge = player.badges.length > 0 ? Math.max(...player.badges) : 0;
-        const requiredTier = wildMon.captureTier;
-
-        if (maxGymBadge < requiredTier) {
-            alert(`⚠️ Para aprender el ataque de ${wildMon.name} necesitas haber derrotado un Gimnasio de al menos Tier ${requiredTier}.\nTus medallas actuales: Tier ${player.badges.join(', ') || 'Ninguna'}.`);
-            return;
-        }
 
         const targetMon = player.monsters.find(m => m.instanceId === targetMonsterInstanceId);
         if (!targetMon) return;
@@ -5536,11 +6377,19 @@ class MonsterJourneyGame {
         if (!item || !monster) return;
 
         if (monster.equippedItem) {
+            if (monster.equippedItem.id === 'item_cmb_9') {
+                monster.maxHp = Math.max(1, monster.maxHp - 3);
+                monster.hp = Math.min(monster.hp, monster.maxHp);
+            }
             player.inventory.push(monster.equippedItem);
             monster.equippedItem = null;
         }
 
         monster.equippedItem = JSON.parse(JSON.stringify(item));
+        if (item.id === 'item_cmb_9') {
+            monster.maxHp += 3;
+            monster.hp += 3;
+        }
         player.inventory.splice(itemIndexInInventory, 1);
         SoundFX.step();
 
@@ -5554,6 +6403,10 @@ class MonsterJourneyGame {
         if (!monster || !monster.equippedItem) return;
 
         const item = monster.equippedItem;
+        if (item.id === 'item_cmb_9') {
+            monster.maxHp = Math.max(1, monster.maxHp - 3);
+            monster.hp = Math.min(monster.hp, monster.maxHp);
+        }
         monster.equippedItem = null;
         player.inventory.push(item);
         SoundFX.step();
@@ -5576,44 +6429,6 @@ class MonsterJourneyGame {
         if (window.UI) UI.renderAll();
     }
 
-    visitPOI() {
-        const player = this.getActivePlayer();
-        if (this.hasActed) {
-            alert('Ya has tomado tu acción en este turno.');
-            return;
-        }
-
-        const node = this.cardMap.getNode(player.x, player.y);
-        if (!node || !node.poi || node.poi.claimed) {
-            alert('No hay ningún Punto de Interés disponible en esta carta.');
-            return;
-        }
-
-        const poi = node.poi;
-        poi.claimed = true;
-
-        if (poi.type === 'item_cache') {
-            player.coins += 3;
-            player.luck += 1;
-            SoundFX.coin();
-        } else if (poi.type === 'fountain') {
-            player.monsters.forEach(m => m.hp = m.maxHp);
-            SoundFX.victory();
-        } else if (poi.type === 'shrine') {
-            player.luck += 2;
-            SoundFX.victory();
-        } else if (poi.type === 'trainer') {
-            player.coins += 4;
-            SoundFX.victory();
-        }
-
-        this.hasActed = true;
-        if (window.UI) {
-            UI.logGame(`📍 ${player.name} visitó el POI **${poi.name}**: ${poi.desc}`);
-            UI.renderAll();
-        }
-    }
-
     // Challenge Gym in current City node
     challengeGym() {
         const player = this.getActivePlayer();
@@ -5629,7 +6444,9 @@ class MonsterJourneyGame {
         }
 
         const gym = node.card.gym;
-        if (player.badges.includes(gym.tier)) {
+        const alreadyDefeated = (player.defeatedGymIds && player.defeatedGymIds.includes(gym.id)) ||
+                                (player.badges.includes(gym.tier) && gym.tier < 3);
+        if (alreadyDefeated) {
             alert(`Ya has derrotado este Gimnasio y posees la ${gym.badgeName}.`);
             return;
         }
@@ -5645,22 +6462,34 @@ class MonsterJourneyGame {
         });
     }
 
-    // Requirement 5: Expansion Decks + 3 of 4 Gyms Win Condition
     onGymDefeated(player, gymData) {
         this.totalGymsDefeated++;
 
-        if (gymData && gymData.tier && !player.badges.includes(gymData.tier)) {
-            player.badges.push(gymData.tier);
-            player.badges.sort((a, b) => a - b);
+        if (gymData) {
+            if (!player.defeatedGymIds) player.defeatedGymIds = [];
+            if (gymData.id && !player.defeatedGymIds.includes(gymData.id)) {
+                player.defeatedGymIds.push(gymData.id);
+            }
+            if (gymData.tier && !player.badges.includes(gymData.tier)) {
+                player.badges.push(gymData.tier);
+                player.badges.sort((a, b) => a - b);
+            }
         }
 
-        // Add expansion decks
-        if (this.totalGymsDefeated === 1 && !this.expansionsUnlocked.tier2) {
+        if (!this.defeatedGymTiers) this.defeatedGymTiers = new Set();
+        if (gymData && gymData.tier) {
+            this.defeatedGymTiers.add(gymData.tier);
+        }
+
+        const isFirstGym = (this.defeatedGymTiers.has(1) || this.totalGymsDefeated === 1);
+        const isSecondGym = (this.defeatedGymTiers.has(2) || this.totalGymsDefeated >= 2);
+
+        if (isFirstGym && !this.expansionsUnlocked.tier2) {
             this.expansionsUnlocked.tier2 = true;
             const t2 = EXPANSION_DECKS.tier2;
             t2.monsters.forEach(m => {
                 if (m && this.biomeDecks[m.biome]) {
-                    this.biomeDecks[m.biome].push(m);
+                    this.biomeDecks[m.biome].push(m, m, m);
                     this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
                 }
             });
@@ -5668,12 +6497,14 @@ class MonsterJourneyGame {
                 UI.logGame(`📦 ¡EXPANSIÓN DESBLOQUEADA: **${t2.name}**! Nuevas criaturas de Tier 2 añadidas.`);
                 UI.showNotification(t2.name, t2.desc);
             }
-        } else if (this.totalGymsDefeated === 2 && !this.expansionsUnlocked.tier3) {
+        }
+
+        if (isSecondGym && !this.expansionsUnlocked.tier3) {
             this.expansionsUnlocked.tier3 = true;
             const t3 = EXPANSION_DECKS.tier3;
             t3.monsters.forEach(m => {
                 if (m && this.biomeDecks[m.biome]) {
-                    this.biomeDecks[m.biome].push(m);
+                    this.biomeDecks[m.biome].push(m, m, m);
                     this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
                 }
             });
@@ -5681,25 +6512,15 @@ class MonsterJourneyGame {
                 UI.logGame(`📦 ¡EXPANSIÓN DESBLOQUEADA: **${t3.name}**! Nuevas criaturas de Tier 3 añadidas.`);
                 UI.showNotification(t3.name, t3.desc);
             }
-        } else if (this.totalGymsDefeated >= 3 && !this.expansionsUnlocked.tier4) {
-            this.expansionsUnlocked.tier4 = true;
-            const t4 = EXPANSION_DECKS.tier4;
-            t4.monsters.forEach(m => {
-                if (m && this.biomeDecks[m.biome]) {
-                    this.biomeDecks[m.biome].push(m);
-                    this.biomeDecks[m.biome].sort(() => Math.random() - 0.5);
-                }
-            });
-            if (window.UI) {
-                UI.logGame(`🌟 ¡EXPANSIÓN DESBLOQUEADA: **${t4.name}**! Criaturas Legendarias añadidas.`);
-                UI.showNotification(t4.name, t4.desc);
-            }
         }
 
-        // Requirement 5: Win condition - Only need 3 of 4 Gyms!
-        if (player.badges.length >= 3) {
+        const badgeCount = player.defeatedGymIds && player.defeatedGymIds.length > player.badges.length
+            ? player.defeatedGymIds.length
+            : player.badges.length;
+
+        if (badgeCount >= 3) {
             if (window.UI) {
-                UI.logGame(`👑 **¡${player.name} HA OBTENIDO 3 MEDALLAS DE GIMNASIO (DE 4)!** ¡Se activa el Gran Torneo Final!`);
+                UI.logGame(`👑 **¡${player.name} HA OBTENIDO 3 MEDALLAS DE GIMNASIO!** ¡Se activa el Gran Torneo Final!`);
             }
             this.triggerTournament();
         }
@@ -5876,10 +6697,6 @@ const UI = {
             this.showLocationActionModal();
         });
 
-        document.getElementById('btn-act-poi')?.addEventListener('click', () => {
-            this.game.visitPOI();
-        });
-
         document.getElementById('btn-act-travel')?.addEventListener('click', () => {
             this.showCityTravelModal(false);
         });
@@ -5902,6 +6719,7 @@ const UI = {
     },
 
     renderAll() {
+        if (!this.game) return;
         this.renderHeader();
         this.renderCardMap();
         this.renderActionBar();
@@ -5921,8 +6739,14 @@ const UI = {
 
         const moveStatusEl = document.getElementById('status-movement');
         if (moveStatusEl) {
-            moveStatusEl.textContent = this.game.hasMoved ? 'Movimiento: Agotado' : `Movimiento: Disponible (1 casillero)`;
-            moveStatusEl.className = this.game.hasMoved ? 'status-pill tag-disabled' : 'status-pill tag-success';
+            if (this.game.hasMoved || this.game.movementPoints <= 0) {
+                moveStatusEl.textContent = 'Movimiento: Agotado';
+                moveStatusEl.className = 'status-pill tag-disabled';
+            } else {
+                const pts = this.game.movementPoints;
+                moveStatusEl.textContent = `Movimiento: ${pts} paso${pts > 1 ? 's' : ''} disponible${pts > 1 ? 's' : ''}`;
+                moveStatusEl.className = 'status-pill tag-success';
+            }
         }
 
         const actStatusEl = document.getElementById('status-action');
@@ -5932,190 +6756,222 @@ const UI = {
         }
     },
 
-    // Requirement 1 & 6: Interconnected Card Node System Map Renderer
+    // Requirement 1 & 6: Pokemon-Style Region Route Map Renderer
     renderCardMap() {
         const grid = document.getElementById('card-board-grid');
         if (!grid) return;
 
         const activePlayer = this.game.getActivePlayer();
-        const nodes = this.game.cardMap.getAllNodes();
+        const playerNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+        const allNodes = this.game.cardMap.getAllNodes();
 
-        // Calculate card coordinates layout
-        const CARD_W = 130;
-        const CARD_H = 182;
-        const GAP_X = 28;
-        const GAP_Y = 28;
-        const STEP_X = CARD_W + GAP_X;
-        const STEP_Y = CARD_H + GAP_Y;
+        const remainingSteps = (this.game.hasMoved || this.game.movementPoints <= 0) ? 0 : this.game.movementPoints;
+        const { reachableDiscovered, reachableUndiscovered } = playerNode
+            ? this.game.cardMap.getReachableNodes(playerNode.id, remainingSteps)
+            : { reachableDiscovered: new Map(), reachableUndiscovered: new Map() };
 
-        // Bounding box of placed nodes
-        let minX = 0, maxX = 0, minY = 0, maxY = 0;
-        nodes.forEach(n => {
-            if (n.x < minX) minX = n.x;
-            if (n.x > maxX) maxX = n.x;
-            if (n.y < minY) minY = n.y;
-            if (n.y > maxY) maxY = n.y;
+        grid.style.width = '1040px';
+        grid.style.height = '660px';
+        grid.style.position = 'relative';
+
+        // 1. Draw connecting route lines (SVG layer)
+        const renderedEdges = new Set();
+        let svgLines = '';
+
+        allNodes.forEach(node => {
+            const connectedNodes = this.game.cardMap.getConnectedNodes(node);
+            connectedNodes.forEach(conn => {
+                const edgeKey = [node.id, conn.id].sort().join('--');
+                if (renderedEdges.has(edgeKey)) return;
+                renderedEdges.add(edgeKey);
+
+                const isDiscovered = (node.cards.length > 0 && conn.cards.length > 0);
+                const isPlayerRoute = playerNode && (
+                    (playerNode.id === node.id && (conn.cards.length > 0 || reachableUndiscovered.has(conn.id))) ||
+                    (playerNode.id === conn.id && (node.cards.length > 0 || reachableUndiscovered.has(node.id))) ||
+                    (reachableDiscovered.has(node.id) && reachableDiscovered.has(conn.id))
+                );
+
+                svgLines += `
+                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
+                          class="route-casing" />
+                    <line x1="${node.mapX}" y1="${node.mapY}" x2="${conn.mapX}" y2="${conn.mapY}"
+                          class="route-inner ${isDiscovered ? 'route-discovered' : 'route-undiscovered'} ${isPlayerRoute ? 'route-adjacent-player' : ''}" />
+                `;
+            });
         });
 
-        // Expand bounds by 1 to include adjacent placeable empty slots
-        const renderMinX = minX - 1;
-        const renderMaxX = maxX + 1;
-        const renderMinY = minY - 1;
-        const renderMaxY = maxY + 1;
+        const svgHtml = `
+            <svg class="pokemon-map-routes" width="1040" height="660" viewBox="0 0 1040 660">
+                ${svgLines}
+            </svg>
+        `;
 
-        const totalCols = (renderMaxX - renderMinX) + 1;
-        const totalRows = (renderMaxY - renderMinY) + 1;
+        // 2. Render Pokemon Map Nodes
+        let nodesHtml = '';
+        allNodes.forEach(node => {
+            const isPlayerHere = playerNode && (playerNode.id === node.id);
+            const isDirectConnected = playerNode ? playerNode.connections.includes(node.id) : false;
+            const isDiscoveredReachable = reachableDiscovered.has(node.id) && !this.game.hasMoved;
+            const isDiscoverableReachable = (reachableUndiscovered.has(node.id) || isDirectConnected) && !this.game.hasMoved && remainingSteps > 0;
+            const isAdjacentReachable = isDiscoveredReachable || isDiscoverableReachable;
 
-        const gridWidth = Math.max(900, totalCols * STEP_X + 40);
-        const gridHeight = Math.max(480, totalRows * STEP_Y + 40);
+            const playersOnNode = this.game.players.filter(p => {
+                const pNode = this.game.cardMap.getNode(p.currentNodeId || `${p.x},${p.y}`);
+                return pNode && pNode.id === node.id;
+            });
 
-        grid.style.width = `${gridWidth}px`;
-        grid.style.height = `${gridHeight}px`;
+            const hasCards = node.cards.length > 0;
 
-        const originX = (gridWidth - (totalCols * STEP_X - GAP_X)) / 2 - (renderMinX * STEP_X);
-        const originY = (gridHeight - (totalRows * STEP_Y - GAP_Y)) / 2 - (renderMinY * STEP_Y);
-
-        let html = '';
-
-        // Draw connections between orthogonally adjacent placed cards
-        nodes.forEach(node => {
-            const px = originX + node.x * STEP_X;
-            const py = originY + node.y * STEP_Y;
-
-            // Check East neighbor
-            if (this.game.cardMap.hasCard(node.x + 1, node.y)) {
-                html += `
-                    <div class="board-path-line" style="
-                        left: ${px + CARD_W}px;
-                        top: ${py + CARD_H / 2 - 3}px;
-                        width: ${GAP_X}px;
-                        height: 6px;
-                        border-top: 2px dashed rgba(148, 163, 184, 0.4);
-                        border-bottom: 2px dashed rgba(148, 163, 184, 0.4);
-                    "></div>
-                `;
-            }
-            // Check South neighbor
-            if (this.game.cardMap.hasCard(node.x, node.y + 1)) {
-                html += `
-                    <div class="board-path-line" style="
-                        left: ${px + CARD_W / 2 - 3}px;
-                        top: ${py + CARD_H}px;
-                        width: 6px;
-                        height: ${GAP_Y}px;
-                        border-left: 2px dashed rgba(148, 163, 184, 0.4);
-                        border-right: 2px dashed rgba(148, 163, 184, 0.4);
-                    "></div>
-                `;
-            }
-        });
-
-        // Render Placed Cards
-        nodes.forEach(node => {
-            const card = node.card;
-            const biome = BIOMES[card.biome] || BIOMES.city;
-            const px = originX + node.x * STEP_X;
-            const py = originY + node.y * STEP_Y;
-
-            const isPlayerHere = (activePlayer.x === node.x && activePlayer.y === node.y);
-            const dist = Math.abs(activePlayer.x - node.x) + Math.abs(activePlayer.y - node.y);
-            const isAdjacent = (dist === 1);
-
-            let nodeClass = 'board-card-node';
+            let nodeClass = 'pokemon-map-node';
             if (isPlayerHere) nodeClass += ' current-player-node';
-            else if (isAdjacent && !this.game.hasMoved) nodeClass += ' adjacent-target-node';
+            if (isAdjacentReachable) nodeClass += ' adjacent-target-node';
+            if (node.maxCards === 2) nodeClass += ' hub-node';
 
-            const playersOnNode = this.game.players.filter(p => p.x === node.x && p.y === node.y);
-
-            html += `
-                <div class="${nodeClass}" style="left: ${px}px; top: ${py}px; border-color: ${biome.color};" 
-                     onclick="UI.onBoardNodeClicked(${node.x}, ${node.y})">
-                    
-                    <div class="board-card-header" style="background: ${biome.color};">
-                        <span>${biome.icon} ${biome.name}</span>
-                        <small>(${node.x},${node.y})</small>
-                    </div>
-
-                    <div class="board-card-body">
-                        ${card.gym ? `<div class="board-card-gym-badge">🏛️ T${card.gym.tier}</div>` : ''}
-                        ${node.poi && !node.poi.claimed ? `<div class="board-card-poi-badge" title="${node.poi.name}: ${node.poi.desc}">${node.poi.icon}</div>` : ''}
+            if (hasCards) {
+                nodesHtml += `
+                    <div class="${nodeClass}" style="left: ${node.mapX}px; top: ${node.mapY}px;"
+                         onclick="UI.onBoardNodeClicked('${node.id}')">
                         
-                        <div class="board-card-icon">${card.icon || biome.icon}</div>
-                        <div class="board-card-title">${card.name}</div>
-                    </div>
-
-                    <!-- Players standing here -->
-                    ${playersOnNode.length > 0 ? `
-                        <div class="board-players-container">
-                            ${playersOnNode.map(p => `
-                                <div class="player-meeple" style="background: ${p.color};" title="${p.name}">
-                                    P${p.num}
-                                </div>
-                            `).join('')}
+                        <div class="node-badge-header">
+                            <span class="node-name-text">${node.name}</span>
+                            ${node.maxCards === 2 ? `<span class="node-hub-pill">${node.cards.length}/2 🗂️</span>` : ''}
+                            ${node.corner ? `<span class="node-corner-pill">🏡 ${node.corner}</span>` : ''}
                         </div>
-                    ` : ''}
 
-                    <div class="board-card-footer">
-                        ${card.locationAction ? `<span>🔄 ${card.locationAction.name}</span>` : `<span>${biome.name}</span>`}
-                    </div>
-                </div>
-            `;
-        });
+                        <div class="node-cards-row">
+                            ${node.cards.map((card) => {
+                                const biome = BIOMES[card.biome] || BIOMES.city;
+                                return `
+                                    <div class="node-mini-card" style="border-top: 3px solid ${biome.color};">
+                                        <div class="mini-card-icon">${card.icon || biome.icon}</div>
+                                        <div class="mini-card-title">${card.name}</div>
+                                        ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
+                                        ${card.locationAction ? `<div class="mini-card-action">🔄</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                            ${(node.cards.length < node.maxCards && (isAdjacentReachable || isPlayerHere)) ? `
+                                <div class="node-mini-card node-mini-card-add" title="Colocar 2ª carta en este Hub"
+                                     onclick="event.stopPropagation(); UI.showPlaceCardModal('${node.id}')">
+                                    <span class="empty-slot-plus">➕</span>
+                                    <span class="empty-slot-text">2ª Carta</span>
+                                </div>
+                            ` : ''}
+                        </div>
 
-        // Render Empty Border Slots (Explorable Areas)
-        const emptySlots = this.game.cardMap.getAllEmptyBorderSlots();
-        emptySlots.forEach(slot => {
-            const px = originX + slot.x * STEP_X;
-            const py = originY + slot.y * STEP_Y;
-
-            const dist = Math.abs(activePlayer.x - slot.x) + Math.abs(activePlayer.y - slot.y);
-            const isDirectlyAdjacentToPlayer = (dist === 1);
-
-            if (isDirectlyAdjacentToPlayer && !this.game.hasMoved) {
-                html += `
-                    <div class="board-empty-slot" style="left: ${px}px; top: ${py}px; border-color: #34d399; background: rgba(52, 211, 153, 0.08);"
-                         onclick="UI.showPlaceCardModal(${slot.x}, ${slot.y})">
-                        <span class="empty-slot-plus">➕</span>
-                        <span class="empty-slot-text" style="color: #34d399;">Descubrir Zona (${slot.x}, ${slot.y})</span>
+                        ${playersOnNode.length > 0 ? `
+                            <div class="board-players-container">
+                                ${playersOnNode.map(p => `
+                                    <div class="player-meeple" style="background: ${p.color};" title="${p.name}">
+                                        P${p.num}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             } else {
-                html += `
-                    <div class="board-empty-slot" style="left: ${px}px; top: ${py}px; opacity: 0.35;" 
-                         title="Espacio vacío (${slot.x}, ${slot.y})">
-                        <span class="empty-slot-plus">＋</span>
-                        <span class="empty-slot-text">(${slot.x}, ${slot.y})</span>
-                    </div>
-                `;
+                if (isAdjacentReachable) {
+                    nodesHtml += `
+                        <div class="${nodeClass} board-empty-slot discoverable-slot" 
+                             style="left: ${node.mapX}px; top: ${node.mapY}px;"
+                             onclick="UI.showPlaceCardModal('${node.id}')">
+                            <div class="node-badge-header">
+                                <span class="node-name-text">${node.name}</span>
+                                ${node.maxCards === 2 ? `<span class="node-hub-pill">Hub 2🗂️</span>` : ''}
+                            </div>
+                            <div class="empty-slot-body">
+                                <span class="empty-slot-plus">➕</span>
+                                <span class="empty-slot-text">Descubrir</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    nodesHtml += `
+                        <div class="${nodeClass} board-empty-slot undiscovered-slot" 
+                             style="left: ${node.mapX}px; top: ${node.mapY}px;"
+                             onclick="UI.onBoardNodeClicked('${node.id}')"
+                             title="Ruta a ${node.name}">
+                            <div class="node-badge-header">
+                                <span class="node-name-text">${node.name}</span>
+                                ${node.maxCards === 2 ? `<span class="node-hub-pill">Hub 2🗂️</span>` : ''}
+                            </div>
+                            <div class="empty-slot-body">
+                                <span class="empty-slot-plus">？</span>
+                                <span class="empty-slot-text">No explorado</span>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         });
 
-        grid.innerHTML = html;
+        grid.innerHTML = svgHtml + nodesHtml;
     },
 
-    onBoardNodeClicked(x, y) {
-        const activePlayer = this.game.getActivePlayer();
-        const dist = Math.abs(activePlayer.x - x) + Math.abs(activePlayer.y - y);
+    onBoardNodeClicked(nodeIdOrX, maybeY) {
+        const targetNode = this.game.cardMap.getNode(nodeIdOrX, maybeY);
+        if (!targetNode) return;
 
-        if (!this.game.hasMoved && dist <= this.game.movementPoints && dist > 0) {
-            this.game.movePlayerToNode(x, y);
+        const activePlayer = this.game.getActivePlayer();
+        const playerNode = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+
+        const remainingSteps = (this.game.hasMoved || this.game.movementPoints <= 0) ? 0 : this.game.movementPoints;
+        const { reachableDiscovered, reachableUndiscovered } = playerNode
+            ? this.game.cardMap.getReachableNodes(playerNode.id, remainingSteps)
+            : { reachableDiscovered: new Map(), reachableUndiscovered: new Map() };
+
+        if (!this.game.hasMoved && remainingSteps > 0) {
+            const isDirectConnected = playerNode ? playerNode.connections.includes(targetNode.id) : false;
+
+            if (targetNode.cards.length > 0 && (reachableDiscovered.has(targetNode.id) || isDirectConnected)) {
+                this.game.movePlayerToNode(targetNode.id);
+                return;
+            }
+
+            if (targetNode.cards.length === 0) {
+                if (isDirectConnected) {
+                    this.showPlaceCardModal(targetNode.id);
+                    return;
+                } else if (reachableUndiscovered.has(targetNode.id)) {
+                    const reachInfo = reachableUndiscovered.get(targetNode.id);
+                    if (reachInfo && reachInfo.path.length >= 2) {
+                        const intermediateNodeId = reachInfo.path[1];
+                        this.game.movePlayerToNode(intermediateNodeId);
+                        setTimeout(() => {
+                            this.showPlaceCardModal(targetNode.id);
+                        }, 250);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (targetNode.cards.length === 0) {
+            this.showNotification(targetNode.name, `Zona aún no descubierta.<br>Conexiones: ${targetNode.connections.map(c => this.game.cardMap.getNode(c)?.name || c).join(', ')}`);
             return;
         }
 
-        const node = this.game.cardMap.getNode(x, y);
-        if (!node) return;
+        let msg = `📍 **${targetNode.name}** (${targetNode.cards.length}/${targetNode.maxCards} cartas)\n\n`;
+        targetNode.cards.forEach((card, idx) => {
+            const biome = BIOMES[card.biome] || BIOMES.city;
+            msg += `**[Carta ${idx + 1}] ${card.name}** (${biome.name})\n`;
+            if (card.flavor) msg += `*${card.flavor}*\n`;
+            if (card.locationAction) msg += `🔄 **Acción:** ${card.locationAction.name} - ${card.locationAction.desc}\n`;
+            if (card.gym) msg += `🏛️ **Gimnasio:** Líder ${card.gym.leaderName} (Tier ${card.gym.tier})\n`;
+            msg += `\n`;
+        });
 
-        let msg = `📍 **${node.card.name}** (${node.x}, ${node.y})\nBioma: ${BIOMES[node.card.biome].name}\n`;
-        if (node.card.flavor) msg += `*${node.card.flavor}*\n\n`;
-        if (node.card.locationAction) msg += `🔄 **Acción de Lugar:** ${node.card.locationAction.name} - ${node.card.locationAction.desc}\n`;
-        if (node.card.gym) msg += `🏛️ **Gimnasio:** Líder ${node.card.gym.leaderName} (Tier ${node.card.gym.tier})\n`;
-        if (node.poi && !node.poi.claimed) msg += `✨ **Punto de Interés:** ${node.poi.name} (${node.poi.desc})\n`;
-
-        this.showNotification(node.card.name, msg.replace(/\n/g, '<br>'));
+        this.showNotification(targetNode.name, msg.replace(/\n/g, '<br>'));
     },
 
-    showPlaceCardModal(x, y) {
-        this.pendingPlacementCoords = { x, y };
+    showPlaceCardModal(nodeIdOrX, maybeY) {
+        const targetNode = this.game.cardMap.getNode(nodeIdOrX, maybeY);
+        if (!targetNode) return;
+
+        this.pendingPlacementNodeId = targetNode.id;
+        this.pendingPlacementCoords = { x: targetNode.gridX, y: targetNode.gridY };
         const modal = document.getElementById('modal-place-card');
         if (!modal) return;
 
@@ -6128,7 +6984,7 @@ const UI = {
             if (this.game.citiesDeck.length > 0) {
                 const nextCity = this.game.citiesDeck[0];
                 html += `
-                    <div class="location-hand-card cities-deck-card" style="cursor: pointer;" onclick="UI.confirmPlaceCity(${x}, ${y})">
+                    <div class="location-hand-card cities-deck-card" style="cursor: pointer;" onclick="UI.confirmPlaceCity('${targetNode.id}')">
                         <div class="location-card-banner" style="background: #1e293b; color: #fbbf24; border-bottom: 1px solid #fbbf24;">
                             <span>🏛️ Mazo de Ciudades</span>
                             <span>T${nextCity.gym.tier}</span>
@@ -6137,11 +6993,11 @@ const UI = {
                         <div class="location-card-title">${nextCity.name}</div>
                         <div class="location-card-action-box">
                             <strong>Gimnasio de ${nextCity.gym.leaderName}</strong>
-                            Fundar esta metrópoli otorga acceso exclusivo a la Tienda y al Gimnasio.
+                            Fundar esta metrópoli en ${targetNode.name} otorga acceso exclusivo a la Tienda y al Gimnasio.
                         </div>
                         <div class="location-card-bottom">
                             <button class="btn-place-loc" style="background: linear-gradient(180deg, #f59e0b, #d97706); border-color: #fbbf24;">
-                                🏛️ Fundar Ciudad Aquí
+                                🏛️ Fundar en ${targetNode.name}
                             </button>
                         </div>
                     </div>
@@ -6152,7 +7008,7 @@ const UI = {
             player.locationHand.forEach((card, idx) => {
                 const biome = BIOMES[card.biome] || BIOMES.forest;
                 html += `
-                    <div class="location-hand-card" style="border-color: ${biome.color}; cursor: pointer;" onclick="UI.confirmPlaceLocationHand(${idx}, ${x}, ${y})">
+                    <div class="location-hand-card" style="border-color: ${biome.color}; cursor: pointer;" onclick="UI.confirmPlaceLocationHand(${idx}, '${targetNode.id}')">
                         <div class="location-card-banner" style="background: ${biome.color};">
                             <span>${biome.icon} ${biome.name}</span>
                             <span>#${idx + 1}</span>
@@ -6164,7 +7020,7 @@ const UI = {
                             ${card.locationAction ? card.locationAction.desc : card.flavor}
                         </div>
                         <div class="location-card-bottom">
-                            <button class="btn-place-loc">🗺️ Colocar Carta</button>
+                            <button class="btn-place-loc">🗺️ Colocar en ${targetNode.name}</button>
                         </div>
                     </div>
                 `;
@@ -6176,51 +7032,58 @@ const UI = {
         modal.classList.add('open');
     },
 
-    confirmPlaceLocationHand(cardIndex, x, y) {
+    confirmPlaceLocationHand(cardIndex, targetNodeId) {
         document.getElementById('modal-place-card')?.classList.remove('open');
-        this.game.placeLocationCardAndMove(cardIndex, x, y);
+        this.game.placeLocationCardAndMove(cardIndex, targetNodeId);
     },
 
-    confirmPlaceCity(x, y) {
+    confirmPlaceCity(targetNodeId) {
         document.getElementById('modal-place-card')?.classList.remove('open');
-        this.game.placeCityCardAndMove(x, y);
+        this.game.placeCityCardAndMove(targetNodeId);
     },
 
     showLocationActionModal() {
         const activePlayer = this.game.getActivePlayer();
-        const node = this.game.cardMap.getNode(activePlayer.x, activePlayer.y);
-        if (!node || !node.card.locationAction) {
+        const node = this.game.cardMap.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+        if (!node) return;
+
+        const cardsWithAction = node.cards.filter(c => Boolean(c.locationAction));
+        if (cardsWithAction.length === 0) {
             alert('Esta localización no posee una acción disponible.');
             return;
         }
 
-        const action = node.card.locationAction;
         const modal = document.getElementById('modal-location-action');
         if (!modal) return;
 
         const titleEl = document.getElementById('loc-action-title');
-        if (titleEl) titleEl.textContent = `Acción de ${node.card.name}: ${action.name}`;
+        if (titleEl) titleEl.textContent = `Acciones en ${node.name}`;
 
         const bodyEl = document.getElementById('loc-action-body');
         if (bodyEl) {
-            bodyEl.innerHTML = `
-                <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-                    <div style="font-size: 2.5rem; margin-bottom: 8px;">${node.card.icon || '🔄'}</div>
-                    <h4 style="color: var(--accent-gold); font-size: 1.1rem; margin-bottom: 6px;">${action.name}</h4>
-                    <p style="color: #cbd5e1; font-size: 0.95rem;">${action.desc}</p>
+            bodyEl.innerHTML = cardsWithAction.map((card, idx) => `
+                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 12px;">
+                    <div style="font-size: 2rem; margin-bottom: 6px;">${card.icon || '🔄'}</div>
+                    <h4 style="color: var(--accent-gold); font-size: 1.05rem; margin-bottom: 4px;">${card.name}: ${card.locationAction.name}</h4>
+                    <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px;">${card.locationAction.desc}</p>
+                    <button class="btn btn-primary" onclick="UI.confirmExecuteLocationAction(${idx})">
+                        ⚡ Activar ${card.locationAction.name}
+                    </button>
                 </div>
-            `;
+            `).join('');
         }
 
         const btnConfirm = document.getElementById('btn-confirm-loc-action');
         if (btnConfirm) {
-            btnConfirm.onclick = () => {
-                modal.classList.remove('open');
-                this.game.executeLocationAction();
-            };
+            btnConfirm.style.display = 'none';
         }
 
         modal.classList.add('open');
+    },
+
+    confirmExecuteLocationAction(cardIndex) {
+        document.getElementById('modal-location-action')?.classList.remove('open');
+        this.game.executeLocationAction(cardIndex);
     },
 
     showDraftLocationModal({ player, cards, onSelect }) {
@@ -6360,7 +7223,8 @@ const UI = {
         const badgesContainer = document.getElementById('board-badges-list');
         if (badgesContainer) {
             badgesContainer.innerHTML = CITIES_DATABASE.map(city => {
-                const earned = player.badges.includes(city.gym.tier);
+                const earned = (player.defeatedGymIds && player.defeatedGymIds.includes(city.gym.id)) ||
+                               player.badges.includes(city.gym.tier);
                 return `
                     <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${city.gym.badgeName} (Tier ${city.gym.tier}) - ${city.name}">
                         <span>${city.gym.badgeIcon}</span>
@@ -6470,19 +7334,25 @@ const UI = {
 
                                 <!-- Speed & Weakness Tag (Rule 18: Weak +2) -->
                                 <div class="stats-row">
-                                    <div class="stat-box">Vel: <strong>${monster.speed} ⚡</strong></div>
+                                    <div class="stat-box">Vel: <strong>${monster.speed + (monster.equippedItem && monster.equippedItem.id === 'item_cmb_3' ? 2 : 0)} ⚡</strong>${monster.equippedItem && monster.equippedItem.id === 'item_cmb_3' ? ' <small style="color:#fbbf24;">(+2 Garra)</small>' : ''}</div>
                                     <div class="stat-box weakness-tag" title="Sufre +2 daño de este tipo">Weak +2: <strong>${monster.weakness}</strong></div>
                                 </div>
 
-                                <!-- Attacks list (Requirement 1: clean attack damage display) -->
+                                <!-- Attacks list (with varied effects display) -->
                                 <div class="attacks-section">
                                     <div class="section-title">Ataques:</div>
-                                    ${monster.attacks.map(atk => `
-                                        <div class="attack-item">
-                                            <span class="atk-name">${atk.name} (${atk.type}):</span>
-                                            <span class="atk-math">${atk.baseDmg} daño</span>
-                                        </div>
-                                    `).join('')}
+                                    ${monster.attacks.map(atk => {
+                                        const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg} daño`;
+                                        return `
+                                            <div class="attack-item" style="display: flex; flex-direction: column; gap: 1px; margin-bottom: 3px;">
+                                                <div style="display: flex; justify-content: space-between;">
+                                                    <span class="atk-name">${atk.name} (${atk.type}):</span>
+                                                    <span class="atk-math">${dmgDisplay}</span>
+                                                </div>
+                                                ${atk.desc ? `<small style="font-size: 0.64rem; color: #fde047; line-height: 1.2;">${atk.desc}</small>` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
                                 </div>
 
                                 <!-- Equipped Item (Rule 10: max 1 item) -->
@@ -6607,7 +7477,7 @@ const UI = {
         if (container) {
             container.innerHTML = cards.map((monster, idx) => {
                 const canCapture = highestToolTier >= monster.captureTier;
-                const canTeach = maxGymBadge >= monster.captureTier;
+                const canTeach = player.monsters.length > 0;
 
                 return `
                     <div class="wild-card-container">
@@ -6628,7 +7498,8 @@ const UI = {
                             </div>
 
                             <div class="wild-attack">
-                                <strong>Ataque:</strong> ${monster.attacks[0].name} (${monster.attacks[0].type}) — ${monster.attacks[0].baseDmg} daño
+                                <strong>Ataque:</strong> ${monster.attacks[0].name} (${monster.attacks[0].type}) — ${monster.attacks[0].effect === 'speed_damage' ? 'Velocidad' : monster.attacks[0].effect === 'fixed_damage' ? `${monster.attacks[0].fixedDmg} Daño Fijo` : `${monster.attacks[0].baseDmg} daño`}
+                                ${monster.attacks[0].desc ? `<div style="font-size: 0.72rem; color: #fde047; margin-top: 2px;">${monster.attacks[0].desc}</div>` : ''}
                             </div>
 
                             <div class="wild-actions">
@@ -6637,9 +7508,9 @@ const UI = {
                                     🪤 Capturar (Req: T${monster.captureTier} - Tienes: T${highestToolTier})
                                 </button>
                                 
-                                <button class="btn-wild-teach ${canTeach ? 'btn-can-teach' : 'btn-cannot'}" 
+                                <button class="btn-wild-teach btn-can-teach" 
                                         onclick="UI.promptTeachAttack(${idx})">
-                                    📖 Aprender Ataque (Req: ${monster.captureTier} Gimnasios - Tienes: ${maxGymBadge})
+                                    📖 Enseñar Ataque (+${monster.attacks[0].name})
                                 </button>
                             </div>
                         </div>
@@ -6668,9 +7539,10 @@ const UI = {
 
     promptTeachAttack(monsterIndex) {
         const player = this.game.getActivePlayer();
-        const wildMon = this.activeSearchData.cards[monsterIndex];
+        const wildMon = (this.activeSearchData && this.activeSearchData.cards && this.activeSearchData.cards[monsterIndex]) || (this.game.activeSearchCards && this.game.activeSearchCards[monsterIndex]);
+        if (!wildMon) return;
 
-        let msg = `¿A qué criatura de tu equipo deseas enseñarle "${wildMon.attacks[0].name}"?\n`;
+        let msg = `¿A qué criatura de tu equipo deseas enseñarle "${wildMon.attacks[0].name}" (${wildMon.attacks[0].type}, ${wildMon.attacks[0].baseDmg} daño)?\n\n`;
         player.monsters.forEach((m, i) => {
             msg += `${i + 1}. ${m.name} (Ataques: ${m.attacks.map(a => a.name).join(', ')})\n`;
         });
@@ -6791,11 +7663,21 @@ const UI = {
         const p1HpBar = document.getElementById('combat-p1-hp-bar');
         if (p1HpBar) p1HpBar.style.width = `${(p1Mon.hp / p1Mon.maxHp) * 100}%`;
 
+        const p1EffSpeed = (p1Mon.status === 'paralysis') ? 0 : p1Mon.speed;
         const p1SpeedEl = document.getElementById('combat-p1-speed');
-        if (p1SpeedEl) p1SpeedEl.textContent = `Velocidad: ${p1Mon.speed} ⚡`;
+        if (p1SpeedEl) p1SpeedEl.textContent = `Velocidad: ${p1EffSpeed} ⚡ ${p1Mon.status === 'paralysis' ? '(Parálisis 0)' : ''}`;
 
         const p1WeakEl = document.getElementById('combat-p1-weak');
-        if (p1WeakEl) p1WeakEl.textContent = `Weak +2: ${p1Mon.weakness}`;
+        if (p1WeakEl) {
+            let statusHtml = '';
+            if (p1Mon.status === 'paralysis') statusHtml += '<span class="combat-status-badge status-paralysis">⚡ Parálisis</span> ';
+            if (p1Mon.status === 'poison') statusHtml += '<span class="combat-status-badge status-poison">☠️ Veneno (-1 HP)</span> ';
+            if (p1Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
+            if (p1Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p1Mon.shieldNextTurn})</span> `;
+            if (p1Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p1Mon.chargeNextTurn})</span> `;
+
+            p1WeakEl.innerHTML = `Weak +2: ${p1Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
+        }
 
         // Opponent Fighter
         const p2NameEl = document.getElementById('combat-p2-mon-name');
@@ -6810,11 +7692,21 @@ const UI = {
         const p2HpBar = document.getElementById('combat-p2-hp-bar');
         if (p2HpBar) p2HpBar.style.width = `${(p2Mon.hp / p2Mon.maxHp) * 100}%`;
 
+        const p2EffSpeed = (p2Mon.status === 'paralysis') ? 0 : p2Mon.speed;
         const p2SpeedEl = document.getElementById('combat-p2-speed');
-        if (p2SpeedEl) p2SpeedEl.textContent = `Velocidad: ${p2Mon.speed} ⚡`;
+        if (p2SpeedEl) p2SpeedEl.textContent = `Velocidad: ${p2EffSpeed} ⚡ ${p2Mon.status === 'paralysis' ? '(Parálisis 0)' : ''}`;
 
         const p2WeakEl = document.getElementById('combat-p2-weak');
-        if (p2WeakEl) p2WeakEl.textContent = `Weak +2: ${p2Mon.weakness}`;
+        if (p2WeakEl) {
+            let statusHtml = '';
+            if (p2Mon.status === 'paralysis') statusHtml += '<span class="combat-status-badge status-paralysis">⚡ Parálisis</span> ';
+            if (p2Mon.status === 'poison') statusHtml += '<span class="combat-status-badge status-poison">☠️ Veneno (-1 HP)</span> ';
+            if (p2Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
+            if (p2Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p2Mon.shieldNextTurn})</span> `;
+            if (p2Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p2Mon.chargeNextTurn})</span> `;
+
+            p2WeakEl.innerHTML = `Weak +2: ${p2Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
+        }
 
         // Combat Actions & Luck Boost toggle (Requirement 3 & Requirement 1)
         const actionsContainer = document.getElementById('combat-actions-bar');
@@ -6830,9 +7722,11 @@ const UI = {
             `;
 
             p1Mon.attacks.forEach((atk, idx) => {
+                const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg}`;
                 actionsHtml += `
                     <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx})" ${combat.isProcessing ? 'disabled' : ''}>
-                        💥 ${atk.name} (${atk.type}): ${atk.baseDmg} daño ${luckActive ? '(+1🍀 Suerte activa)' : ''}
+                        <div style="font-weight: 800;">💥 ${atk.name} (${atk.type}): ${dmgDisplay} daño ${luckActive ? '(+1🍀)' : ''}</div>
+                        ${atk.desc ? `<div style="font-size: 0.72rem; color: #fde047; font-weight: normal; margin-top: 2px;">${atk.desc}</div>` : ''}
                     </button>
                 `;
             });
@@ -6859,6 +7753,22 @@ const UI = {
             const idx = parseInt(choice, 10) - 1;
             if (idx >= 0 && idx < combat.p1Team.length) {
                 combat.playerSwitchMonster(idx);
+            }
+        }
+    },
+
+    promptPivotSwitch() {
+        const combat = this.game.combatEngine;
+        let msg = `🔄 ¡Cambio Táctico Disponible!\nSelecciona el monstruo al que deseas cambiar sin recibir penalización:\n`;
+        combat.p1Team.forEach((m, idx) => {
+            msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === combat.p1ActiveIndex ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
+        });
+
+        const choice = prompt(msg, '2');
+        if (choice) {
+            const idx = parseInt(choice, 10) - 1;
+            if (idx >= 0 && idx < combat.p1Team.length) {
+                combat.playerPivotSwitch(idx);
             }
         }
     },
@@ -7070,19 +7980,19 @@ const UI = {
         if (this.codexActiveTab === 'monsters') {
             if (filterContainer) {
                 filterContainer.innerHTML = `
-                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (32)</button>
+                    <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (40)</button>
                     <button class="codex-chip ${this.codexFilter === 'forest' ? 'active' : ''}" onclick="UI.setCodexFilter('forest')">🌲 Bosque</button>
                     <button class="codex-chip ${this.codexFilter === 'mountain' ? 'active' : ''}" onclick="UI.setCodexFilter('mountain')">⛰️ Montaña</button>
                     <button class="codex-chip ${this.codexFilter === 'plains' ? 'active' : ''}" onclick="UI.setCodexFilter('plains')">🌾 Pradera</button>
                     <button class="codex-chip ${this.codexFilter === 'freshwater' ? 'active' : ''}" onclick="UI.setCodexFilter('freshwater')">💧 Dulce</button>
                     <button class="codex-chip ${this.codexFilter === 'saltwater' ? 'active' : ''}" onclick="UI.setCodexFilter('saltwater')">🌊 Salada</button>
-                    <button class="codex-chip ${this.codexFilter === 't4' ? 'active' : ''}" onclick="UI.setCodexFilter('t4')">🌟 Legendarios (T4)</button>
+                    <button class="codex-chip ${this.codexFilter === 't3' ? 'active' : ''}" onclick="UI.setCodexFilter('t3')">🌟 Legendarios (T3)</button>
                 `;
             }
 
             let filtered = MONSTERS_DATABASE;
-            if (this.codexFilter === 't4') {
-                filtered = filtered.filter(m => m.captureTier === 4);
+            if (this.codexFilter === 't3') {
+                filtered = filtered.filter(m => m.captureTier === 3);
             } else if (this.codexFilter !== 'all') {
                 filtered = filtered.filter(m => m.biome === this.codexFilter);
             }
@@ -7179,7 +8089,8 @@ const UI = {
                             <span class="type-pill" style="background: ${typeColor};">${a.type}</span>
                         </div>
                         <div class="codex-attack-meta">
-                            💥 Daño Base: <strong>${a.baseDmg}</strong> (tira dados en combate)
+                            💥 Daño: <strong>${a.effect === 'speed_damage' ? 'Igual a Velocidad' : a.effect === 'fixed_damage' ? `${a.fixedDmg} Fijo` : `${a.baseDmg} Base`}</strong> ${a.diceCount ? `(+${a.diceCount} dado${a.diceCount > 1 ? 's' : ''})` : ''}
+                            ${a.desc ? `<div style="color: #fde047; font-size: 0.8rem; margin-top: 3px;">${a.desc}</div>` : ''}
                         </div>
                         <div class="codex-attack-learners">
                             <strong>Monstruos de origen:</strong> ${a.learners.join(', ')}

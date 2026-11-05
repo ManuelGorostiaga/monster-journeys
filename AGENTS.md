@@ -19,7 +19,7 @@ The project uses a clean modular source structure compiled into a single product
 - `c:\Dev\monster-journeys\build.js`: Node.js build bundler. Inlines CSS and all JS modules into `index.html`.
 - `c:\Dev\monster-journeys\test-suite.js`: Node.js automated test suite (12 test suites covering all core game logic). Run with `node c:\Dev\monster-journeys\test-suite.js`.
 - `c:\Dev\monster-journeys\css\styles.css`: Styles for the board game UI, playing card proportions (5:7 ratio), layout, and modals.
-- `c:\Dev\monster-journeys\js\data.js`: Database for characters, 40 monsters, attacks, 21 items, 23 locations (18 environment cards + 4 gym cities + 1 starting town), and weakness rules.
+- `c:\Dev\monster-journeys\js\data.js`: Database for characters, 40 monsters, attacks, 20 items, 23 locations (18 environment cards + 4 gym cities + 1 starting town), and weakness rules.
 - `c:\Dev\monster-journeys\js\cardmap.js`: Interconnected Card Node system. Manages grid coordinates, adjacent slots, discovering new zones, and city placement.
 - `c:\Dev\monster-journeys\js\combat.js`: 1v1 combat engine, attack dice rolling, weakness checks, monster switching penalty, item effects (e.g., Oran Berry at 0 HP), and post-combat healing/rewards.
 - `c:\Dev\monster-journeys\js\tournament.js`: Grand Tournament brackets and final PvP tournament resolution when 3 of 4 gyms are beaten or at round 20.
