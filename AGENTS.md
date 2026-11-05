@@ -4,6 +4,7 @@
 Monster Journeys is a single-page digital prototype for a tabletop board game inspired by *Sinnoh Journeys* and monster-catching card games. It supports 1 to 4 players (playable hotseat/solo for complete testing) directly in the browser.
 
 - **Production URL**: https://monster-journeys.vercel.app
+- **GitHub Repository**: https://github.com/ManuelGorostiaga/monster-journeys
 - **Vercel Project**: `monster-journeys` (`prj_yISCrnLDhCQY1TEKkWj4x7UWp549`) under team `low-mana`
 - **Root Directory**: `c:\Dev\monster-journeys`
 
