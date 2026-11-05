@@ -1,0 +1,4860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Monster Journeys - Prototipo de Juego de Mesa (1 a 4 Jugadores)</title>
+ <style>
+:root {
+ --bg-dark: #121418;
+ --bg-surface: #1a1e24;
+ --bg-surface-elevated: #242a33;
+ --border-color: #374151;
+ --border-highlight: #4f5a6b;
+ --text-primary: #f3f4f6;
+ --text-secondary: #9ca3af;
+ --text-muted: #6b7280;
+ --accent-gold: #fbbf24;
+ --accent-red: #ef4444;
+ --accent-blue: #3b82f6;
+ --accent-green: #10b981;
+ --accent-purple: #8b5cf6;
+ --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+* {
+ box-sizing: border-box;
+ margin: 0;
+ padding: 0;
+ user-select: none;
+}
+body {
+ background-color: var(--bg-dark);
+ color: var(--text-primary);
+ font-family: var(--font-main);
+ line-height: 1.4;
+ overflow-x: hidden;
+ min-height: 100vh;
+}
+header.app-header {
+ background: linear-gradient(180deg, #1f252e, #161b22);
+ border-bottom: 1px solid var(--border-color);
+ padding: 10px 20px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ position: sticky;
+ top: 0;
+ z-index: 50;
+ box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.header-left {
+ display: flex;
+ align-items: center;
+ gap: 15px;
+}
+.app-title {
+ font-size: 1.25rem;
+ font-weight: 800;
+ letter-spacing: -0.5px;
+ background: linear-gradient(135deg, #fbbf24, #f59e0b);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ display: flex;
+ align-items: center;
+ gap: 8px;
+}
+.round-tracker {
+ background: rgba(0, 0, 0, 0.4);
+ border: 1px solid var(--border-color);
+ padding: 4px 12px;
+ border-radius: 20px;
+ font-size: 0.85rem;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+}
+.round-tracker strong {
+ color: var(--accent-gold);
+}
+.header-center {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+}
+.status-pill {
+ padding: 4px 10px;
+ border-radius: 12px;
+ font-size: 0.8rem;
+ font-weight: 600;
+}
+.tag-primary { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6; }
+.tag-success { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+.tag-disabled { background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid #4b5563; }
+.header-right {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+}
+.debug-toolbar {
+ background: #111418;
+ border-bottom: 1px solid #28303d;
+ padding: 6px 20px;
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ font-size: 0.8rem;
+ color: #9ca3af;
+ overflow-x: auto;
+}
+.debug-toolbar span.debug-label {
+ font-weight: 700;
+ color: #fbbf24;
+ text-transform: uppercase;
+ font-size: 0.72rem;
+ letter-spacing: 0.5px;
+ white-space: nowrap;
+}
+.btn-debug {
+ background: #232a34;
+ border: 1px solid #374151;
+ color: #d1d5db;
+ padding: 3px 8px;
+ border-radius: 4px;
+ cursor: pointer;
+ font-size: 0.75rem;
+ white-space: nowrap;
+ transition: all 0.15s ease;
+}
+.btn-debug:hover {
+ background: #374151;
+ color: #fff;
+ border-color: #9ca3af;
+}
+.btn-debug-highlight {
+ background: #7c2d12;
+ border-color: #ea580c;
+ color: #ffedd5;
+ font-weight: bold;
+}
+.btn-debug-highlight:hover {
+ background: #9a3412;
+}
+main.main-workspace {
+ display: flex;
+ flex-direction: column;
+ gap: 16px;
+ padding: 16px 20px;
+ max-width: 1700px;
+ margin: 0 auto;
+}
+.map-view-card {
+ background: var(--bg-surface);
+ border: 1px solid var(--border-color);
+ border-radius: 12px;
+ overflow: hidden;
+ box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+ position: relative;
+}
+.map-header-bar {
+ padding: 10px 16px;
+ background: rgba(0, 0, 0, 0.25);
+ border-bottom: 1px solid var(--border-color);
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ font-size: 0.85rem;
+}
+.map-legend {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+}
+.legend-item {
+ display: flex;
+ align-items: center;
+ gap: 5px;
+ font-size: 0.78rem;
+ color: var(--text-secondary);
+}
+.legend-color {
+ width: 12px;
+ height: 12px;
+ border-radius: 3px;
+ display: inline-block;
+}
+.hex-map-scroll-wrapper {
+ overflow: auto;
+ width: 100%;
+ max-height: 520px;
+ background: #090b0e;
+ cursor: grab;
+ display: flex;
+ justify-content: center;
+ padding: 10px 0;
+}
+svg#hex-map-svg {
+ display: block;
+ min-width: 1100px;
+ min-height: 580px;
+}
+.hex-cell polygon {
+ transition: filter 0.2s ease, stroke 0.2s ease;
+}
+.hex-cell:hover polygon {
+ filter: brightness(1.25);
+ stroke: #ffffff !important;
+ stroke-width: 2.5px !important;
+}
+.action-controls-bar {
+ padding: 12px 16px;
+ background: #14171d;
+ border-top: 1px solid var(--border-color);
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ justify-content: space-between;
+ gap: 10px;
+}
+.action-buttons-group {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 8px;
+}
+.btn-action {
+ background: linear-gradient(180deg, #2a323d, #1e242c);
+ border: 1px solid #434d5d;
+ color: #f3f4f6;
+ padding: 8px 14px;
+ border-radius: 6px;
+ font-weight: 600;
+ font-size: 0.85rem;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ transition: all 0.15s ease;
+}
+.btn-action:hover:not(:disabled) {
+ background: linear-gradient(180deg, #374151, #28303b);
+ border-color: #6b7280;
+ box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+ transform: translateY(-1px);
+}
+.btn-action:disabled {
+ opacity: 0.45;
+ cursor: not-allowed;
+ filter: grayscale(0.8);
+}
+.btn-action-primary {
+ background: linear-gradient(180deg, #0284c7, #0369a1);
+ border-color: #38bdf8;
+}
+.btn-action-primary:hover:not(:disabled) {
+ background: linear-gradient(180deg, #0369a1, #075985);
+}
+.btn-action-fight {
+ background: linear-gradient(180deg, #dc2626, #b91c1c);
+ border-color: #f87171;
+}
+.btn-action-fight:hover:not(:disabled) {
+ background: linear-gradient(180deg, #b91c1c, #991b1b);
+}
+.btn-action-endturn {
+ background: linear-gradient(180deg, #10b981, #059669);
+ border-color: #34d399;
+}
+.btn-action-endturn:hover:not(:disabled) {
+ background: linear-gradient(180deg, #059669, #047857);
+}
+.player-dashboard-container {
+ background: var(--bg-surface);
+ border: 1px solid var(--border-color);
+ border-radius: 12px;
+ box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+ overflow: hidden;
+}
+.player-tabs-bar {
+ display: flex;
+ background: #111418;
+ border-bottom: 1px solid var(--border-color);
+ overflow-x: auto;
+}
+.player-tab-btn {
+ background: transparent;
+ border: none;
+ border-bottom: 3px solid transparent;
+ color: var(--text-secondary);
+ padding: 10px 20px;
+ font-size: 0.88rem;
+ font-weight: 600;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ transition: all 0.15s ease;
+ white-space: nowrap;
+}
+.player-tab-btn:hover {
+ color: #fff;
+ background: rgba(255, 255, 255, 0.03);
+}
+.player-tab-btn.active {
+ color: #fff;
+ background: var(--bg-surface);
+ border-bottom-width: 3px;
+}
+.tab-indicator {
+ width: 10px;
+ height: 10px;
+ border-radius: 50%;
+ display: inline-block;
+}
+.player-board-content {
+ padding: 16px;
+ display: flex;
+ flex-direction: column;
+ gap: 16px;
+}
+.player-header-meta {
+ display: flex;
+ flex-wrap: wrap;
+ justify-content: space-between;
+ align-items: center;
+ background: rgba(0, 0, 0, 0.25);
+ padding: 12px 16px;
+ border-radius: 8px;
+ border: 1px solid var(--border-color);
+ gap: 15px;
+}
+.char-card-summary {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+}
+.char-avatar-icon {
+ font-size: 2rem;
+ background: rgba(255, 255, 255, 0.05);
+ padding: 6px;
+ border-radius: 8px;
+ border: 1px solid var(--border-color);
+}
+.char-title-text {
+ font-weight: 700;
+ font-size: 1.05rem;
+ color: #f9fafb;
+}
+.char-ability-text {
+ font-size: 0.8rem;
+ color: var(--text-secondary);
+ margin-top: 2px;
+}
+.player-resources {
+ display: flex;
+ align-items: center;
+ gap: 20px;
+}
+.resource-box {
+ display: flex;
+ flex-direction: column;
+ align-items: flex-end;
+}
+.resource-label {
+ font-size: 0.72rem;
+ text-transform: uppercase;
+ color: var(--text-muted);
+ font-weight: 700;
+}
+.resource-value {
+ font-size: 1.2rem;
+ font-weight: 800;
+ color: var(--accent-gold);
+}
+.badges-row {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+}
+.badge-token {
+ width: 32px;
+ height: 32px;
+ border-radius: 6px;
+ border: 1px solid #4b5563;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ font-size: 0.75rem;
+ transition: all 0.2s ease;
+}
+.badge-token.earned {
+ background: rgba(251, 191, 36, 0.2);
+ border-color: #f59e0b;
+ box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+.badge-token.locked {
+ background: rgba(0, 0, 0, 0.4);
+ opacity: 0.35;
+ filter: grayscale(1);
+}
+.creature-slots-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+ gap: 14px;
+}
+.creature-card-slot {
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-color);
+ border-radius: 10px;
+ overflow: hidden;
+ display: flex;
+ flex-direction: column;
+ box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+ position: relative;
+ transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.creature-card-slot:hover {
+ border-color: var(--border-highlight);
+}
+.creature-card-slot.battle-party {
+ border-top: 4px solid var(--accent-gold);
+}
+.creature-card-slot.bench-reserve {
+ border-top: 4px solid #6b7280;
+ opacity: 0.9;
+}
+.slot-badge {
+ padding: 3px 10px;
+ font-size: 0.72rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ background: rgba(0, 0, 0, 0.3);
+ color: var(--text-secondary);
+ border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.monster-card-inner {
+ padding: 12px;
+ display: flex;
+ flex-direction: column;
+ gap: 10px;
+ flex: 1;
+}
+.monster-header {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+}
+.monster-avatar {
+ width: 44px;
+ height: 44px;
+ border-radius: 8px;
+ background: rgba(0, 0, 0, 0.3);
+ border: 2px solid;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 1.5rem;
+}
+.monster-titles {
+ flex: 1;
+}
+.monster-name {
+ font-weight: 700;
+ font-size: 0.98rem;
+ color: #f3f4f6;
+}
+.type-pill {
+ display: inline-block;
+ padding: 1px 7px;
+ border-radius: 4px;
+ font-size: 0.7rem;
+ font-weight: 700;
+ color: #fff;
+ margin-top: 2px;
+}
+.tier-pill {
+ padding: 2px 6px;
+ border-radius: 4px;
+ background: rgba(255, 255, 255, 0.1);
+ font-size: 0.72rem;
+ font-weight: 700;
+ color: #fbbf24;
+ border: 1px solid rgba(251, 191, 36, 0.3);
+}
+.hp-tracker-row {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ font-size: 0.8rem;
+}
+.hp-adjuster {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+}
+.hp-val {
+ font-size: 0.9rem;
+ color: #10b981;
+}
+.hp-val.low-hp {
+ color: #ef4444;
+}
+.btn-micro {
+ background: #374151;
+ border: 1px solid #4b5563;
+ color: #fff;
+ width: 20px;
+ height: 20px;
+ border-radius: 3px;
+ cursor: pointer;
+ font-size: 0.8rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+}
+.btn-micro:hover {
+ background: #4b5563;
+}
+.hp-bar-outer {
+ width: 100%;
+ height: 6px;
+ background: #2b313a;
+ border-radius: 3px;
+ overflow: hidden;
+}
+.hp-bar-fill {
+ height: 100%;
+ background: linear-gradient(90deg, #ef4444, #10b981);
+ transition: width 0.3s ease;
+}
+.stats-row {
+ display: flex;
+ justify-content: space-between;
+ gap: 8px;
+ font-size: 0.78rem;
+}
+.stat-box {
+ background: rgba(0, 0, 0, 0.25);
+ padding: 3px 8px;
+ border-radius: 4px;
+ border: 1px solid rgba(255, 255, 255, 0.05);
+ flex: 1;
+}
+.weakness-tag {
+ color: #f87171;
+ background: rgba(239, 68, 68, 0.1);
+ border-color: rgba(239, 68, 68, 0.3);
+}
+.attacks-section {
+ background: rgba(0, 0, 0, 0.2);
+ padding: 6px 8px;
+ border-radius: 6px;
+ font-size: 0.75rem;
+}
+.attacks-section .section-title {
+ font-weight: 700;
+ color: var(--text-muted);
+ font-size: 0.7rem;
+ text-transform: uppercase;
+ margin-bottom: 3px;
+}
+.attack-item {
+ display: flex;
+ justify-content: space-between;
+ padding: 2px 0;
+ border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+.attack-item:last-child {
+ border-bottom: none;
+}
+.atk-name {
+ font-weight: 600;
+ color: #e5e7eb;
+}
+.atk-math {
+ color: var(--accent-gold);
+}
+.item-slot-row {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ font-size: 0.75rem;
+}
+.equipped-item-chip {
+ background: rgba(59, 130, 246, 0.15);
+ border: 1px solid rgba(59, 130, 246, 0.4);
+ color: #93c5fd;
+ padding: 2px 8px;
+ border-radius: 12px;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ flex: 1;
+}
+.btn-micro-remove {
+ background: transparent;
+ border: none;
+ color: #f87171;
+ cursor: pointer;
+ font-weight: bold;
+}
+.empty-item-text {
+ color: var(--text-muted);
+ font-style: italic;
+}
+.overworld-row button.btn-overworld {
+ width: 100%;
+ background: linear-gradient(180deg, #312e81, #1e1b4b);
+ border: 1px solid #4338ca;
+ color: #c7d2fe;
+ padding: 4px 8px;
+ border-radius: 4px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.15s ease;
+}
+.overworld-row button.btn-overworld:hover {
+ background: #3730a3;
+}
+.reorder-row {
+ display: flex;
+ gap: 6px;
+ margin-top: auto;
+}
+.btn-reorder {
+ flex: 1;
+ background: #232a34;
+ border: 1px solid #374151;
+ color: #9ca3af;
+ padding: 3px 6px;
+ border-radius: 4px;
+ font-size: 0.7rem;
+ cursor: pointer;
+}
+.btn-reorder:hover:not(:disabled) {
+ background: #374151;
+ color: #fff;
+}
+.btn-reorder:disabled {
+ opacity: 0.25;
+ cursor: default;
+}
+.empty-slot {
+ border-style: dashed;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ min-height: 240px;
+}
+.empty-placeholder {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ color: var(--text-muted);
+ text-align: center;
+ padding: 20px;
+}
+.inventory-hand-section {
+ background: rgba(0, 0, 0, 0.2);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ padding: 12px;
+}
+.inventory-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ margin-bottom: 10px;
+ font-size: 0.88rem;
+ font-weight: 700;
+ color: #e5e7eb;
+}
+.inventory-cards-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+ gap: 10px;
+}
+.inventory-card {
+ background: #232a34;
+ border: 1px solid var(--border-color);
+ border-radius: 6px;
+ padding: 8px;
+ display: flex;
+ flex-direction: column;
+ gap: 4px;
+ font-size: 0.78rem;
+}
+.inv-top {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+}
+.inv-icon {
+ font-size: 1.2rem;
+}
+.inv-name {
+ font-weight: 700;
+ color: #f3f4f6;
+}
+.inv-desc {
+ color: var(--text-secondary);
+ font-size: 0.72rem;
+ flex: 1;
+}
+.btn-action-small {
+ background: #374151;
+ border: 1px solid #4b5563;
+ color: #fff;
+ padding: 3px 6px;
+ border-radius: 4px;
+ font-size: 0.72rem;
+ cursor: pointer;
+ margin-top: 4px;
+}
+.btn-action-small:hover {
+ background: #4b5563;
+}
+.empty-stash {
+ color: var(--text-muted);
+ font-size: 0.8rem;
+ font-style: italic;
+ padding: 10px;
+}
+.game-log-card {
+ background: var(--bg-surface);
+ border: 1px solid var(--border-color);
+ border-radius: 12px;
+ padding: 12px;
+}
+.game-log-title {
+ font-size: 0.82rem;
+ font-weight: 700;
+ color: var(--text-muted);
+ text-transform: uppercase;
+ margin-bottom: 6px;
+}
+.game-log-container {
+ height: 110px;
+ overflow-y: auto;
+ background: #0f1216;
+ border: 1px solid #232933;
+ border-radius: 6px;
+ padding: 8px 12px;
+ font-size: 0.78rem;
+ font-family: monospace;
+ display: flex;
+ flex-direction: column;
+ gap: 4px;
+}
+.game-log-line {
+ color: #d1d5db;
+}
+.log-time {
+ color: var(--accent-gold);
+ font-weight: 700;
+}
+.modal-overlay {
+ position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
+ background: rgba(0, 0, 0, 0.78);
+ backdrop-filter: blur(4px);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ z-index: 100;
+ opacity: 0;
+ pointer-events: none;
+ transition: opacity 0.2s ease;
+ padding: 20px;
+}
+.modal-overlay.open {
+ opacity: 1;
+ pointer-events: auto;
+}
+.modal-box {
+ background: var(--bg-surface);
+ border: 1px solid var(--border-color);
+ border-radius: 14px;
+ max-width: 900px;
+ width: 100%;
+ max-height: 90vh;
+ overflow-y: auto;
+ box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+ display: flex;
+ flex-direction: column;
+}
+.modal-header {
+ padding: 14px 20px;
+ background: #14171d;
+ border-bottom: 1px solid var(--border-color);
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+}
+.modal-header h3 {
+ font-size: 1.15rem;
+ color: #f3f4f6;
+ display: flex;
+ align-items: center;
+ gap: 8px;
+}
+.modal-close-btn {
+ background: transparent;
+ border: none;
+ color: var(--text-muted);
+ font-size: 1.3rem;
+ cursor: pointer;
+}
+.modal-close-btn:hover {
+ color: #fff;
+}
+.modal-content {
+ padding: 20px;
+ display: flex;
+ flex-direction: column;
+ gap: 16px;
+}
+.search-cards-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+ gap: 16px;
+}
+.wild-card-container {
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-color);
+ border-radius: 10px;
+ overflow: hidden;
+ display: flex;
+ flex-direction: column;
+ box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.wild-card-biome-back {
+ padding: 10px;
+ text-align: center;
+ border-bottom: 1px solid rgba(255,255,255,0.08);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 8px;
+ font-size: 0.8rem;
+ font-weight: 700;
+}
+.cardback-forest { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: #a5d6a7; }
+.cardback-mountain { background: linear-gradient(135deg, #4e342e, #6d4c41); color: #d7ccc8; }
+.cardback-plains { background: linear-gradient(135deg, #f57f17, #fbc02d); color: #3e2723; }
+.cardback-freshwater { background: linear-gradient(135deg, #006064, #00838f); color: #b2ebf2; }
+.cardback-saltwater { background: linear-gradient(135deg, #0d47a1, #1565c0); color: #bbdefb; }
+.wild-card-front {
+ padding: 12px;
+ display: flex;
+ flex-direction: column;
+ gap: 8px;
+ flex: 1;
+}
+.wild-header {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+}
+.wild-icon {
+ font-size: 1.8rem;
+}
+.wild-name {
+ font-weight: 700;
+ font-size: 1rem;
+}
+.wild-stats {
+ display: flex;
+ justify-content: space-between;
+ font-size: 0.78rem;
+ background: rgba(0, 0, 0, 0.2);
+ padding: 6px;
+ border-radius: 4px;
+}
+.wild-attack {
+ font-size: 0.78rem;
+ background: rgba(0, 0, 0, 0.15);
+ padding: 6px;
+ border-radius: 4px;
+ color: #f3f4f6;
+}
+.wild-actions {
+ display: flex;
+ flex-direction: column;
+ gap: 6px;
+ margin-top: auto;
+ padding-top: 8px;
+}
+.btn-wild-capture, .btn-wild-teach {
+ padding: 7px;
+ border-radius: 5px;
+ font-size: 0.75rem;
+ font-weight: 700;
+ cursor: pointer;
+ border: 1px solid transparent;
+ text-align: center;
+}
+.btn-can-capture {
+ background: #047857;
+ border-color: #10b981;
+ color: #fff;
+}
+.btn-can-capture:hover { background: #059669; }
+.btn-can-teach {
+ background: #1d4ed8;
+ border-color: #3b82f6;
+ color: #fff;
+}
+.btn-can-teach:hover { background: #2563eb; }
+.btn-cannot {
+ background: #374151;
+ border-color: #4b5563;
+ color: #9ca3af;
+ cursor: not-allowed;
+ opacity: 0.6;
+}
+.shop-river-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 12px;
+}
+.shop-card-item {
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ padding: 10px;
+ display: flex;
+ flex-direction: column;
+ gap: 6px;
+ position: relative;
+}
+.shop-card-badge {
+ position: absolute;
+ top: 6px;
+ right: 6px;
+ font-size: 0.65rem;
+ font-weight: 700;
+ padding: 1px 6px;
+ border-radius: 4px;
+}
+.shop-card-icon {
+ font-size: 1.8rem;
+ text-align: center;
+ margin: 4px 0;
+}
+.shop-card-name {
+ font-weight: 700;
+ font-size: 0.88rem;
+ color: #f3f4f6;
+}
+.shop-card-desc {
+ font-size: 0.72rem;
+ color: var(--text-secondary);
+ flex: 1;
+}
+.shop-card-bottom {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ margin-top: 8px;
+}
+.shop-card-cost {
+ font-size: 0.95rem;
+ font-weight: 800;
+ color: var(--accent-gold);
+}
+.btn-buy {
+ padding: 5px 12px;
+ border-radius: 4px;
+ font-size: 0.78rem;
+ font-weight: 700;
+ cursor: pointer;
+}
+.btn-buy.can-buy {
+ background: #10b981;
+ border: 1px solid #34d399;
+ color: #fff;
+}
+.btn-buy.can-buy:hover { background: #059669; }
+.btn-buy.cannot-buy {
+ background: #374151;
+ border: 1px solid #4b5563;
+ color: #9ca3af;
+ cursor: not-allowed;
+ opacity: 0.5;
+}
+.combat-arena-box {
+ display: grid;
+ grid-template-columns: 1fr auto 1fr;
+ gap: 16px;
+ background: #0f1217;
+ border: 1px solid var(--border-color);
+ border-radius: 10px;
+ padding: 16px;
+ align-items: center;
+}
+.combatant-side {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ text-align: center;
+ gap: 8px;
+}
+.combat-mon-avatar {
+ font-size: 3.5rem;
+ filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+.combat-mon-name {
+ font-size: 1.1rem;
+ font-weight: 800;
+ color: #f3f4f6;
+}
+.combat-hp-container {
+ width: 100%;
+ max-width: 220px;
+}
+.combat-vs-divider {
+ font-size: 1.5rem;
+ font-weight: 900;
+ color: var(--accent-gold);
+}
+.combat-actions-bar {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 10px;
+ justify-content: center;
+ background: rgba(0, 0, 0, 0.25);
+ padding: 12px;
+ border-radius: 8px;
+ border: 1px solid var(--border-color);
+}
+.btn-combat-attack {
+ background: linear-gradient(180deg, #dc2626, #991b1b);
+ border: 1px solid #ef4444;
+ color: #fff;
+ padding: 10px 16px;
+ border-radius: 6px;
+ font-weight: 700;
+ font-size: 0.88rem;
+ cursor: pointer;
+ box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+.btn-combat-attack:hover:not(:disabled) {
+ background: linear-gradient(180deg, #ef4444, #b91c1c);
+}
+.btn-combat-switch {
+ background: #374151;
+ border: 1px solid #4b5563;
+ color: #f3f4f6;
+ padding: 10px 16px;
+ border-radius: 6px;
+ font-weight: 600;
+ font-size: 0.82rem;
+ cursor: pointer;
+}
+.btn-combat-switch:hover:not(:disabled) {
+ background: #4b5563;
+}
+.combat-log-stream {
+ background: #0a0d10;
+ border: 1px solid var(--border-color);
+ border-radius: 6px;
+ padding: 10px;
+ height: 140px;
+ overflow-y: auto;
+ font-size: 0.8rem;
+ font-family: monospace;
+ display: flex;
+ flex-direction: column;
+ gap: 4px;
+}
+.combat-log-entry {
+ color: #e5e7eb;
+}
+.tournament-matches-list {
+ display: flex;
+ flex-direction: column;
+ gap: 12px;
+}
+.tournament-match-card {
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ padding: 14px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+}
+.tournament-match-card.current-active-match {
+ border-color: var(--accent-gold);
+ box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+}
+.match-combatants {
+ display: flex;
+ align-items: center;
+ gap: 14px;
+ font-size: 1rem;
+ font-weight: 700;
+}
+.vs-badge {
+ color: var(--accent-gold);
+ font-size: 0.8rem;
+}
+.winner-combatant {
+ color: #10b981;
+ text-decoration: underline;
+}
+.btn-play-match {
+ background: #dc2626;
+ border: 1px solid #ef4444;
+ color: #fff;
+ padding: 8px 16px;
+ border-radius: 6px;
+ font-weight: 700;
+ cursor: pointer;
+}
+.setup-players-count {
+ display: flex;
+ gap: 12px;
+ margin-bottom: 16px;
+}
+.btn-count-choice {
+ flex: 1;
+ padding: 12px;
+ background: #242a33;
+ border: 2px solid var(--border-color);
+ border-radius: 8px;
+ color: #fff;
+ font-size: 1rem;
+ font-weight: 700;
+ cursor: pointer;
+ text-align: center;
+ transition: all 0.15s ease;
+}
+.btn-count-choice.active {
+ border-color: var(--accent-gold);
+ background: rgba(251, 191, 36, 0.15);
+}
+.player-config-row {
+ background: rgba(0, 0, 0, 0.25);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ padding: 12px;
+ margin-bottom: 10px;
+ display: grid;
+ grid-template-columns: 140px 1fr 1fr;
+ gap: 12px;
+ align-items: center;
+}
+select.setup-select, input.setup-input {
+ background: #1a1e24;
+ border: 1px solid var(--border-color);
+ color: #fff;
+ padding: 8px;
+ border-radius: 6px;
+ width: 100%;
+}
+.btn-start-game {
+ background: linear-gradient(180deg, #10b981, #059669);
+ border: 1px solid #34d399;
+ color: #fff;
+ padding: 14px;
+ border-radius: 8px;
+ font-size: 1.1rem;
+ font-weight: 800;
+ cursor: pointer;
+ width: 100%;
+ margin-top: 10px;
+ box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+.btn-start-game:hover {
+ background: linear-gradient(180deg, #059669, #047857);
+}
+#toast-notification {
+ position: fixed;
+ bottom: 24px;
+ right: 24px;
+ background: #1e293b;
+ border: 1px solid #38bdf8;
+ color: #f1f5f9;
+ padding: 12px 18px;
+ border-radius: 8px;
+ box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+ z-index: 200;
+ opacity: 0;
+ transform: translateY(20px);
+ transition: all 0.25s ease;
+ pointer-events: none;
+ max-width: 360px;
+}
+#toast-notification.show {
+ opacity: 1;
+ transform: translateY(0);
+}
+.travel-cities-list {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+ gap: 12px;
+}
+.travel-city-card {
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ padding: 12px;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ text-align: center;
+ gap: 8px;
+ cursor: pointer;
+ transition: border-color 0.15s ease;
+}
+.travel-city-card:hover {
+ border-color: var(--accent-gold);
+}
+.travel-city-icon {
+ font-size: 2rem;
+}
+</style>
+</head>
+<body>
+ <!-- ========================================================
+ APP HEADER
+ ======================================================== -->
+ <header class="app-header">
+ <div class="header-left">
+ <h1 class="app-title">
+ <span>🎲</span> Monster Journeys
+ </h1>
+ <div class="round-tracker">
+ <span>Ronda:</span>
+ <strong id="display-round">1 / 20</strong>
+ </div>
+ <div class="round-tracker">
+ <span>Turno de:</span>
+ <strong id="display-active-player">Jugador 1</strong>
+ </div>
+ </div>
+ <div class="header-center">
+ <span id="status-movement" class="status-pill tag-success">Movimiento: Disponible</span>
+ <span id="status-action" class="status-pill tag-primary">Acción: Disponible</span>
+ </div>
+ <div class="header-right">
+ <button id="btn-sound-toggle" class="btn-debug">🔊 Sonido</button>
+ <button id="btn-rules" class="btn-debug">📖 Reglas (31)</button>
+ <button id="btn-restart" class="btn-debug" onclick="location.reload()">🔄 Nueva Partida</button>
+ </div>
+ </header>
+ <!-- ========================================================
+ DEBUG / SOLO TESTING TOOLBAR
+ ======================================================== -->
+ <div class="debug-toolbar">
+ <span class="debug-label">🛠️ Herramientas de Testeo Rápido:</span>
+ <button id="btn-dbg-tournament" class="btn-debug btn-debug-highlight" title="Salta directamente a la Ronda 20 para probar el Torneo Final">
+ 🏆 Ir a Ronda 20 (Probar Torneo)
+ </button>
+ <button id="btn-dbg-coins" class="btn-debug">+10 Monedas 🪙</button>
+ <button id="btn-dbg-badges" class="btn-debug">🏅 Desbloquear 4 Medallas</button>
+ <button id="btn-dbg-heal" class="btn-debug">🌿 Curar al 100%</button>
+ </div>
+ <!-- ========================================================
+ MAIN WORKSPACE
+ ======================================================== -->
+ <main class="main-workspace">
+ <!-- MAP & ACTIONS CONTAINER -->
+ <div class="map-view-card">
+ <div class="map-header-bar">
+ <div class="map-legend">
+ <span style="font-weight: 700; color: #fff;">Mapa Hexagonal (18 x 12):</span>
+ <span class="legend-item"><span class="legend-color" style="background: #2e7d32;"></span> Bosque</span>
+ <span class="legend-item"><span class="legend-color" style="background: #6d4c41;"></span> Montaña</span>
+ <span class="legend-item"><span class="legend-color" style="background: #f9a825;"></span> Pradera</span>
+ <span class="legend-item"><span class="legend-color" style="background: #00838f;"></span> Agua Dulce</span>
+ <span class="legend-item"><span class="legend-color" style="background: #1565c0;"></span> Agua Salada (Océano)</span>
+ </div>
+ <div style="font-size: 0.78rem; color: #9ca3af;">
+ 🏛️ 4 Ciudades (Distancia ≥ 5 casilleros) &nbsp;|&nbsp; ✨ 50% Puntos de Interés
+ </div>
+ </div>
+ <!-- SCROLLABLE SVG HEX MAP -->
+ <div class="hex-map-scroll-wrapper">
+ <svg id="hex-map-svg" width="1240" height="660" viewBox="0 0 1240 660"></svg>
+ </div>
+ <!-- ACTION CONTROLS BAR (Rule 25 & 26) -->
+ <div class="action-controls-bar">
+ <div class="action-buttons-group">
+ <button id="btn-act-search" class="btn-action btn-action-primary" title="Miras las 3 primeras cartas del mazo de bioma para capturar o aprender ataque">
+ 🔍 Buscar Monstruos (Robar 3)
+ </button>
+ <button id="btn-act-fight" class="btn-action btn-action-fight" title="Desafiar el gimnasio local o pelear contra un entrenador rival">
+ ⚔️ Pelear
+ </button>
+ <button id="btn-act-shop" class="btn-action" title="Abrir el River de 8 cartas de objetos sin duplicados">
+ 🛒 Tienda (River 8 Objetos)
+ </button>
+ <button id="btn-act-poi" class="btn-action" title="Explorar el Punto de Interés de la casilla actual">
+ 📍 Visitar Punto de Interés
+ </button>
+ <button id="btn-act-travel" class="btn-action" title="Viajar rápidamente de una ciudad a otra">
+ ✈️ Viaje Rápido entre Ciudades
+ </button>
+ </div>
+ <div>
+ <button id="btn-act-endturn" class="btn-action btn-action-endturn">
+ Terminar Turno ➡️
+ </button>
+ </div>
+ </div>
+ </div>
+ <!-- PLAYER DASHBOARD (Rule 22 & 24) -->
+ <div class="player-dashboard-container">
+ <!-- Tabs for 1 to 4 players -->
+ <div id="player-tabs-bar" class="player-tabs-bar"></div>
+ <div class="player-board-content">
+ <!-- Player & Character Meta Header -->
+ <div class="player-header-meta">
+ <div class="char-card-summary">
+ <div id="board-char-icon" class="char-avatar-icon">🧢</div>
+ <div>
+ <div id="board-player-name" style="font-weight: 800; font-size: 1.15rem; color: #fff;">Jugador 1</div>
+ <div id="board-char-title" class="char-title-text">Red (El Audaz) - Entrenador Nato</div>
+ <div id="board-char-ability" class="char-ability-text">Habilidad: Determinación Ardiente</div>
+ </div>
+ </div>
+ <div class="player-resources">
+ <div class="resource-box">
+ <span class="resource-label">Oro / Monedas</span>
+ <span id="board-coins-val" class="resource-value">10 🪙</span>
+ </div>
+ <div class="resource-box">
+ <span class="resource-label">Medallas de Gimnasio</span>
+ <div id="board-badges-list" class="badges-row"></div>
+ </div>
+ </div>
+ </div>
+ <!-- Personal Board Creature Slots (4 slots: 3 Battle + 1 Reserve) (Rule 24 & Rule 3) -->
+ <div>
+ <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+ <h3 style="font-size: 0.95rem; color: #e5e7eb; font-weight: 700;">
+ 🐾 Tablero Personal de Criaturas (Máximo 3 en Combate + 1 Reserva):
+ </h3>
+ <span style="font-size: 0.75rem; color: #9ca3af;">
+ Regla 27: Puedes cambiar el orden en cualquier momento | Regla 18: Weak +2 indicada en cada carta
+ </span>
+ </div>
+ <div id="creature-slots-container" class="creature-slots-grid"></div>
+ </div>
+ <!-- Hand of Items / Inventory (Rule 24) -->
+ <div class="inventory-hand-section">
+ <div class="inventory-header">
+ <span>🎒 Mano de Cartas de Objetos (Herramientas, Combate y Utilidad):</span>
+ <span style="font-size: 0.75rem; color: #9ca3af;">Regla 10: Máximo 1 objeto equipado por criatura</span>
+ </div>
+ <div id="board-inventory-items" class="inventory-cards-grid"></div>
+ </div>
+ </div>
+ </div>
+ <!-- GAME EVENT LOG -->
+ <div class="game-log-card">
+ <div class="game-log-title">📜 Registro de Eventos de la Partida:</div>
+ <div id="game-event-log" class="game-log-container"></div>
+ </div>
+ </main>
+ <!-- ========================================================
+ MODAL: SEARCH ENCOUNTER (Rule 7, 5, 6, 30)
+ ======================================================== -->
+ <div id="modal-search" class="modal-overlay">
+ <div class="modal-box" style="max-width: 860px;">
+ <div class="modal-header">
+ <h3>🔍 Mazo de Encuentro Salvaje (Miras 3 cartas)</h3>
+ <button class="modal-close-btn" onclick="UI.hideSearchModal()">✕</button>
+ </div>
+ <div class="modal-content">
+ <p style="font-size: 0.85rem; color: #cbd5e1;">
+ <strong>Regla 7 &amp; 30:</strong> Has explorado el bioma. Elige una de estas cartas para 
+ <strong>Capturar</strong> (si tienes la Herramienta del Tier requerido) o 
+ <strong>Aprender su Ataque</strong> (si tienes suficientes medallas de gimnasio derrotados).
+ </p>
+ <div id="search-cards-grid" class="search-cards-grid"></div>
+ </div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: RIVER SHOP (Rule 16)
+ ======================================================== -->
+ <div id="modal-shop" class="modal-overlay">
+ <div class="modal-box" style="max-width: 960px;">
+ <div class="modal-header">
+ <h3>🛒 Tienda del River (8 Cartas sin duplicados)</h3>
+ <div style="display: flex; align-items: center; gap: 15px;">
+ <span style="font-weight: bold; color: #fbbf24;">Tus Monedas: <span id="shop-player-coins">10 🪙</span></span>
+ <button class="modal-close-btn" onclick="UI.hideShopModal()">✕</button>
+ </div>
+ </div>
+ <div class="modal-content">
+ <p style="font-size: 0.85rem; color: #9ca3af;">
+ <strong>Regla 16:</strong> El river siempre mantiene 8 cartas distintas. Al comprar una carta, se repone inmediatamente sin permitir duplicados en el mostrador.
+ </p>
+ <div id="shop-river-grid" class="shop-river-grid"></div>
+ </div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: COMBAT ARENA (Rule 1, 2, 18, 19, 31)
+ ======================================================== -->
+ <div id="modal-combat" class="modal-overlay">
+ <div class="modal-box" style="max-width: 850px;">
+ <div class="modal-header">
+ <h3 id="combat-modal-title">⚔️ Arena de Combate 1v1</h3>
+ </div>
+ <div class="modal-content">
+ <div class="combat-arena-box">
+ <!-- Left: Player 1 Fighter -->
+ <div class="combatant-side">
+ <div id="combat-p1-mon-icon" class="combat-mon-avatar">🦖</div>
+ <div id="combat-p1-mon-name" class="combat-mon-name">Monstruo P1</div>
+ <div class="combat-hp-container">
+ <div id="combat-p1-hp-text" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 2px;">10 / 10 HP</div>
+ <div class="hp-bar-outer"><div id="combat-p1-hp-bar" class="hp-bar-fill" style="width: 100%;"></div></div>
+ </div>
+ <div style="font-size: 0.78rem; display: flex; gap: 8px;">
+ <span id="combat-p1-speed" class="stat-box">Velocidad: 5 ⚡</span>
+ <span id="combat-p1-weak" class="stat-box weakness-tag">Weak +2: Fuego</span>
+ </div>
+ </div>
+ <!-- Center: VS Divider -->
+ <div class="combat-vs-divider">VS</div>
+ <!-- Right: Opponent Fighter -->
+ <div class="combatant-side">
+ <div id="combat-p2-mon-icon" class="combat-mon-avatar">🐉</div>
+ <div id="combat-p2-mon-name" class="combat-mon-name">Monstruo Oponente</div>
+ <div class="combat-hp-container">
+ <div id="combat-p2-hp-text" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 2px;">10 / 10 HP</div>
+ <div class="hp-bar-outer"><div id="combat-p2-hp-bar" class="hp-bar-fill" style="width: 100%;"></div></div>
+ </div>
+ <div style="font-size: 0.78rem; display: flex; gap: 8px;">
+ <span id="combat-p2-speed" class="stat-box">Velocidad: 4 ⚡</span>
+ <span id="combat-p2-weak" class="stat-box weakness-tag">Weak +2: Agua</span>
+ </div>
+ </div>
+ </div>
+ <!-- Dice specification note (Rule 31) -->
+ <div style="font-size: 0.75rem; color: #9ca3af; text-align: center;">
+ 🎲 <strong>Dados de Ataque:</strong> Caras con valores [0, 1, 1, 1, 1, 2] | ⚡ <strong>Debilidad:</strong> +2 daño si el ataque explota la debilidad
+ </div>
+ <!-- Action choices: Attack or Switch (Rule 2) -->
+ <div id="combat-actions-bar" class="combat-actions-bar"></div>
+ <!-- Combat Log -->
+ <div id="combat-log-stream" class="combat-log-stream"></div>
+ </div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: COMBAT RESULT (Rule 13, 14, 29)
+ ======================================================== -->
+ <div id="modal-combat-result" class="modal-overlay">
+ <div class="modal-box" style="max-width: 500px; text-align: center;">
+ <div class="modal-header">
+ <h3 id="result-title">Fin del Combate</h3>
+ </div>
+ <div class="modal-content">
+ <div id="result-body"></div>
+ <button id="btn-result-continue" class="btn-action btn-action-primary" style="margin-top: 15px; width: 100%; justify-content: center;">
+ Continuar Aventura
+ </button>
+ </div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: CITY FAST TRAVEL (Rule 15)
+ ======================================================== -->
+ <div id="modal-travel" class="modal-overlay">
+ <div class="modal-box" style="max-width: 600px;">
+ <div class="modal-header">
+ <h3>✈️ Viaje Rápido entre Ciudades</h3>
+ <button class="modal-close-btn" onclick="UI.hideCityTravelModal()">✕</button>
+ </div>
+ <div class="modal-content">
+ <p style="font-size: 0.85rem; color: #9ca3af;">
+ <strong>Regla 15:</strong> Puedes viajar inmediatamente de una ciudad a cualquier otra ciudad de la isla.
+ </p>
+ <div id="travel-cities-list" class="travel-cities-list"></div>
+ </div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: TOURNAMENT ENDGAME (Rule 28 & 9)
+ ======================================================== -->
+ <div id="modal-tournament" class="modal-overlay">
+ <div class="modal-box" style="max-width: 750px;">
+ <div class="modal-content" id="tournament-bracket-view"></div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: VICTORY CEREMONY
+ ======================================================== -->
+ <div id="modal-victory" class="modal-overlay">
+ <div class="modal-box" style="max-width: 500px; text-align: center; padding: 20px;">
+ <h2 style="font-size: 2.5rem; margin-bottom: 10px;">👑</h2>
+ <h2 style="font-size: 1.6rem; color: #fbbf24; margin-bottom: 10px;">¡TENEMOS UN CAMPEÓN!</h2>
+ <h3 id="victory-champion-name" style="font-size: 1.4rem; color: #fff; margin-bottom: 20px;">Jugador 1</h3>
+ <p style="color: #cbd5e1; margin-bottom: 25px;">
+ ¡Ha superado el Gran Torneo Final tras 20 intensas rondas de exploración, capturas y estrategia!
+ </p>
+ <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="location.reload()">
+ Jugar Otra Partida
+ </button>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: GAME RULES GUIDE (All 31 Rules)
+ ======================================================== -->
+ <div id="modal-rules" class="modal-overlay">
+ <div class="modal-box" style="max-width: 800px;">
+ <div class="modal-header">
+ <h3>📖 Reglas Completas del Juego de Mesa</h3>
+ <button class="modal-close-btn" onclick="UI.hideRulesModal()">✕</button>
+ </div>
+ <div class="modal-content" style="font-size: 0.85rem; line-height: 1.6; color: #cbd5e1;">
+ <ol style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+ <li><strong>Monstruos:</strong> Cada monstruo es una carta con vida, velocidad y ataque.</li>
+ <li><strong>Cambio de Monstruo:</strong> En combate puedes cambiar de monstruo o atacar. Si cambias de monstruo recibes el daño sin atacar ese turno.</li>
+ <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate, el resto se guardan.</li>
+ <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
+ <li><strong>Mazos de Biomas:</strong> Salen de 5 biomas (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada) con dorsos diferentes.</li>
+ <li><strong>Herramientas de Captura:</strong> Cada monstruo tiene un tier de captura (1 a 4). Sin la herramienta adecuada no puede ser capturado.</li>
+ <li><strong>Mazo de Encuentro:</strong> Al buscar miras las primeras 3 cartas del mazo del bioma y eliges una.</li>
+ <li><strong>Zonas:</strong> Hay 5 biomas principales.</li>
+ <li><strong>Combate Final:</strong> Al final los jugadores se enfrentan en un torneo.</li>
+ <li><strong>Objetos Equipados:</strong> Máximo un objeto equipado por monstruo.</li>
+ <li><strong>Mapa:</strong> Nodos hexagonales de 18 columnas por 12 filas.</li>
+ <li><strong>Puntos de Interés:</strong> En el 50% de los nodos hay POIs visitables.</li>
+ <li><strong>Recuperación:</strong> Los monstruos recuperan toda su salud tras una pelea.</li>
+ <li><strong>Recompensa de Derrota:</strong> Al perder una pelea, obtienes dinero de todas maneras como si hubieras ganado.</li>
+ <li><strong>Viaje Rápido:</strong> Se puede viajar de una ciudad a otra si estás en una ciudad.</li>
+ <li><strong>Tienda River:</strong> 8 cartas de objetos sin duplicados (combate, utilidad y captura). Se repone de inmediato al comprar.</li>
+ <li><strong>Habilidad de Overworld:</strong> Los tipos otorgan habilidades adicionales de mapa en lugar de la acción normal.</li>
+ <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 puntos adicionales de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
+ <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas.</li>
+ <li><strong>Personajes:</strong> Cartas de personaje con objetos iniciales y habilidad única.</li>
+ <li><strong>NPCs:</strong> Los NPCs no cambian de monstruo voluntariamente.</li>
+ <li><strong>Tracking de Salud:</strong> La vida de los monstruos se trackea en el tablero del jugador.</li>
+ <li><strong>Dimensiones y Gimnasios:</strong> Al menos 5 casilleros de distancia entre gimnasios y rodeado de agua (18x12).</li>
+ <li><strong>Tablero Personal:</strong> Lugar para 4 criaturas (3 combate + 1 reserva) y pila de mano de items.</li>
+ <li><strong>Turnos:</strong> Mover 1 casilla y tomar 1 acción por turno.</li>
+ <li><strong>Acciones:</strong> Buscar monstruos, pelear, visitar tienda o POI.</li>
+ <li><strong>Reordenar:</strong> Puedes cambiar el orden de tus criaturas en cualquier momento fuera de combate.</li>
+ <li><strong>Final a 20 Rondas:</strong> Se activa el torneo final (Playoffs, Triangular, o Mejor de 3 según el número de jugadores).</li>
+ <li><strong>Aprender Ataques en Victoria:</strong> Al derrotar a un monstruo en combate puedes enseñarle su ataque a una de tus criaturas.</li>
+ <li><strong>Monstruos Salvajes:</strong> No se pelea contra monstruos salvajes; solo se capturan o se enseñan como ataques si tienes suficientes gimnasios derrotados.</li>
+ <li><strong>Dados de Ataque:</strong> Los dados tienen caras [0, 1, 1, 1, 1, 2] que determinan el daño total.</li>
+ </ol>
+ </div>
+ </div>
+ </div>
+ <!-- ========================================================
+ MODAL: GAME SETUP (1 to 4 Players)
+ ======================================================== -->
+ <div id="modal-setup" class="modal-overlay open">
+ <div class="modal-box" style="max-width: 650px;">
+ <div class="modal-header">
+ <h3>🎮 Configuración de Partida (1 a 4 Jugadores)</h3>
+ </div>
+ <div class="modal-content">
+ <p style="font-size: 0.88rem; color: #cbd5e1;">
+ Elige el número de jugadores. Si juegas en solitario, podrás controlar a todos los jugadores por turnos para testear todas las mecánicas del juego de mesa:
+ </p>
+ <div class="setup-players-count">
+ <button class="btn-count-choice" onclick="selectPlayerCount(1)">1 Jugador (Solo)</button>
+ <button class="btn-count-choice active" onclick="selectPlayerCount(2)">2 Jugadores</button>
+ <button class="btn-count-choice" onclick="selectPlayerCount(3)">3 Jugadores</button>
+ <button class="btn-count-choice" onclick="selectPlayerCount(4)">4 Jugadores</button>
+ </div>
+ <div id="player-setup-rows"></div>
+ <button class="btn-start-game" onclick="startGameFromSetup()">
+ 🚀 Comenzar Partida de Testeo
+ </button>
+ </div>
+ </div>
+ </div>
+ <!-- TOAST NOTIFICATION -->
+ <div id="toast-notification"></div>
+ <!-- INLINED SCRIPTS -->
+ <script>
+ const SoundFX = {
+ ctx: null,
+ enabled: true,
+ init() {
+ if (!this.ctx) {
+ const AudioContext = window.AudioContext || window.webkitAudioContext;
+ if (AudioContext) {
+ this.ctx = new AudioContext();
+ }
+ }
+ if (this.ctx && this.ctx.state === 'suspended') {
+ this.ctx.resume();
+ }
+ },
+ toggle() {
+ this.enabled = !this.enabled;
+ return this.enabled;
+ },
+ playTone(freq, type, duration, delay = 0, gainLevel = 0.15) {
+ if (!this.enabled) return;
+ this.init();
+ if (!this.ctx) return;
+ setTimeout(() => {
+ try {
+ const osc = this.ctx.createOscillator();
+ const gain = this.ctx.createGain();
+ osc.type = type;
+ osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+ gain.gain.setValueAtTime(gainLevel, this.ctx.currentTime);
+ gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+ osc.connect(gain);
+ gain.connect(this.ctx.destination);
+ osc.start();
+ osc.stop(this.ctx.currentTime + duration);
+ } catch (e) {
+ console.error(e);
+ }
+ }, delay * 1000);
+ },
+ click() {
+ this.playTone(600, 'sine', 0.04, 0, 0.08);
+ },
+ step() {
+ this.playTone(320, 'triangle', 0.06, 0, 0.1);
+ },
+ coin() {
+ this.playTone(987, 'sine', 0.08, 0, 0.12);
+ this.playTone(1318, 'sine', 0.18, 0.07, 0.12);
+ },
+ diceRoll() {
+ if (!this.enabled) return;
+ for (let i = 0; i < 5; i++) {
+ const freq = 200 + Math.random() * 250;
+ this.playTone(freq, 'square', 0.03, i * 0.06, 0.06);
+ }
+ },
+ hit() {
+ this.playTone(180, 'sawtooth', 0.15, 0, 0.2);
+ this.playTone(90, 'triangle', 0.25, 0.05, 0.25);
+ },
+ weaknessHit() {
+ this.playTone(220, 'sawtooth', 0.12, 0, 0.2);
+ this.playTone(440, 'sine', 0.15, 0.08, 0.2);
+ this.playTone(880, 'triangle', 0.3, 0.16, 0.25);
+ },
+ captureSuccess() {
+ this.playTone(523, 'sine', 0.1, 0, 0.15);
+ this.playTone(659, 'sine', 0.1, 0.1, 0.15);
+ this.playTone(783, 'sine', 0.12, 0.2, 0.15);
+ this.playTone(1046, 'sine', 0.35, 0.3, 0.2);
+ },
+ faint() {
+ this.playTone(300, 'sawtooth', 0.15, 0, 0.15);
+ this.playTone(220, 'sawtooth', 0.2, 0.1, 0.15);
+ this.playTone(150, 'sawtooth', 0.35, 0.22, 0.2);
+ },
+ victory() {
+ const notes = [523, 659, 783, 1046];
+ notes.forEach((n, i) => {
+ this.playTone(n, 'triangle', 0.25, i * 0.12, 0.2);
+ });
+ }
+};
+window.SoundFX = SoundFX;
+ const DICE_FACES = [0, 1, 1, 1, 1, 2];
+function rollAttackDie() {
+ const idx = Math.floor(Math.random() * DICE_FACES.length);
+ return DICE_FACES[idx];
+}
+function rollDice(count) {
+ const rolls = [];
+ let total = 0;
+ for (let i = 0; i < count; i++) {
+ const val = rollAttackDie();
+ rolls.push(val);
+ total += val;
+ }
+ return { rolls, total };
+}
+const BIOMES = {
+ forest: {
+ id: 'forest',
+ name: 'Bosque',
+ color: '#2e7d32',
+ lightColor: '#81c784',
+ accentColor: '#1b5e20',
+ bgGradient: 'linear-gradient(135deg, #1b5e20, #388e3c)',
+ icon: '🌲',
+ cardback: 'cardback-forest',
+ description: 'Frondosos árboles y vegetación densa. Hogar de monstruos Planta y Bicho.'
+ },
+ mountain: {
+ id: 'mountain',
+ name: 'Montaña',
+ color: '#6d4c41',
+ lightColor: '#a1887f',
+ accentColor: '#4e342e',
+ bgGradient: 'linear-gradient(135deg, #4e342e, #795548)',
+ icon: '⛰️',
+ cardback: 'cardback-mountain',
+ description: 'Picos escarpados y riscos rocosos. Hogar de monstruos Roca, Tierra y Volador.'
+ },
+ plains: {
+ id: 'plains',
+ name: 'Pradera',
+ color: '#f9a825',
+ lightColor: '#fff176',
+ accentColor: '#e65100',
+ bgGradient: 'linear-gradient(135deg, #f57f17, #fbc02d)',
+ icon: '🌾',
+ cardback: 'cardback-plains',
+ description: 'Vastas llanuras doradas y campos abiertos. Hogar de monstruos Fuego y Eléctrico.'
+ },
+ freshwater: {
+ id: 'freshwater',
+ name: 'Agua Dulce',
+ color: '#00838f',
+ lightColor: '#4dd0e1',
+ accentColor: '#006064',
+ bgGradient: 'linear-gradient(135deg, #006064, #0097a7)',
+ icon: '🏞️',
+ cardback: 'cardback-freshwater',
+ description: 'Ríos serenos, lagos cristalinos y cascadas. Hogar de criaturas acuáticas fluviales.'
+ },
+ saltwater: {
+ id: 'saltwater',
+ name: 'Agua Salada',
+ color: '#1565c0',
+ lightColor: '#64b5f6',
+ accentColor: '#0d47a1',
+ bgGradient: 'linear-gradient(135deg, #0d47a1, #1976d2)',
+ icon: '🌊',
+ cardback: 'cardback-saltwater',
+ description: 'El inmenso océano que rodea la isla. Criaturas marinas de gran poder.'
+ }
+};
+const TYPE_WEAKNESS = {
+ 'Planta': 'Fuego',
+ 'Fuego': 'Agua',
+ 'Agua': 'Eléctrico',
+ 'Eléctrico': 'Tierra',
+ 'Tierra': 'Planta',
+ 'Volador': 'Eléctrico',
+ 'Roca': 'Agua',
+ 'Bicho': 'Fuego',
+ 'Dragón': 'Hielo',
+ 'Hielo': 'Fuego'
+};
+const TYPE_COLORS = {
+ 'Planta': '#2e7d32',
+ 'Fuego': '#e64a19',
+ 'Agua': '#0288d1',
+ 'Eléctrico': '#fbc02d',
+ 'Tierra': '#8d6e63',
+ 'Volador': '#7e57c2',
+ 'Roca': '#5d4037',
+ 'Bicho': '#689f38',
+ 'Dragón': '#4527a0',
+ 'Hielo': '#00acc1'
+};
+const OVERWORLD_ABILITIES = {
+ flying: {
+ id: 'flying',
+ name: 'Vuelo Rápido',
+ desc: 'Teletransporte directo a cualquier ciudad del mapa.',
+ requiresCityTarget: true
+ },
+ water: {
+ id: 'water',
+ name: 'Nado Veloz',
+ desc: 'Moverse hasta 2 casillas si ambas son de Agua Dulce o Salada.',
+ waterMovement: true
+ },
+ grass: {
+ id: 'grass',
+ name: 'Rastreo Silvestre',
+ desc: 'Al Buscar Monstruos en este turno, revela 4 cartas en vez de 3.',
+ searchBonus: 1
+ },
+ fire: {
+ id: 'fire',
+ name: 'Calor de Campamento',
+ desc: 'Cura 3 HP a todos los monstruos de tu equipo o gana +2 monedas.',
+ fireHeal: true
+ },
+ electric: {
+ id: 'electric',
+ name: 'Sobrecarga',
+ desc: 'Genera +3 monedas de energía para tus compras en la tienda.',
+ coinsBonus: 3
+ },
+ rock: {
+ id: 'rock',
+ name: 'Romperrocas',
+ desc: 'Permite atravesar terrenos montañosos y ganar +2 monedas al visitar POIs de montaña.',
+ mountainPass: true
+ },
+ ground: {
+ id: 'ground',
+ name: 'Excavación',
+ desc: 'Teletranspórtate a la casilla con Punto de Interés no visitado más cercana.',
+ burrow: true
+ },
+ bug: {
+ id: 'bug',
+ name: 'Red de Seda',
+ desc: 'En tu próxima acción de captura, captura como si tu herramienta fuera 1 tier superior.',
+ captureTierBonus: 1
+ }
+};
+const MONSTERS_DATABASE = [
+ {
+ id: 'mon_for_1',
+ name: 'Hojarín',
+ biome: 'forest',
+ type: 'Planta',
+ weakness: 'Fuego',
+ hp: 10,
+ maxHp: 10,
+ speed: 4,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.grass,
+ icon: '🌱',
+ attacks: [
+ { name: 'Látigo Cepa', type: 'Planta', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_for_2',
+ name: 'Orugán',
+ biome: 'forest',
+ type: 'Bicho',
+ weakness: 'Fuego',
+ hp: 9,
+ maxHp: 9,
+ speed: 3,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.bug,
+ icon: '🐛',
+ attacks: [
+ { name: 'Picadura', type: 'Bicho', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_for_3',
+ name: 'Espinardo',
+ biome: 'forest',
+ type: 'Planta',
+ weakness: 'Fuego',
+ hp: 13,
+ maxHp: 13,
+ speed: 5,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.grass,
+ icon: '🌵',
+ attacks: [
+ { name: 'Espina Aguda', type: 'Planta', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_for_4',
+ name: 'Mantisombra',
+ biome: 'forest',
+ type: 'Bicho',
+ weakness: 'Fuego',
+ hp: 12,
+ maxHp: 12,
+ speed: 7,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.bug,
+ icon: '🦗',
+ attacks: [
+ { name: 'Corte Rápido', type: 'Bicho', baseDmg: 2, diceCount: 2, desc: '2 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_for_5',
+ name: 'Fungobrujo',
+ biome: 'forest',
+ type: 'Planta',
+ weakness: 'Fuego',
+ hp: 15,
+ maxHp: 15,
+ speed: 4,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.grass,
+ icon: '🍄',
+ attacks: [
+ { name: 'Esporas Tóxicas', type: 'Planta', baseDmg: 4, diceCount: 1, desc: '4 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_for_6',
+ name: 'Escaraciervo',
+ biome: 'forest',
+ type: 'Bicho',
+ weakness: 'Fuego',
+ hp: 16,
+ maxHp: 16,
+ speed: 6,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.bug,
+ icon: '🪲',
+ attacks: [
+ { name: 'Cuerno Titán', type: 'Bicho', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_for_7',
+ name: 'Sylvanor',
+ biome: 'forest',
+ type: 'Planta',
+ weakness: 'Fuego',
+ hp: 20,
+ maxHp: 20,
+ speed: 6,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.grass,
+ icon: '🌳',
+ attacks: [
+ { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_for_8',
+ name: 'Reina Vespa',
+ biome: 'forest',
+ type: 'Bicho',
+ weakness: 'Fuego',
+ hp: 18,
+ maxHp: 18,
+ speed: 9,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.bug,
+ icon: '🐝',
+ attacks: [
+ { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_mtn_1',
+ name: 'Guijarrón',
+ biome: 'mountain',
+ type: 'Roca',
+ weakness: 'Agua',
+ hp: 12,
+ maxHp: 12,
+ speed: 2,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.rock,
+ icon: '🪨',
+ attacks: [
+ { name: 'Lanzarrocas', type: 'Roca', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_mtn_2',
+ name: 'Picoperico',
+ biome: 'mountain',
+ type: 'Volador',
+ weakness: 'Eléctrico',
+ hp: 9,
+ maxHp: 9,
+ speed: 6,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.flying,
+ icon: '🐦',
+ attacks: [
+ { name: 'Picotazo', type: 'Volador', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_mtn_3',
+ name: 'Topoacero',
+ biome: 'mountain',
+ type: 'Tierra',
+ weakness: 'Planta',
+ hp: 13,
+ maxHp: 13,
+ speed: 4,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.ground,
+ icon: '🦡',
+ attacks: [
+ { name: 'Excavar', type: 'Tierra', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_mtn_4',
+ name: 'Peñascoide',
+ biome: 'mountain',
+ type: 'Roca',
+ weakness: 'Agua',
+ hp: 15,
+ maxHp: 15,
+ speed: 3,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.rock,
+ icon: '🗿',
+ attacks: [
+ { name: 'Rodar', type: 'Roca', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_mtn_5',
+ name: 'Halcóntor',
+ biome: 'mountain',
+ type: 'Volador',
+ weakness: 'Eléctrico',
+ hp: 14,
+ maxHp: 14,
+ speed: 8,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.flying,
+ icon: '🦅',
+ attacks: [
+ { name: 'Tajo Aéreo', type: 'Volador', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_mtn_6',
+ name: 'Gólemita',
+ biome: 'mountain',
+ type: 'Tierra',
+ weakness: 'Planta',
+ hp: 17,
+ maxHp: 17,
+ speed: 3,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.ground,
+ icon: '🌋',
+ attacks: [
+ { name: 'Terremoto', type: 'Tierra', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_mtn_7',
+ name: 'Colosoroca',
+ biome: 'mountain',
+ type: 'Roca',
+ weakness: 'Agua',
+ hp: 22,
+ maxHp: 22,
+ speed: 3,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.rock,
+ icon: '⛰️',
+ attacks: [
+ { name: 'Avalancha Titán', type: 'Roca', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_mtn_8',
+ name: 'Ventáguila',
+ biome: 'mountain',
+ type: 'Volador',
+ weakness: 'Eléctrico',
+ hp: 17,
+ maxHp: 17,
+ speed: 10,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.flying,
+ icon: '🕊️',
+ attacks: [
+ { name: 'Huracán Cumbre', type: 'Volador', baseDmg: 4, diceCount: 3, desc: '4 base + 3 dados' }
+ ]
+ },
+ {
+ id: 'mon_pln_1',
+ name: 'Chispito',
+ biome: 'plains',
+ type: 'Eléctrico',
+ weakness: 'Tierra',
+ hp: 9,
+ maxHp: 9,
+ speed: 6,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.electric,
+ icon: '⚡',
+ attacks: [
+ { name: 'Impactrueno', type: 'Eléctrico', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_pln_2',
+ name: 'Candilín',
+ biome: 'plains',
+ type: 'Fuego',
+ weakness: 'Agua',
+ hp: 10,
+ maxHp: 10,
+ speed: 5,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.fire,
+ icon: '🔥',
+ attacks: [
+ { name: 'Ascua', type: 'Fuego', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_pln_3',
+ name: 'Voltizorro',
+ biome: 'plains',
+ type: 'Eléctrico',
+ weakness: 'Tierra',
+ hp: 12,
+ maxHp: 12,
+ speed: 7,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.electric,
+ icon: '🦊',
+ attacks: [
+ { name: 'Onda Trueno', type: 'Eléctrico', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_pln_4',
+ name: 'Furiaponi',
+ biome: 'plains',
+ type: 'Fuego',
+ weakness: 'Agua',
+ hp: 13,
+ maxHp: 13,
+ speed: 7,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.fire,
+ icon: '🐎',
+ attacks: [
+ { name: 'Rueda Fuego', type: 'Fuego', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_pln_5',
+ name: 'Electroleón',
+ biome: 'plains',
+ type: 'Eléctrico',
+ weakness: 'Tierra',
+ hp: 15,
+ maxHp: 15,
+ speed: 8,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.electric,
+ icon: '🦁',
+ attacks: [
+ { name: 'Rayo Fulgor', type: 'Eléctrico', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_pln_6',
+ name: 'Ignívoro',
+ biome: 'plains',
+ type: 'Fuego',
+ weakness: 'Agua',
+ hp: 16,
+ maxHp: 16,
+ speed: 6,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.fire,
+ icon: '🦬',
+ attacks: [
+ { name: 'Lanzallamas', type: 'Fuego', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_pln_7',
+ name: 'Raidracos',
+ biome: 'plains',
+ type: 'Eléctrico',
+ weakness: 'Tierra',
+ hp: 19,
+ maxHp: 19,
+ speed: 9,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.electric,
+ icon: '🐅',
+ attacks: [
+ { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_pln_8',
+ name: 'Fénixdor',
+ biome: 'plains',
+ type: 'Fuego',
+ weakness: 'Agua',
+ hp: 18,
+ maxHp: 18,
+ speed: 8,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.fire,
+ icon: '🦚',
+ attacks: [
+ { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_frw_1',
+ name: 'Renacuajito',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 10,
+ maxHp: 10,
+ speed: 4,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐸',
+ attacks: [
+ { name: 'Pistola Agua', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_frw_2',
+ name: 'Patiloto',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 9,
+ maxHp: 9,
+ speed: 5,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🦆',
+ attacks: [
+ { name: 'Burbujas', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_frw_3',
+ name: 'Nutrialegre',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 13,
+ maxHp: 13,
+ speed: 6,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🦦',
+ attacks: [
+ { name: 'Aqua Cola', type: 'Agua', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_frw_4',
+ name: 'Sapoabismal',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 15,
+ maxHp: 15,
+ speed: 4,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐸',
+ attacks: [
+ { name: 'Lodazo', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_frw_5',
+ name: 'Cocodriloide',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 17,
+ maxHp: 17,
+ speed: 5,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐊',
+ attacks: [
+ { name: 'Mordisco Fuvial', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_frw_6',
+ name: 'Serpentina',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 15,
+ maxHp: 15,
+ speed: 7,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐍',
+ attacks: [
+ { name: 'Hidropulso', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_frw_7',
+ name: 'Gyarador',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 20,
+ maxHp: 20,
+ speed: 7,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐉',
+ attacks: [
+ { name: 'Hidrobomba', type: 'Agua', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_frw_8',
+ name: 'Rei Tortugón',
+ biome: 'freshwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 22,
+ maxHp: 22,
+ speed: 3,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐢',
+ attacks: [
+ { name: 'Cañón Cascada', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_ocn_1',
+ name: 'Cangrejito',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 11,
+ maxHp: 11,
+ speed: 3,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🦀',
+ attacks: [
+ { name: 'Pinza Tenaz', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_ocn_2',
+ name: 'Pezdardo',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 9,
+ maxHp: 9,
+ speed: 7,
+ captureTier: 1,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐟',
+ attacks: [
+ { name: 'Embestida Acuática', type: 'Agua', baseDmg: 2, diceCount: 1, desc: '2 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_ocn_3',
+ name: 'Medusónica',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 12,
+ maxHp: 12,
+ speed: 6,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🪼',
+ attacks: [
+ { name: 'Descarga Marina', type: 'Agua', baseDmg: 3, diceCount: 1, desc: '3 base + 1 dado' }
+ ]
+ },
+ {
+ id: 'mon_ocn_4',
+ name: 'Mantamar',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 14,
+ maxHp: 14,
+ speed: 6,
+ captureTier: 2,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐡',
+ attacks: [
+ { name: 'Oleada', type: 'Agua', baseDmg: 3, diceCount: 2, desc: '3 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_ocn_5',
+ name: 'Tiburafán',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 17,
+ maxHp: 17,
+ speed: 8,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🦈',
+ attacks: [
+ { name: 'Mandíbula Abisal', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_ocn_6',
+ name: 'Krakengelio',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 18,
+ maxHp: 18,
+ speed: 5,
+ captureTier: 3,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐙',
+ attacks: [
+ { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, desc: '4 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_ocn_7',
+ name: 'Leviatán Marino',
+ biome: 'saltwater',
+ type: 'Agua',
+ weakness: 'Eléctrico',
+ hp: 22,
+ maxHp: 22,
+ speed: 7,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐋',
+ attacks: [
+ { name: 'Tsunami Abisal', type: 'Agua', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ },
+ {
+ id: 'mon_ocn_8',
+ name: 'Dragón Coralino',
+ biome: 'saltwater',
+ type: 'Dragón',
+ weakness: 'Hielo',
+ hp: 21,
+ maxHp: 21,
+ speed: 8,
+ captureTier: 4,
+ overworldAbility: OVERWORLD_ABILITIES.water,
+ icon: '🐉',
+ attacks: [
+ { name: 'Aliento del Dragón', type: 'Dragón', baseDmg: 5, diceCount: 2, desc: '5 base + 2 dados' }
+ ]
+ }
+];
+const ITEMS_DATABASE = [
+ {
+ id: 'item_cap_1',
+ name: 'Pokeball Básica',
+ category: 'capture',
+ tier: 1,
+ cost: 4,
+ icon: '🔴',
+ desc: 'Permite capturar monstruos salvajes de Tier 1.'
+ },
+ {
+ id: 'item_cap_2',
+ name: 'Superball Reforzada',
+ category: 'capture',
+ tier: 2,
+ cost: 8,
+ icon: '🔵',
+ desc: 'Permite capturar monstruos salvajes de Tier 1 y Tier 2.'
+ },
+ {
+ id: 'item_cap_3',
+ name: 'Ultraball Avanzada',
+ category: 'capture',
+ tier: 3,
+ cost: 14,
+ icon: '🟡',
+ desc: 'Permite capturar monstruos salvajes hasta Tier 3.'
+ },
+ {
+ id: 'item_cap_4',
+ name: 'Masterball Suprema',
+ category: 'capture',
+ tier: 4,
+ cost: 22,
+ icon: '🟣',
+ desc: 'Permite capturar cualquier monstruo legendario (Tier 1 a Tier 4).'
+ },
+ {
+ id: 'item_cmb_1',
+ name: 'Banda Fuerza',
+ category: 'combat',
+ cost: 6,
+ icon: '🥊',
+ desc: '+1 daño base en todos los ataques del monstruo portador.'
+ },
+ {
+ id: 'item_cmb_2',
+ name: 'Chaleco Defensivo',
+ category: 'combat',
+ cost: 6,
+ icon: '🦺',
+ desc: 'Reduce en 1 punto el daño recibido de ataques enemigos (mínimo 1 daño).'
+ },
+ {
+ id: 'item_cmb_3',
+ name: 'Garra Rápida',
+ category: 'combat',
+ cost: 5,
+ icon: '⚡',
+ desc: '+2 Velocidad para el monstruo que la tenga equipada.'
+ },
+ {
+ id: 'item_cmb_4',
+ name: 'Cinta Focus',
+ category: 'combat',
+ cost: 8,
+ icon: '🎗️',
+ desc: 'Sobrevive con 1 HP la primera vez que el monstruo recibiría un golpe letal.'
+ },
+ {
+ id: 'item_cmb_5',
+ name: 'Lente Preciso',
+ category: 'combat',
+ cost: 7,
+ icon: '🎯',
+ desc: 'Tus dados de ataque que saquen 0 se convierten automáticamente en 1.'
+ },
+ {
+ id: 'item_cmb_6',
+ name: 'Colmillo Afilado',
+ category: 'combat',
+ cost: 6,
+ icon: '🦷',
+ desc: '+2 daño adicional si tu monstruo ataca primero en el turno.'
+ },
+ {
+ id: 'item_cmb_7',
+ name: 'Baya Aranja',
+ category: 'combat',
+ cost: 4,
+ icon: '🫐',
+ desc: 'Restaura 3 HP automáticamente cuando la vida del monstruo cae al 50% o menos (un solo uso por combate).'
+ },
+ {
+ id: 'item_cmb_8',
+ name: 'Casco Dentado',
+ category: 'combat',
+ cost: 6,
+ icon: '🪖',
+ desc: 'Cada vez que el monstruo recibe daño físico de un ataque, el atacante sufre 1 de daño.'
+ },
+ {
+ id: 'item_cmb_9',
+ name: 'Pesa Recia',
+ category: 'combat',
+ cost: 7,
+ icon: '🏋️',
+ desc: '+3 HP máxima y actual para el monstruo portador.'
+ },
+ {
+ id: 'item_utl_1',
+ name: 'Botas Ligeras',
+ category: 'utility',
+ cost: 5,
+ icon: '👟',
+ desc: 'Puedes moverte 1 casilla adicional en tu fase de movimiento terrestre.'
+ },
+ {
+ id: 'item_utl_2',
+ name: 'Caña de Pescar',
+ category: 'utility',
+ cost: 5,
+ icon: '🎣',
+ desc: 'Permite la acción "Buscar Monstruo" en casillas de Agua Dulce o Agua Salada.'
+ },
+ {
+ id: 'item_utl_3',
+ name: 'Mapa de Rutas',
+ category: 'utility',
+ cost: 5,
+ icon: '🗺️',
+ desc: 'Recibe +2 monedas de oro cada vez que visites cualquier Punto de Interés (POI).'
+ },
+ {
+ id: 'item_utl_4',
+ name: 'Flauta Mágica',
+ category: 'utility',
+ cost: 6,
+ icon: '🪈',
+ desc: 'En combate, puedes relanzar 1 dado de ataque por turno.'
+ },
+ {
+ id: 'item_utl_5',
+ name: 'Moneda Amuleto',
+ category: 'utility',
+ cost: 6,
+ icon: '🪙',
+ desc: 'Gana +3 monedas adicionales al terminar cualquier combate (victoria o derrota).'
+ },
+ {
+ id: 'item_utl_6',
+ name: 'Poción de Campamento',
+ category: 'utility',
+ cost: 5,
+ icon: '🧪',
+ desc: 'Úsala fuera de combate para restaurar al máximo la salud de todo tu equipo.'
+ },
+ {
+ id: 'item_utl_7',
+ name: 'Telescopio Explorador',
+ category: 'utility',
+ cost: 7,
+ icon: '🔭',
+ desc: 'Al Buscar Monstruos, roba y mira 4 cartas del mazo de encuentro en lugar de 3.'
+ },
+ {
+ id: 'item_utl_8',
+ name: 'Imán de Tesoros',
+ category: 'utility',
+ cost: 7,
+ icon: '🧲',
+ desc: 'Cada 3 turnos obtienes automáticamente 2 monedas de oro.'
+ }
+];
+const CHARACTERS_DATABASE = [
+ {
+ id: 'char_red',
+ name: 'Red (El Audaz)',
+ title: 'Entrenador Nato',
+ icon: '🧢',
+ avatarColor: '#d32f2f',
+ startingCoins: 10,
+ startingToolTier: 1,
+ startingItemIds: ['item_cap_1', 'item_cmb_7'],
+ starterMonsterId: 'mon_pln_2', // Candilín (Fuego)
+ abilityName: 'Determinación Ardiente',
+ abilityDesc: 'Tus ataques hacen +1 de daño si la vida de tu monstruo activo está por debajo de la mitad.'
+ },
+ {
+ id: 'char_blue',
+ name: 'Blue (El Estratega)',
+ title: 'Táctico Ambicioso',
+ icon: '🕶️',
+ avatarColor: '#1976d2',
+ startingCoins: 10,
+ startingToolTier: 2,
+ startingItemIds: ['item_cap_2', 'item_cmb_1'],
+ starterMonsterId: 'mon_frw_1', // Renacuajito (Agua)
+ abilityName: 'Primer Golpe',
+ abilityDesc: 'Tus monstruos tienen +2 de Velocidad en el primer turno de cualquier combate.'
+ },
+ {
+ id: 'char_misty',
+ name: 'Marina (La Pescadora)',
+ title: 'Especialista Fluvial',
+ icon: '🌊',
+ avatarColor: '#00838f',
+ startingCoins: 14,
+ startingToolTier: 1,
+ startingItemIds: ['item_cap_1', 'item_utl_2'],
+ starterMonsterId: 'mon_frw_2', // Patiloto (Agua)
+ abilityName: 'Navegante Experta',
+ abilityDesc: 'Moverse por casillas de Agua Dulce no consume movimiento extra y ganas +2 monedas al visitar POIs acuáticos.'
+ },
+ {
+ id: 'char_brock',
+ name: 'Flint (El Montañero)',
+ title: 'Guardaparques Férreo',
+ icon: '🧗',
+ avatarColor: '#6d4c41',
+ startingCoins: 12,
+ startingToolTier: 1,
+ startingItemIds: ['item_cap_1', 'item_cmb_2'],
+ starterMonsterId: 'mon_for_1', // Hojarín (Planta)
+ abilityName: 'Resistencia Rocosa',
+ abilityDesc: 'Todos los monstruos de tu equipo tienen +2 de HP máxima permanente.'
+ }
+];
+const GYMS_DATABASE = [
+ {
+ id: 'gym_1',
+ name: 'Gimnasio Arbóreo',
+ cityName: 'Ciudad Hoja',
+ hexX: 3,
+ hexY: 2,
+ tier: 1,
+ badgeName: 'Medalla Hoja',
+ badgeIcon: '🍃',
+ leaderName: 'Líder Erika',
+ rewardCoins: 8,
+ teamMonsterIds: ['mon_for_1', 'mon_for_2']
+ },
+ {
+ id: 'gym_2',
+ name: 'Gimnasio Cumbre',
+ cityName: 'Ciudad Pico',
+ hexX: 14,
+ hexY: 2,
+ tier: 2,
+ badgeName: 'Medalla Risco',
+ badgeIcon: '⛰️',
+ leaderName: 'Líder Brock',
+ rewardCoins: 12,
+ teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4']
+ },
+ {
+ id: 'gym_3',
+ name: 'Gimnasio Marejada',
+ cityName: 'Ciudad Puerto',
+ hexX: 4,
+ hexY: 9,
+ tier: 3,
+ badgeName: 'Medalla Cascada',
+ badgeIcon: '💧',
+ leaderName: 'Líder Misty',
+ rewardCoins: 16,
+ teamMonsterIds: ['mon_frw_5', 'mon_ocn_5']
+ },
+ {
+ id: 'gym_4',
+ name: 'Gimnasio Volcán',
+ cityName: 'Ciudad Flama',
+ hexX: 13,
+ hexY: 9,
+ tier: 4,
+ badgeName: 'Medalla Volcán',
+ badgeIcon: '🔥',
+ leaderName: 'Líder Blaine',
+ rewardCoins: 22,
+ teamMonsterIds: ['mon_pln_6', 'mon_pln_7']
+ }
+];
+const POI_TYPES = [
+ {
+ id: 'poi_berries',
+ name: 'Arbusto de Bayas',
+ icon: '🫐',
+ desc: 'Recolectas frutas medicinales silvestres.',
+ reward: (player) => {
+ const berry = JSON.parse(JSON.stringify(ITEMS_DATABASE.find(i => i.id === 'item_cmb_7')));
+ player.inventory.push(berry);
+ return '¡Encontraste 1 Baya Aranja! La guardas en tu mano de items.';
+ }
+ },
+ {
+ id: 'poi_treasure',
+ name: 'Cofre Antiguo',
+ icon: '🪙',
+ desc: 'Un viejo tesoro olvidado en la naturaleza.',
+ reward: (player) => {
+ const amt = Math.floor(Math.random() * 5) + 4; // 4 to 8
+ player.coins += amt;
+ return `¡Abriste el cofre y obtuviste ${amt} monedas de oro!`;
+ }
+ },
+ {
+ id: 'poi_shrine',
+ name: 'Altar Misterioso',
+ icon: '⛩️',
+ desc: 'Un altar consagrado que irradia bendición ancestral.',
+ reward: (player) => {
+ const utils = ITEMS_DATABASE.filter(i => i.category === 'utility');
+ const randomItem = JSON.parse(JSON.stringify(utils[Math.floor(Math.random() * utils.length)]));
+ player.inventory.push(randomItem);
+ return `El altar brilla y te otorga: ${randomItem.name}!`;
+ }
+ },
+ {
+ id: 'poi_springs',
+ name: 'Aguas Termales',
+ icon: '♨️',
+ desc: 'Aguas termales curativas y relajantes.',
+ reward: (player) => {
+ player.monsters.forEach(m => m.hp = m.maxHp);
+ player.coins += 2;
+ return '¡Tus monstruos se relajaron y recuperaron toda su salud! Además hallaste 2 monedas en el fondo.';
+ }
+ },
+ {
+ id: 'poi_lookout',
+ name: 'Torre Vigía',
+ icon: '🗼',
+ desc: 'Un mirador alto que expande tu visión del horizonte.',
+ reward: (player) => {
+ player.coins += 4;
+ return 'Oteas el territorio desde la cima. Ganas 4 monedas de recompensas de explorador.';
+ }
+ },
+ {
+ id: 'poi_fossil',
+ name: 'Excavación Fósil',
+ icon: '🦴',
+ desc: 'Restos fosilizados de criaturas arcaicas.',
+ reward: (player) => {
+ player.coins += 6;
+ return '¡Desenterraste un fósil valioso! Los científicos te pagan 6 monedas de oro.';
+ }
+ }
+];
+window.DICE_FACES = DICE_FACES;
+window.rollAttackDie = rollAttackDie;
+window.rollDice = rollDice;
+window.BIOMES = BIOMES;
+window.TYPE_WEAKNESS = TYPE_WEAKNESS;
+window.TYPE_COLORS = TYPE_COLORS;
+window.OVERWORLD_ABILITIES = OVERWORLD_ABILITIES;
+window.MONSTERS_DATABASE = MONSTERS_DATABASE;
+window.ITEMS_DATABASE = ITEMS_DATABASE;
+window.CHARACTERS_DATABASE = CHARACTERS_DATABASE;
+window.GYMS_DATABASE = GYMS_DATABASE;
+window.POI_TYPES = POI_TYPES;
+ const GRID_WIDTH = 18;
+const GRID_HEIGHT = 12;
+const HEX_RADIUS = 34; // Radius in pixels for rendering
+const HEX_WIDTH = Math.sqrt(3) * HEX_RADIUS;
+const HEX_HEIGHT = 2 * HEX_RADIUS;
+function oddRToCube(col, row) {
+ const q = col - Math.floor((row - (row & 1)) / 2);
+ const r = row;
+ const s = -q - r;
+ return { q, r, s };
+}
+function hexDistance(x1, y1, x2, y2) {
+ const a = oddRToCube(x1, y1);
+ const b = oddRToCube(x2, y2);
+ return (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.s - b.s)) / 2;
+}
+function getHexNeighbors(col, row) {
+ const isOdd = (row % 2 === 1);
+ const deltas = isOdd ? [
+ { dx: 1, dy: 0 },
+ { dx: -1, dy: 0 },
+ { dx: 1, dy: -1 },
+ { dx: 0, dy: -1 },
+ { dx: 1, dy: 1 },
+ { dx: 0, dy: 1 }
+ ] : [
+ { dx: 1, dy: 0 },
+ { dx: -1, dy: 0 },
+ { dx: 0, dy: -1 },
+ { dx: -1, dy: -1 },
+ { dx: 0, dy: 1 },
+ { dx: -1, dy: 1 }
+ ];
+ const neighbors = [];
+ for (const d of deltas) {
+ const nx = col + d.dx;
+ const ny = row + d.dy;
+ if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT) {
+ neighbors.push({ x: nx, y: ny });
+ }
+ }
+ return neighbors;
+}
+function getHexCenter(col, row) {
+ const cx = col * HEX_WIDTH + (row % 2 === 1 ? HEX_WIDTH / 2 : 0) + HEX_WIDTH / 2 + 20;
+ const cy = row * (HEX_HEIGHT * 0.75) + HEX_RADIUS + 20;
+ return { x: cx, y: cy };
+}
+function getHexPolygonPoints(centerX, centerY, radius = HEX_RADIUS) {
+ const points = [];
+ for (let i = 0; i < 6; i++) {
+ const angleDeg = 60 * i + 30;
+ const angleRad = (Math.PI / 180) * angleDeg;
+ const px = centerX + radius * Math.cos(angleRad);
+ const py = centerY + radius * Math.sin(angleRad);
+ points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+ }
+ return points.join(' ');
+}
+class HexMap {
+ constructor() {
+ this.width = GRID_WIDTH;
+ this.height = GRID_HEIGHT;
+ this.nodes = [];
+ this.generateMap();
+ }
+ generateMap() {
+ this.nodes = [];
+ for (let y = 0; y < this.height; y++) {
+ this.nodes[y] = [];
+ for (let x = 0; x < this.width; x++) {
+ let biome = 'plains';
+ if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+ biome = 'saltwater';
+ } else if (x === 1 || x === this.width - 2 || y === 1 || y === this.height - 2) {
+ if (Math.random() < 0.45) {
+ biome = 'saltwater';
+ } else if (Math.random() < 0.3) {
+ biome = 'freshwater';
+ } else if (x < 8 && y < 6) {
+ biome = 'forest';
+ } else if (x > 9 && y < 6) {
+ biome = 'mountain';
+ } else {
+ biome = 'plains';
+ }
+ } else {
+ if (x < 9 && y < 6) {
+ const r = Math.random();
+ if (r < 0.65) biome = 'forest';
+ else if (r < 0.85) biome = 'freshwater';
+ else biome = 'plains';
+ }
+ else if (x >= 9 && y < 6) {
+ const r = Math.random();
+ if (r < 0.65) biome = 'mountain';
+ else if (r < 0.85) biome = 'plains';
+ else biome = 'forest';
+ }
+ else if (x < 9 && y >= 6) {
+ const r = Math.random();
+ if (r < 0.5) biome = 'freshwater';
+ else if (r < 0.8) biome = 'plains';
+ else biome = 'forest';
+ }
+ else {
+ const r = Math.random();
+ if (r < 0.55) biome = 'plains';
+ else if (r < 0.8) biome = 'mountain';
+ else biome = 'freshwater';
+ }
+ }
+ this.nodes[y][x] = {
+ x,
+ y,
+ biome,
+ city: null,
+ gym: null,
+ poi: null
+ };
+ }
+ }
+ GYMS_DATABASE.forEach(gym => {
+ const node = this.nodes[gym.hexY][gym.hexX];
+ node.city = gym.cityName;
+ node.gym = gym;
+ if (gym.id === 'gym_1') node.biome = 'forest';
+ if (gym.id === 'gym_2') node.biome = 'mountain';
+ if (gym.id === 'gym_3') node.biome = 'freshwater';
+ if (gym.id === 'gym_4') node.biome = 'plains';
+ });
+ const allCandidates = [];
+ for (let y = 0; y < this.height; y++) {
+ for (let x = 0; x < this.width; x++) {
+ const node = this.nodes[y][x];
+ if (!node.city) {
+ allCandidates.push(node);
+ }
+ }
+ }
+ allCandidates.sort(() => Math.random() - 0.5);
+ const targetPoiCount = Math.floor((this.width * this.height) * 0.50);
+ for (let i = 0; i < targetPoiCount && i < allCandidates.length; i++) {
+ const poiType = POI_TYPES[i % POI_TYPES.length];
+ allCandidates[i].poi = {
+ id: poiType.id,
+ name: poiType.name,
+ icon: poiType.icon,
+ desc: poiType.desc,
+ claimedBy: []
+ };
+ }
+ }
+ getNode(x, y) {
+ if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+ return this.nodes[y][x];
+ }
+ return null;
+ }
+ getNeighbors(x, y) {
+ return getHexNeighbors(x, y).map(pos => this.getNode(pos.x, pos.y));
+ }
+}
+window.HexMap = HexMap;
+window.getHexCenter = getHexCenter;
+window.getHexPolygonPoints = getHexPolygonPoints;
+window.hexDistance = hexDistance;
+window.getHexNeighbors = getHexNeighbors;
+window.HEX_RADIUS = HEX_RADIUS;
+window.HEX_WIDTH = HEX_WIDTH;
+window.HEX_HEIGHT = HEX_HEIGHT;
+window.GRID_WIDTH = GRID_WIDTH;
+window.GRID_HEIGHT = GRID_HEIGHT;
+ class CombatEngine {
+ constructor(game) {
+ this.game = game;
+ this.inCombat = false;
+ this.battleType = null; // 'gym', 'npc', 'pvp', 'tournament'
+ this.player1 = null;
+ this.player2 = null; // or null for NPC/Gym
+ this.gymData = null;
+ this.npcData = null;
+ this.combatLog = [];
+ this.p1ActiveIndex = 0;
+ this.p2ActiveIndex = 0;
+ this.p1Team = [];
+ this.p2Team = [];
+ this.turnNumber = 1;
+ this.isProcessing = false;
+ this.pendingMoveTeaching = null;
+ this.onCombatEndCallback = null;
+ }
+ startBattle({ type, player1, player2 = null, gym = null, npc = null, onEnd = null }) {
+ this.inCombat = true;
+ this.battleType = type;
+ this.player1 = player1;
+ this.player2 = player2;
+ this.gymData = gym;
+ this.npcData = npc;
+ this.combatLog = [];
+ this.turnNumber = 1;
+ this.isProcessing = false;
+ this.pendingMoveTeaching = null;
+ this.onCombatEndCallback = onEnd;
+ this.p1Team = player1.monsters.slice(0, 3).map(m => this.cloneMonster(m));
+ this.p1ActiveIndex = 0;
+ const firstAliveP1 = this.p1Team.findIndex(m => m.hp > 0);
+ this.p1ActiveIndex = firstAliveP1 >= 0 ? firstAliveP1 : 0;
+ if (type === 'gym') {
+ this.p2Team = gym.teamMonsterIds.map(id => {
+ const base = MONSTERS_DATABASE.find(m => m.id === id);
+ return this.cloneMonster(base);
+ });
+ this.p2ActiveIndex = 0;
+ this.log(`⚔️ ¡Comienza el combate de gimnasio contra ${gym.leaderName} (${gym.cityName})!`);
+ } else if (type === 'npc') {
+ this.p2Team = npc.monsters.map(m => this.cloneMonster(m));
+ this.p2ActiveIndex = 0;
+ this.log(`⚔️ ¡Comienza el combate contra el Entrenador ${npc.name}!`);
+ } else if (type === 'pvp' || type === 'tournament') {
+ this.p2Team = player2.monsters.slice(0, 3).map(m => this.cloneMonster(m));
+ const firstAliveP2 = this.p2Team.findIndex(m => m.hp > 0);
+ this.p2ActiveIndex = firstAliveP2 >= 0 ? firstAliveP2 : 0;
+ this.log(`⚔️ ¡Duelo entre ${player1.name} y ${player2.name}!`);
+ }
+ const p1Active = this.p1Team[this.p1ActiveIndex];
+ const p2Active = this.p2Team[this.p2ActiveIndex];
+ this.log(`${player1.name} envía a ${p1Active.name} (HP: ${p1Active.hp}/${p1Active.maxHp}).`);
+ this.log(`${this.getOpponentDisplayName()} envía a ${p2Active.name} (HP: ${p2Active.hp}/${p2Active.maxHp}).`);
+ if (window.UI) {
+ UI.showCombatModal();
+ UI.renderCombatArena();
+ }
+ }
+ cloneMonster(m) {
+ return {
+ id: m.id,
+ name: m.name,
+ biome: m.biome,
+ type: m.type,
+ weakness: m.weakness,
+ hp: m.hp,
+ maxHp: m.maxHp,
+ speed: m.speed,
+ captureTier: m.captureTier,
+ icon: m.icon,
+ attacks: JSON.parse(JSON.stringify(m.attacks)),
+ equippedItem: m.equippedItem ? JSON.parse(JSON.stringify(m.equippedItem)) : null,
+ focusSashUsed: false,
+ berryUsed: false
+ };
+ }
+ getOpponentDisplayName() {
+ if (this.gymData) return this.gymData.leaderName;
+ if (this.npcData) return this.npcData.name;
+ if (this.player2) return this.player2.name;
+ return 'Oponente';
+ }
+ log(msg) {
+ this.combatLog.push(msg);
+ if (window.UI) {
+ UI.updateCombatLog(msg);
+ }
+ }
+ getP1Active() {
+ return this.p1Team[this.p1ActiveIndex];
+ }
+ getP2Active() {
+ return this.p2Team[this.p2ActiveIndex];
+ }
+ playerSwitchMonster(newIndex) {
+ if (this.isProcessing) return;
+ if (newIndex === this.p1ActiveIndex) return;
+ if (this.p1Team[newIndex].hp <= 0) {
+ alert('¡Ese monstruo está debilitado y no puede entrar a luchar!');
+ return;
+ }
+ this.isProcessing = true;
+ const oldMon = this.getP1Active();
+ this.p1ActiveIndex = newIndex;
+ const newMon = this.getP1Active();
+ this.log(`🔄 ${this.player1.name} retira a ${oldMon.name} y envía a ${newMon.name}.`);
+ this.log(`⚠️ Regla de cambio: ¡${newMon.name} recibe el ataque enemigo sin poder atacar este turno!`);
+ SoundFX.step();
+ setTimeout(() => {
+ const oppMon = this.getP2Active();
+ const oppAttack = oppMon.attacks[0];
+ this.executeAttack({
+ attacker: oppMon,
+ defender: newMon,
+ attack: oppAttack,
+ attackerPlayer: this.player2,
+ defenderPlayer: this.player1,
+ isFreeAttackOnSwitch: true
+ });
+ this.checkFaints();
+ this.turnNumber++;
+ this.isProcessing = false;
+ if (window.UI) UI.renderCombatArena();
+ }, 600);
+ }
+ playerAttack(attackIndex = 0) {
+ if (this.isProcessing) return;
+ this.isProcessing = true;
+ const p1Mon = this.getP1Active();
+ const p2Mon = this.getP2Active();
+ const p1Attack = p1Mon.attacks[attackIndex] || p1Mon.attacks[0];
+ const p2Attack = p2Mon.attacks[0];
+ let p1Speed = p1Mon.speed;
+ let p2Speed = p2Mon.speed;
+ if (p1Mon.equippedItem && p1Mon.equippedItem.id === 'item_cmb_3') p1Speed += 2; // Garra Rápida
+ if (p2Mon.equippedItem && p2Mon.equippedItem.id === 'item_cmb_3') p2Speed += 2;
+ if (this.turnNumber === 1) {
+ if (this.player1 && this.player1.characterId === 'char_blue') p1Speed += 2;
+ if (this.player2 && this.player2.characterId === 'char_blue') p2Speed += 2;
+ }
+ const p1GoesFirst = p1Speed > p2Speed || (p1Speed === p2Speed && Math.random() < 0.5);
+ this.log(`--- Turno ${this.turnNumber} ---`);
+ this.log(`Iniciativa: ${p1GoesFirst ? p1Mon.name : p2Mon.name} es más veloz (${Math.max(p1Speed, p2Speed)} vs ${Math.min(p1Speed, p2Speed)}).`);
+ if (p1GoesFirst) {
+ this.executeTurnSequence(
+ { attacker: p1Mon, defender: p2Mon, attack: p1Attack, attackerPlayer: this.player1, defenderPlayer: this.player2, first: true },
+ { attacker: p2Mon, defender: p1Mon, attack: p2Attack, attackerPlayer: this.player2, defenderPlayer: this.player1, first: false }
+ );
+ } else {
+ this.executeTurnSequence(
+ { attacker: p2Mon, defender: p1Mon, attack: p2Attack, attackerPlayer: this.player2, defenderPlayer: this.player1, first: true },
+ { attacker: p1Mon, defender: p2Mon, attack: p1Attack, attackerPlayer: this.player1, defenderPlayer: this.player2, first: false }
+ );
+ }
+ }
+ executeTurnSequence(firstStrike, secondStrike) {
+ this.executeAttack(firstStrike);
+ SoundFX.diceRoll();
+ setTimeout(() => {
+ const firstTargetFainted = firstStrike.defender.hp <= 0;
+ if (window.UI) UI.renderCombatArena();
+ if (firstTargetFainted) {
+ this.handleFaint(firstStrike.defender, firstStrike.defenderPlayer);
+ this.turnNumber++;
+ this.isProcessing = false;
+ if (window.UI) UI.renderCombatArena();
+ return;
+ }
+ setTimeout(() => {
+ this.executeAttack(secondStrike);
+ if (window.UI) UI.renderCombatArena();
+ const secondTargetFainted = secondStrike.defender.hp <= 0;
+ if (secondTargetFainted) {
+ this.handleFaint(secondStrike.defender, secondStrike.defenderPlayer);
+ }
+ this.turnNumber++;
+ this.isProcessing = false;
+ if (window.UI) UI.renderCombatArena();
+ }, 700);
+ }, 700);
+ }
+ executeAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first = false, isFreeAttackOnSwitch = false }) {
+ this.log(`💥 ${attacker.name} usa **${attack.name}** contra ${defender.name}!`);
+ const diceCount = attack.diceCount || 1;
+ let { rolls, total: diceSum } = rollDice(diceCount);
+ if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_5') {
+ rolls = rolls.map(r => r === 0 ? 1 : r);
+ diceSum = rolls.reduce((a, b) => a + b, 0);
+ this.log(`🎯 Lente Preciso convierte las caras 0 en 1!`);
+ }
+ let damage = (attack.baseDmg || 1) + diceSum;
+ const diceStr = `[${rolls.join(', ')}] = +${diceSum}`;
+ let weaknessBonus = 0;
+ const isWeak = (defender.weakness === attack.type) || (TYPE_WEAKNESS[defender.type] === attack.type);
+ if (isWeak) {
+ weaknessBonus = 2;
+ damage += weaknessBonus;
+ this.log(`⚡ ¡GOLPE EFECTIVO! ${defender.name} tiene debilidad a ${attack.type} (Weak +2 daño).`);
+ SoundFX.weaknessHit();
+ } else {
+ SoundFX.hit();
+ }
+ if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_1') {
+ damage += 1;
+ this.log(`🥊 Banda Fuerza añade +1 al daño total.`);
+ }
+ if (first && attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_6') {
+ damage += 2;
+ this.log(`🦷 Colmillo Afilado inflige +2 daño por atacar primero.`);
+ }
+ if (attackerPlayer && attackerPlayer.characterId === 'char_red' && attacker.hp <= (attacker.maxHp / 2)) {
+ damage += 1;
+ this.log(`🔥 Determinación de Red aumenta el daño en +1.`);
+ }
+ if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_2') {
+ damage = Math.max(1, damage - 1);
+ this.log(`🦺 Chaleco Defensivo reduce el daño en 1.`);
+ }
+ this.log(`Cálculo de daño: Base (${attack.baseDmg}) + Dados ${diceStr} ${weaknessBonus > 0 ? `+ Debilidad (${weaknessBonus})` : ''} = **${damage} daño total**.`);
+ const initialHp = defender.hp;
+ let newHp = initialHp - damage;
+ if (newHp <= 0 && defender.equippedItem && defender.equippedItem.id === 'item_cmb_4' && !defender.focusSashUsed) {
+ newHp = 1;
+ defender.focusSashUsed = true;
+ this.log(`🎗️ ¡Cinta Focus activada! ${defender.name} sobrevive con 1 HP milagrosamente.`);
+ }
+ defender.hp = Math.max(0, newHp);
+ this.log(`❤️ ${defender.name} recibe ${damage} daño. (Salud restante: ${defender.hp}/${defender.maxHp}).`);
+ if (defender.hp > 0 && defender.hp <= (defender.maxHp / 2) && defender.equippedItem && defender.equippedItem.id === 'item_cmb_7' && !defender.berryUsed) {
+ defender.berryUsed = true;
+ defender.hp = Math.min(defender.maxHp, defender.hp + 3);
+ this.log(`🫐 ¡${defender.name} consume su Baya Aranja y recupera 3 HP! (Salud: ${defender.hp}/${defender.maxHp}).`);
+ }
+ if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_8' && attacker.hp > 0) {
+ attacker.hp = Math.max(0, attacker.hp - 1);
+ this.log(`🪖 ¡Casco Dentado hiere a ${attacker.name} por 1 punto de daño reflejado!`);
+ }
+ }
+ checkFaints() {
+ const p1Active = this.getP1Active();
+ const p2Active = this.getP2Active();
+ if (p1Active && p1Active.hp <= 0) {
+ this.handleFaint(p1Active, this.player1);
+ }
+ if (p2Active && p2Active.hp <= 0) {
+ this.handleFaint(p2Active, this.player2);
+ }
+ }
+ handleFaint(monster, ownerPlayer) {
+ this.log(`💀 ¡${monster.name} ha caído debilitado!`);
+ SoundFX.faint();
+ const isOpponentMonster = (ownerPlayer === this.player2 || !ownerPlayer);
+ if (isOpponentMonster && this.player1) {
+ this.pendingMoveTeaching = {
+ monsterName: monster.name,
+ attack: monster.attacks[0],
+ sourceMonster: monster
+ };
+ }
+ const p1Alive = this.p1Team.filter(m => m.hp > 0);
+ const p2Alive = this.p2Team.filter(m => m.hp > 0);
+ if (p1Alive.length === 0) {
+ this.endBattle(false);
+ return;
+ }
+ if (p2Alive.length === 0) {
+ this.endBattle(true);
+ return;
+ }
+ if (this.getP2Active().hp <= 0) {
+ const nextIdx = this.p2Team.findIndex(m => m.hp > 0);
+ if (nextIdx >= 0) {
+ this.p2ActiveIndex = nextIdx;
+ this.log(`➡️ ${this.getOpponentDisplayName()} envía a ${this.getP2Active().name} al campo.`);
+ }
+ }
+ if (this.getP1Active().hp <= 0) {
+ const nextIdx = this.p1Team.findIndex(m => m.hp > 0);
+ if (nextIdx >= 0) {
+ this.p1ActiveIndex = nextIdx;
+ this.log(`➡️ ${this.player1.name} envía a ${this.getP1Active().name} al campo.`);
+ }
+ }
+ }
+ endBattle(playerWon) {
+ this.isProcessing = false;
+ this.log(`🏁 FIN DEL COMBATE: ${playerWon ? `¡VICTORIA para ${this.player1.name}!` : `¡${this.player1.name} ha sido derrotado!`}`);
+ let rewardCoins = 6;
+ if (this.gymData) {
+ rewardCoins = this.gymData.rewardCoins;
+ }
+ const hasAmulet = this.player1.inventory.some(i => i.id === 'item_utl_5');
+ if (hasAmulet) {
+ rewardCoins += 3;
+ this.log(`🪙 Moneda Amuleto otorga +3 monedas extras.`);
+ }
+ this.player1.coins += rewardCoins;
+ SoundFX.coin();
+ if (playerWon) {
+ SoundFX.victory();
+ this.log(`🎉 ¡Has ganado ${rewardCoins} monedas de oro!`);
+ if (this.gymData) {
+ if (!this.player1.badges.includes(this.gymData.tier)) {
+ this.player1.badges.push(this.gymData.tier);
+ this.player1.badges.sort((a, b) => a - b);
+ this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
+ this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
+ }
+ }
+ } else {
+ this.log(`🪙 REGLA 14: A pesar de la derrota, ¡obtienes ${rewardCoins} monedas de recompensa para recuperarte!`);
+ }
+ this.player1.monsters.forEach(m => {
+ m.hp = m.maxHp;
+ });
+ this.log(`🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud.`);
+ if (window.UI) {
+ UI.renderCombatArena();
+ UI.showCombatResultModal({
+ won: playerWon,
+ coins: rewardCoins,
+ badge: playerWon && this.gymData ? this.gymData : null,
+ moveTeaching: this.pendingMoveTeaching,
+ onContinue: () => {
+ this.inCombat = false;
+ if (this.onCombatEndCallback) {
+ this.onCombatEndCallback(playerWon);
+ }
+ if (window.UI) UI.hideCombatModal();
+ }
+ });
+ }
+ }
+}
+window.CombatEngine = CombatEngine;
+ class TournamentEngine {
+ constructor(game) {
+ this.game = game;
+ this.active = false;
+ this.format = null; // 'gauntlet' (1P), 'best_of_3' (2P), 'triangular' (3P), 'playoffs' (4P)
+ this.matches = [];
+ this.currentMatchIndex = 0;
+ this.standings = {}; // playerId -> score
+ this.winner = null;
+ }
+ startTournament(players) {
+ this.active = true;
+ this.currentMatchIndex = 0;
+ this.winner = null;
+ this.standings = {};
+ players.forEach(p => {
+ this.standings[p.id] = 0;
+ });
+ const count = players.length;
+ if (count === 1) {
+ this.format = 'gauntlet';
+ this.setupGauntlet(players[0]);
+ } else if (count === 2) {
+ this.format = 'best_of_3';
+ this.setupBestOfThree(players[0], players[1]);
+ } else if (count === 3) {
+ this.format = 'triangular';
+ this.setupTriangular(players);
+ } else {
+ this.format = 'playoffs';
+ this.setupPlayoffs(players);
+ }
+ if (window.UI) {
+ UI.showTournamentModal();
+ UI.renderTournamentBracket();
+ }
+ }
+ setupGauntlet(player) {
+ this.matches = [
+ {
+ name: 'Ronda 1: Reto del Élite',
+ p1: player,
+ p2: null,
+ isNpc: true,
+ npcName: 'Campeón Bruno',
+ npcMonsters: [
+ MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_7'),
+ MONSTERS_DATABASE.find(m => m.id === 'mon_mtn_6'),
+ MONSTERS_DATABASE.find(m => m.id === 'mon_for_7')
+ ],
+ winner: null
+ },
+ {
+ name: 'Ronda 2: Reto del Élite Avanzado',
+ p1: player,
+ p2: null,
+ isNpc: true,
+ npcName: 'Campeona Cynthia',
+ npcMonsters: [
+ MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_8'),
+ MONSTERS_DATABASE.find(m => m.id === 'mon_pln_8'),
+ MONSTERS_DATABASE.find(m => m.id === 'mon_frw_7')
+ ],
+ winner: null
+ },
+ {
+ name: 'Gran Final: Reto Supremo',
+ p1: player,
+ p2: null,
+ isNpc: true,
+ npcName: 'Maestro Legendario',
+ npcMonsters: [
+ MONSTERS_DATABASE.find(m => m.id === 'mon_ocn_7'),
+ MONSTERS_DATABASE.find(m => m.id === 'mon_pln_7'),
+ MONSTERS_DATABASE.find(m => m.id === 'mon_for_8')
+ ],
+ winner: null
+ }
+ ];
+ }
+ setupBestOfThree(p1, p2) {
+ this.matches = [
+ { name: 'Duelo 1 (Mejor de 3)', p1, p2, winner: null },
+ { name: 'Duelo 2 (Mejor de 3)', p1, p2, winner: null },
+ { name: 'Duelo 3 (Desempate si es necesario)', p1, p2, winner: null }
+ ];
+ }
+ setupTriangular(players) {
+ const [p1, p2, p3] = players;
+ this.matches = [
+ { name: 'Jornada 1', p1, p2, winner: null },
+ { name: 'Jornada 2', p1: p2, p2: p3, winner: null },
+ { name: 'Jornada 3', p1: p3, p2: p1, winner: null }
+ ];
+ }
+ setupPlayoffs(players) {
+ const [p1, p2, p3, p4] = players;
+ this.matches = [
+ { id: 'sf1', name: 'Semifinal 1: P1 vs P4', p1, p2: p4, winner: null },
+ { id: 'sf2', name: 'Semifinal 2: P2 vs P3', p1: p2, p2: p3, winner: null },
+ { id: 'bronze', name: 'Tercer Puesto', p1: null, p2: null, winner: null },
+ { id: 'final', name: 'Gran Final del Torneo', p1: null, p2: null, winner: null }
+ ];
+ }
+ getCurrentMatch() {
+ return this.matches[this.currentMatchIndex] || null;
+ }
+ playCurrentMatch() {
+ const match = this.getCurrentMatch();
+ if (!match || match.winner) return;
+ if (match.isNpc) {
+ this.game.combatEngine.startBattle({
+ type: 'tournament',
+ player1: match.p1,
+ npc: { name: match.npcName, monsters: match.npcMonsters },
+ onEnd: (won) => {
+ match.winner = won ? match.p1.name : match.npcName;
+ if (won) {
+ this.standings[match.p1.id] = (this.standings[match.p1.id] || 0) + 1;
+ }
+ this.advanceTournament();
+ }
+ });
+ } else {
+ this.game.combatEngine.startBattle({
+ type: 'tournament',
+ player1: match.p1,
+ player2: match.p2,
+ onEnd: (won) => {
+ const matchWinner = won ? match.p1 : match.p2;
+ match.winner = matchWinner.name;
+ this.standings[matchWinner.id] = (this.standings[matchWinner.id] || 0) + 1;
+ this.advanceTournament();
+ }
+ });
+ }
+ }
+ advanceTournament() {
+ const count = this.game.players.length;
+ if (this.format === 'best_of_3') {
+ const p1Wins = this.standings[this.game.players[0].id] || 0;
+ const p2Wins = this.standings[this.game.players[1].id] || 0;
+ if (p1Wins >= 2) {
+ this.winner = this.game.players[0];
+ this.concludeTournament();
+ return;
+ }
+ if (p2Wins >= 2) {
+ this.winner = this.game.players[1];
+ this.concludeTournament();
+ return;
+ }
+ }
+ if (this.format === 'playoffs') {
+ if (this.currentMatchIndex === 0) {
+ this.currentMatchIndex = 1;
+ UI.renderTournamentBracket();
+ return;
+ } else if (this.currentMatchIndex === 1) {
+ const sf1 = this.matches[0];
+ const sf2 = this.matches[1];
+ const sf1Winner = sf1.winner === sf1.p1.name ? sf1.p1 : sf1.p2;
+ const sf1Loser = sf1.winner === sf1.p1.name ? sf1.p2 : sf1.p1;
+ const sf2Winner = sf2.winner === sf2.p1.name ? sf2.p1 : sf2.p2;
+ const sf2Loser = sf2.winner === sf2.p1.name ? sf2.p2 : sf2.p1;
+ this.matches[2].p1 = sf1Loser;
+ this.matches[2].p2 = sf2Loser;
+ this.matches[3].p1 = sf1Winner;
+ this.matches[3].p2 = sf2Winner;
+ this.currentMatchIndex = 2; // Bronze match
+ UI.renderTournamentBracket();
+ return;
+ } else if (this.currentMatchIndex === 2) {
+ this.currentMatchIndex = 3;
+ UI.renderTournamentBracket();
+ return;
+ } else if (this.currentMatchIndex === 3) {
+ const finalMatch = this.matches[3];
+ this.winner = finalMatch.winner === finalMatch.p1.name ? finalMatch.p1 : finalMatch.p2;
+ this.concludeTournament();
+ return;
+ }
+ }
+ this.currentMatchIndex++;
+ if (this.currentMatchIndex >= this.matches.length) {
+ let bestPlayer = this.game.players[0];
+ let maxWins = -1;
+ this.game.players.forEach(p => {
+ if ((this.standings[p.id] || 0) > maxWins) {
+ maxWins = this.standings[p.id] || 0;
+ bestPlayer = p;
+ }
+ });
+ this.winner = bestPlayer;
+ this.concludeTournament();
+ } else {
+ if (window.UI) UI.renderTournamentBracket();
+ }
+ }
+ concludeTournament() {
+ SoundFX.victory();
+ if (window.UI) {
+ UI.renderTournamentBracket();
+ UI.showVictoryModal(this.winner);
+ }
+ }
+}
+window.TournamentEngine = TournamentEngine;
+ class MonsterJourneyGame {
+ constructor() {
+ this.hexMap = new HexMap();
+ this.combatEngine = new CombatEngine(this);
+ this.tournamentEngine = new TournamentEngine(this);
+ this.players = [];
+ this.activePlayerIndex = 0;
+ this.currentRound = 1;
+ this.maxRounds = 20;
+ this.hasMoved = false;
+ this.hasActed = false;
+ this.movementPoints = 1;
+ this.shopRiver = [];
+ this.shopDiscard = [];
+ this.biomeDecks = {};
+ this.activeSearchCards = null;
+ this.isGameOver = false;
+ }
+ initGame(playerConfigs) {
+ this.players = [];
+ this.currentRound = 1;
+ this.activePlayerIndex = 0;
+ this.hasMoved = false;
+ this.hasActed = false;
+ this.movementPoints = 1;
+ this.isGameOver = false;
+ this.initBiomeDecks();
+ this.initShopRiver();
+ playerConfigs.forEach((cfg, idx) => {
+ const charData = CHARACTERS_DATABASE.find(c => c.id === cfg.characterId) || CHARACTERS_DATABASE[idx % CHARACTERS_DATABASE.length];
+ const starterData = MONSTERS_DATABASE.find(m => m.id === cfg.starterMonsterId) || MONSTERS_DATABASE.find(m => m.id === charData.starterMonsterId);
+ const startCity = GYMS_DATABASE[idx % GYMS_DATABASE.length];
+ const starterMonster = this.instantiateMonster(starterData);
+ if (charData.id === 'char_brock') {
+ starterMonster.maxHp += 2;
+ starterMonster.hp = starterMonster.maxHp;
+ }
+ const startingItems = charData.startingItemIds.map(itemId => {
+ const item = ITEMS_DATABASE.find(i => i.id === itemId);
+ return JSON.parse(JSON.stringify(item));
+ });
+ const player = {
+ id: `p${idx + 1}`,
+ num: idx + 1,
+ name: cfg.name || `Jugador ${idx + 1}`,
+ characterId: charData.id,
+ character: charData,
+ color: ['#e53935', '#1e88e5', '#43a047', '#8e24aa'][idx % 4],
+ x: startCity.hexX,
+ y: startCity.hexY,
+ coins: charData.startingCoins,
+ badges: [], // Array of defeated gym tiers: [1, 2, 3, 4]
+ monsters: [starterMonster], // Up to 4 on board (3 active + 1 reserve), others stored
+ storageMonsters: [],
+ inventory: startingItems, // Hand of item cards
+ temporaryModifiers: {
+ searchBonus: 0,
+ captureTierBonus: 0
+ }
+ };
+ this.players.push(player);
+ });
+ this.startTurn();
+ }
+ instantiateMonster(baseMonster) {
+ return {
+ instanceId: 'inst_' + Math.random().toString(36).substr(2, 9),
+ id: baseMonster.id,
+ name: baseMonster.name,
+ biome: baseMonster.biome,
+ type: baseMonster.type,
+ weakness: baseMonster.weakness,
+ hp: baseMonster.hp,
+ maxHp: baseMonster.maxHp,
+ speed: baseMonster.speed,
+ captureTier: baseMonster.captureTier,
+ icon: baseMonster.icon,
+ attacks: JSON.parse(JSON.stringify(baseMonster.attacks)),
+ overworldAbility: baseMonster.overworldAbility ? JSON.parse(JSON.stringify(baseMonster.overworldAbility)) : null,
+ equippedItem: null
+ };
+ }
+ initBiomeDecks() {
+ this.biomeDecks = {};
+ Object.keys(BIOMES).forEach(biomeKey => {
+ const list = MONSTERS_DATABASE.filter(m => m.biome === biomeKey);
+ this.biomeDecks[biomeKey] = [...list, ...list].sort(() => Math.random() - 0.5);
+ });
+ }
+ initShopRiver() {
+ this.shopRiver = [];
+ this.shopDiscard = [];
+ const pool = [...ITEMS_DATABASE].sort(() => Math.random() - 0.5);
+ for (const item of pool) {
+ if (this.shopRiver.length >= 8) break;
+ if (!this.shopRiver.some(i => i.id === item.id)) {
+ this.shopRiver.push(JSON.parse(JSON.stringify(item)));
+ }
+ }
+ }
+ replenishShopRiver() {
+ while (this.shopRiver.length < 8) {
+ const available = ITEMS_DATABASE.filter(item => !this.shopRiver.some(r => r.id === item.id));
+ if (available.length === 0) break; // All available items are already shown
+ const pick = available[Math.floor(Math.random() * available.length)];
+ this.shopRiver.push(JSON.parse(JSON.stringify(pick)));
+ }
+ }
+ getActivePlayer() {
+ return this.players[this.activePlayerIndex];
+ }
+ startTurn() {
+ const player = this.getActivePlayer();
+ this.hasMoved = false;
+ this.hasActed = false;
+ this.movementPoints = 1;
+ player.temporaryModifiers.searchBonus = 0;
+ player.temporaryModifiers.captureTierBonus = 0;
+ const hasBoots = player.inventory.some(i => i.id === 'item_utl_1');
+ if (hasBoots) {
+ this.movementPoints = 2;
+ }
+ const hasMagnet = player.inventory.some(i => i.id === 'item_utl_8');
+ if (hasMagnet && this.currentRound % 3 === 0) {
+ player.coins += 2;
+ SoundFX.coin();
+ }
+ if (window.UI) {
+ UI.renderAll();
+ UI.logGame(`Turno de **${player.name}** (Ronda ${this.currentRound}/${this.maxRounds}).`);
+ }
+ }
+ movePlayerTo(destX, destY) {
+ const player = this.getActivePlayer();
+ if (this.hasMoved) {
+ alert('Ya has realizado tu movimiento en este turno.');
+ return false;
+ }
+ const currentHex = this.hexMap.getNode(player.x, player.y);
+ const destHex = this.hexMap.getNode(destX, destY);
+ if (!destHex) return false;
+ const dist = hexDistance(player.x, player.y, destX, destY);
+ if (dist > this.movementPoints) {
+ alert(`Esa casilla está a ${dist} casillas de distancia. Tu movimiento máximo es de ${this.movementPoints} casilla(s).`);
+ return false;
+ }
+ if (destHex.biome === 'saltwater') {
+ const hasWaterMon = player.monsters.some(m => m.type === 'Agua');
+ const hasRod = player.inventory.some(i => i.id === 'item_utl_2');
+ const isMisty = player.characterId === 'char_misty';
+ if (!hasWaterMon && !hasRod && !isMisty) {
+ const confirmMove = confirm('Esta casilla es de Agua Salada abierta. ¿Seguro que deseas adentrarte? (Se recomienda tener un monstruo de Agua o Caña de Pescar).');
+ if (!confirmMove) return false;
+ }
+ }
+ player.x = destX;
+ player.y = destY;
+ this.hasMoved = true;
+ SoundFX.step();
+ if (window.UI) UI.logGame(`${player.name} se mueve a (${destX}, ${destY}) - Bioma: ${BIOMES[destHex.biome].name}.`);
+ if (window.UI) UI.renderAll();
+ return true;
+ }
+ fastTravelToCity(targetCityId) {
+ const player = this.getActivePlayer();
+ const currentHex = this.hexMap.getNode(player.x, player.y);
+ if (!currentHex.city) {
+ alert('Debes estar en una ciudad para viajar rápidamente a otra.');
+ return false;
+ }
+ const targetGym = GYMS_DATABASE.find(g => g.id === targetCityId);
+ if (!targetGym) return false;
+ player.x = targetGym.hexX;
+ player.y = targetGym.hexY;
+ this.hasActed = true;
+ SoundFX.step();
+ if (window.UI) {
+ UI.logGame(`✈️ ${player.name} viaja rápidamente de ${currentHex.city} a **${targetGym.cityName}**.`);
+ UI.hideCityTravelModal();
+ UI.renderAll();
+ }
+ return true;
+ }
+ searchMonsters() {
+ const player = this.getActivePlayer();
+ if (this.hasActed) {
+ alert('Ya has tomado tu acción en este turno.');
+ return;
+ }
+ const currentHex = this.hexMap.getNode(player.x, player.y);
+ const biome = currentHex.biome;
+ if ((biome === 'saltwater' || biome === 'freshwater') && player.characterId !== 'char_misty') {
+ const hasRod = player.inventory.some(i => i.id === 'item_utl_2');
+ const hasWaterMon = player.monsters.some(m => m.type === 'Agua');
+ if (!hasRod && !hasWaterMon) {
+ alert('Para buscar monstruos en casillas acuáticas necesitas una Caña de Pescar o un monstruo de tipo Agua en tu equipo.');
+ return;
+ }
+ }
+ let drawCount = 3 + (player.temporaryModifiers.searchBonus || 0);
+ if (player.inventory.some(i => i.id === 'item_utl_7')) { // Telescopio Explorador
+ drawCount += 1;
+ }
+ const deck = this.biomeDecks[biome];
+ if (deck.length < drawCount) {
+ this.initBiomeDecks();
+ }
+ const drawnCards = [];
+ for (let i = 0; i < drawCount; i++) {
+ if (deck.length === 0) this.initBiomeDecks();
+ drawnCards.push(this.instantiateMonster(deck.pop()));
+ }
+ this.activeSearchCards = drawnCards;
+ SoundFX.step();
+ if (window.UI) {
+ UI.showSearchModal({
+ biome: BIOMES[biome],
+ cards: drawnCards,
+ player: player
+ });
+ }
+ }
+ captureMonster(monsterIndex) {
+ const player = this.getActivePlayer();
+ const monster = this.activeSearchCards[monsterIndex];
+ if (!monster) return;
+ let highestToolTier = 0;
+ player.inventory.forEach(item => {
+ if (item.category === 'capture' && item.tier) {
+ if (item.tier > highestToolTier) highestToolTier = item.tier;
+ }
+ });
+ highestToolTier += (player.temporaryModifiers.captureTierBonus || 0);
+ if (highestToolTier < monster.captureTier) {
+ alert(`⚠️ No puedes capturar a ${monster.name}!\nRequiere una Herramienta de Captura de Tier ${monster.captureTier}, pero tu herramienta máxima actual es Tier ${highestToolTier}.`);
+ return;
+ }
+ SoundFX.captureSuccess();
+ if (player.characterId === 'char_brock') {
+ monster.maxHp += 2;
+ monster.hp = monster.maxHp;
+ }
+ if (player.monsters.length < 4) {
+ player.monsters.push(monster);
+ if (window.UI) UI.logGame(`🎉 ¡${player.name} capturó a **${monster.name}** (Tier ${monster.captureTier})! Se coloca en su tablero personal.`);
+ } else {
+ player.storageMonsters.push(monster);
+ if (window.UI) UI.logGame(`🎉 ¡${player.name} capturó a **${monster.name}** (Tier ${monster.captureTier})! Tu tablero personal ya tiene 4 criaturas, así que se envía a tu Caja de Reserva.`);
+ }
+ this.hasActed = true;
+ this.activeSearchCards = null;
+ if (window.UI) {
+ UI.hideSearchModal();
+ UI.renderAll();
+ }
+ }
+ teachAttackFromWild(monsterIndex, targetMonsterInstanceId) {
+ const player = this.getActivePlayer();
+ const wildMon = this.activeSearchCards[monsterIndex];
+ if (!wildMon) return;
+ const maxGymBadge = player.badges.length > 0 ? Math.max(...player.badges) : 0;
+ const requiredTier = wildMon.captureTier;
+ if (maxGymBadge < requiredTier) {
+ alert(`⚠️ Para aprender el ataque de ${wildMon.name} necesitas haber derrotado un Gimnasio de al menos Tier ${requiredTier}.\nTus medallas actuales: Tier ${player.badges.join(', ') || 'Ninguna'}.`);
+ return;
+ }
+ const targetMon = player.monsters.find(m => m.instanceId === targetMonsterInstanceId);
+ if (!targetMon) return;
+ const attackToTeach = wildMon.attacks[0];
+ if (targetMon.attacks.some(a => a.name === attackToTeach.name)) {
+ alert(`${targetMon.name} ya conoce el ataque ${attackToTeach.name}.`);
+ return;
+ }
+ if (targetMon.attacks.length >= 3) {
+ targetMon.attacks[1] = JSON.parse(JSON.stringify(attackToTeach)); // replace secondary
+ } else {
+ targetMon.attacks.push(JSON.parse(JSON.stringify(attackToTeach)));
+ }
+ SoundFX.victory();
+ if (window.UI) UI.logGame(`📖 ¡${targetMon.name} aprendió el ataque **${attackToTeach.name}** de ${wildMon.name}!`);
+ this.hasActed = true;
+ this.activeSearchCards = null;
+ if (window.UI) {
+ UI.hideSearchModal();
+ UI.renderAll();
+ }
+ }
+ buyShopItem(itemIndex) {
+ const player = this.getActivePlayer();
+ const item = this.shopRiver[itemIndex];
+ if (!item) return;
+ let cost = item.cost;
+ if (player.characterId === 'char_blue' && item.category === 'utility') {
+ cost = Math.max(1, cost - 1);
+ }
+ if (player.coins < cost) {
+ alert(`No tienes suficientes monedas. Cuesta ${cost} monedas y tienes ${player.coins}.`);
+ return;
+ }
+ player.coins -= cost;
+ player.inventory.push(JSON.parse(JSON.stringify(item)));
+ SoundFX.coin();
+ if (window.UI) UI.logGame(`🛒 ${player.name} compró **${item.name}** por ${cost} monedas.`);
+ this.shopRiver.splice(itemIndex, 1);
+ this.replenishShopRiver();
+ if (window.UI) {
+ UI.renderShopModal();
+ UI.renderAll();
+ }
+ }
+ equipItemToMonster(itemIndexInInventory, monsterInstanceId) {
+ const player = this.getActivePlayer();
+ const item = player.inventory[itemIndexInInventory];
+ const monster = player.monsters.find(m => m.instanceId === monsterInstanceId);
+ if (!item || !monster) return;
+ if (monster.equippedItem) {
+ player.inventory.push(monster.equippedItem);
+ monster.equippedItem = null;
+ }
+ monster.equippedItem = JSON.parse(JSON.stringify(item));
+ player.inventory.splice(itemIndexInInventory, 1);
+ SoundFX.step();
+ if (window.UI) UI.logGame(`🛡️ ${player.name} equipó **${item.name}** en ${monster.name}.`);
+ if (window.UI) UI.renderAll();
+ }
+ unequipItemFromMonster(monsterInstanceId) {
+ const player = this.getActivePlayer();
+ const monster = player.monsters.find(m => m.instanceId === monsterInstanceId);
+ if (!monster || !monster.equippedItem) return;
+ const item = monster.equippedItem;
+ monster.equippedItem = null;
+ player.inventory.push(item);
+ SoundFX.step();
+ if (window.UI) UI.logGame(`🎒 ${player.name} desequipó **${item.name}** de ${monster.name}.`);
+ if (window.UI) UI.renderAll();
+ }
+ moveMonsterOrder(fromIndex, toIndex) {
+ const player = this.getActivePlayer();
+ if (fromIndex < 0 || fromIndex >= player.monsters.length) return;
+ if (toIndex < 0 || toIndex >= player.monsters.length) return;
+ const temp = player.monsters[fromIndex];
+ player.monsters[fromIndex] = player.monsters[toIndex];
+ player.monsters[toIndex] = temp;
+ SoundFX.step();
+ if (window.UI) UI.logGame(`🔄 ${player.name} cambió el orden de su alineación.`);
+ if (window.UI) UI.renderAll();
+ }
+ visitPOI() {
+ const player = this.getActivePlayer();
+ if (this.hasActed) {
+ alert('Ya has tomado tu acción en este turno.');
+ return;
+ }
+ const node = this.hexMap.getNode(player.x, player.y);
+ if (!node || !node.poi) {
+ alert('No hay ningún Punto de Interés en esta casilla.');
+ return;
+ }
+ const poiType = POI_TYPES.find(p => p.id === node.poi.id);
+ if (!poiType) return;
+ const message = poiType.reward(player);
+ SoundFX.coin();
+ if (player.inventory.some(i => i.id === 'item_utl_3')) {
+ player.coins += 2;
+ if (window.UI) UI.logGame(`🗺️ Mapa de Rutas otorga +2 monedas adicionales por visitar un POI.`);
+ }
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`📍 ${player.name} visita **${node.poi.name}**: ${message}`);
+ if (window.UI) {
+ UI.showNotification(`Punto de Interés: ${node.poi.name}`, message);
+ UI.renderAll();
+ }
+ }
+ useOverworldAbility(monsterInstanceId) {
+ const player = this.getActivePlayer();
+ if (this.hasActed) {
+ alert('Ya has tomado tu acción en este turno.');
+ return;
+ }
+ const monster = player.monsters.find(m => m.instanceId === monsterInstanceId);
+ if (!monster || !monster.overworldAbility) return;
+ const ability = monster.overworldAbility;
+ if (ability.id === 'flying') {
+ if (window.UI) {
+ UI.showCityTravelModal(true); // Is flying ability
+ }
+ return;
+ } else if (ability.id === 'water') {
+ this.movementPoints = 2;
+ this.hasMoved = false; // Grants extra movement on water
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`🌊 ${monster.name} activa **Nado Veloz**: Puedes moverte 2 casillas en aguas.`);
+ SoundFX.step();
+ } else if (ability.id === 'grass') {
+ player.temporaryModifiers.searchBonus = 1;
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`🌿 ${monster.name} activa **Rastreo Silvestre**: Revelarás 4 cartas en tu próxima búsqueda.`);
+ SoundFX.step();
+ } else if (ability.id === 'fire') {
+ player.monsters.forEach(m => m.hp = Math.min(m.maxHp, m.hp + 3));
+ player.coins += 2;
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`🔥 ${monster.name} activa **Calor de Campamento**: Curó 3 HP a todos los monstruos y generó 2 monedas.`);
+ SoundFX.coin();
+ } else if (ability.id === 'electric') {
+ player.coins += 3;
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`⚡ ${monster.name} activa **Sobrecarga**: Ganaste 3 monedas de energía.`);
+ SoundFX.coin();
+ } else if (ability.id === 'rock') {
+ player.coins += 2;
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`🪨 ${monster.name} activa **Romperrocas**: Hallaste minerales que valen 2 monedas.`);
+ SoundFX.coin();
+ } else if (ability.id === 'ground') {
+ const nearestPoi = this.findNearestPoi(player.x, player.y);
+ if (nearestPoi) {
+ player.x = nearestPoi.x;
+ player.y = nearestPoi.y;
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`⛏️ ${monster.name} activa **Excavación**: Te teletransportaste al POI más cercano (${nearestPoi.x}, ${nearestPoi.y}).`);
+ SoundFX.step();
+ }
+ } else if (ability.id === 'bug') {
+ player.temporaryModifiers.captureTierBonus = 1;
+ this.hasActed = true;
+ if (window.UI) UI.logGame(`🕸️ ${monster.name} activa **Red de Seda**: Tu próxima captura se considerará de 1 Tier superior.`);
+ SoundFX.step();
+ }
+ if (window.UI) UI.renderAll();
+ }
+ findNearestPoi(startX, startY) {
+ let bestDist = 999;
+ let bestNode = null;
+ for (let y = 0; y < this.hexMap.height; y++) {
+ for (let x = 0; x < this.hexMap.width; x++) {
+ const node = this.hexMap.getNode(x, y);
+ if (node.poi && (x !== startX || y !== startY)) {
+ const d = hexDistance(startX, startY, x, y);
+ if (d < bestDist) {
+ bestDist = d;
+ bestNode = node;
+ }
+ }
+ }
+ }
+ return bestNode;
+ }
+ endTurn() {
+ const prevPlayer = this.getActivePlayer();
+ this.activePlayerIndex++;
+ if (this.activePlayerIndex >= this.players.length) {
+ this.activePlayerIndex = 0;
+ this.currentRound++;
+ if (this.currentRound > this.maxRounds) {
+ this.triggerTournament();
+ return;
+ }
+ }
+ this.startTurn();
+ }
+ triggerTournament() {
+ this.isGameOver = true;
+ if (window.UI) UI.logGame(`🏆 **¡SE HAN CUMPLIDO LAS 20 RONDAS!** Comienza el Gran Torneo Final.`);
+ SoundFX.victory();
+ this.tournamentEngine.startTournament(this.players);
+ }
+}
+window.MonsterJourneyGame = MonsterJourneyGame;
+ const UI = {
+ game: null,
+ selectedPlayerTab: 0,
+ activeSearchData: null,
+ init(game) {
+ this.game = game;
+ this.bindEvents();
+ },
+ bindEvents() {
+ document.getElementById('btn-rules')?.addEventListener('click', () => {
+ this.showRulesModal();
+ });
+ document.getElementById('btn-sound-toggle')?.addEventListener('click', () => {
+ const enabled = SoundFX.toggle();
+ const btn = document.getElementById('btn-sound-toggle');
+ if (btn) btn.textContent = enabled ? '🔊 Sonido' : '🔇 Silencio';
+ });
+ document.getElementById('btn-dbg-coins')?.addEventListener('click', () => {
+ const p = this.game.getActivePlayer();
+ p.coins += 10;
+ SoundFX.coin();
+ this.renderAll();
+ this.logGame(`🛠️ [DEBUG] +10 monedas para ${p.name}.`);
+ });
+ document.getElementById('btn-dbg-badges')?.addEventListener('click', () => {
+ const p = this.game.getActivePlayer();
+ p.badges = [1, 2, 3, 4];
+ this.renderAll();
+ this.logGame(`🛠️ [DEBUG] Todas las 4 medallas desbloqueadas para ${p.name}.`);
+ });
+ document.getElementById('btn-dbg-heal')?.addEventListener('click', () => {
+ const p = this.game.getActivePlayer();
+ p.monsters.forEach(m => m.hp = m.maxHp);
+ this.renderAll();
+ this.logGame(`🛠️ [DEBUG] Monstruos de ${p.name} curados al 100%.`);
+ });
+ document.getElementById('btn-dbg-tournament')?.addEventListener('click', () => {
+ if (confirm('¿Saltar directamente a la Ronda 20 y comenzar el Gran Torneo Final?')) {
+ this.game.currentRound = 20;
+ this.game.triggerTournament();
+ }
+ });
+ document.getElementById('btn-act-search')?.addEventListener('click', () => {
+ this.game.searchMonsters();
+ });
+ document.getElementById('btn-act-fight')?.addEventListener('click', () => {
+ this.handleFightAction();
+ });
+ document.getElementById('btn-act-shop')?.addEventListener('click', () => {
+ this.showShopModal();
+ });
+ document.getElementById('btn-act-poi')?.addEventListener('click', () => {
+ this.game.visitPOI();
+ });
+ document.getElementById('btn-act-travel')?.addEventListener('click', () => {
+ this.showCityTravelModal(false);
+ });
+ document.getElementById('btn-act-endturn')?.addEventListener('click', () => {
+ this.game.endTurn();
+ });
+ },
+ renderAll() {
+ this.renderHeader();
+ this.renderHexMap();
+ this.renderActionBar();
+ this.renderPlayerBoard();
+ },
+ renderHeader() {
+ const roundEl = document.getElementById('display-round');
+ if (roundEl) roundEl.textContent = `${this.game.currentRound} / ${this.game.maxRounds}`;
+ const activePlayer = this.game.getActivePlayer();
+ const activeNameEl = document.getElementById('display-active-player');
+ if (activeNameEl) {
+ activeNameEl.textContent = activePlayer.name;
+ activeNameEl.style.color = activePlayer.color;
+ }
+ const moveStatusEl = document.getElementById('status-movement');
+ if (moveStatusEl) {
+ moveStatusEl.textContent = this.game.hasMoved ? 'Movimiento: Agotado' : `Movimiento: Disponible (${this.game.movementPoints} casilla)`;
+ moveStatusEl.className = this.game.hasMoved ? 'status-pill tag-disabled' : 'status-pill tag-success';
+ }
+ const actStatusEl = document.getElementById('status-action');
+ if (actStatusEl) {
+ actStatusEl.textContent = this.game.hasActed ? 'Acción: Agotada' : 'Acción: Disponible';
+ actStatusEl.className = this.game.hasActed ? 'status-pill tag-disabled' : 'status-pill tag-primary';
+ }
+ },
+ renderHexMap() {
+ const svgContainer = document.getElementById('hex-map-svg');
+ if (!svgContainer) return;
+ const activePlayer = this.game.getActivePlayer();
+ const neighbors = this.game.hasMoved ? [] : getHexNeighbors(activePlayer.x, activePlayer.y);
+ let svgHtml = '';
+ svgHtml += `
+ <defs>
+ <filter id="glow-gold" x="-30%" y="-30%" width="160%" height="160%">
+ <feGaussianBlur stdDeviation="3" result="blur" />
+ <feComposite in="SourceGraphic" in2="blur" operator="over" />
+ </filter>
+ <filter id="player-glow" x="-40%" y="-40%" width="180%" height="180%">
+ <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#ffffff" flood-opacity="0.8"/>
+ </filter>
+ </defs>
+ `;
+ for (let y = 0; y < this.game.hexMap.height; y++) {
+ for (let x = 0; x < this.game.hexMap.width; x++) {
+ const node = this.game.hexMap.getNode(x, y);
+ const center = getHexCenter(x, y);
+ const points = getHexPolygonPoints(center.x, center.y, HEX_RADIUS - 1.5);
+ const biome = BIOMES[node.biome];
+ const isAdjacent = neighbors.some(n => n.x === x && n.y === y);
+ const isCurrentPlayerHex = (activePlayer.x === x && activePlayer.y === y);
+ let strokeColor = 'rgba(0, 0, 0, 0.35)';
+ let strokeWidth = '1';
+ let fillColor = biome.color;
+ if (isAdjacent && !this.game.hasMoved) {
+ strokeColor = '#ffea00';
+ strokeWidth = '2.5';
+ }
+ if (isCurrentPlayerHex) {
+ strokeColor = '#ffffff';
+ strokeWidth = '3';
+ }
+ svgHtml += `
+ <g class="hex-cell" data-x="${x}" data-y="${y}" style="cursor: pointer;" onclick="UI.onHexClicked(${x}, ${y})">
+ <polygon points="${points}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${strokeWidth}" />
+ <!-- Biome icon/water decor -->
+ <text x="${center.x}" y="${center.y + 4}" font-size="12" text-anchor="middle" opacity="0.35" pointer-events="none">
+ ${biome.icon}
+ </text>
+ `;
+ if (node.city) {
+ svgHtml += `
+ <circle cx="${center.x}" cy="${center.y - 10}" r="12" fill="#212121" stroke="#ffd700" stroke-width="2"/>
+ <text x="${center.x}" y="${center.y - 6}" font-size="11" text-anchor="middle" fill="#ffffff" pointer-events="none">🏛️</text>
+ <rect x="${center.x - 30}" y="${center.y + 7}" width="60" height="13" rx="3" fill="rgba(0,0,0,0.75)"/>
+ <text x="${center.x}" y="${center.y + 17}" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#fff" pointer-events="none">
+ ${node.city}
+ </text>
+ `;
+ }
+ if (node.poi && !node.city) {
+ svgHtml += `
+ <circle cx="${center.x}" cy="${center.y - 8}" r="9" fill="rgba(0,0,0,0.45)" stroke="#fff" stroke-width="1"/>
+ <text x="${center.x}" y="${center.y - 4}" font-size="9" text-anchor="middle" fill="#fff" pointer-events="none">
+ ${node.poi.icon}
+ </text>
+ `;
+ }
+ svgHtml += `
+ <text x="${center.x}" y="${center.y + 20}" font-size="7.5" text-anchor="middle" fill="rgba(255,255,255,0.45)" pointer-events="none">
+ ${x},${y}
+ </text>
+ `;
+ const playersHere = this.game.players.filter(p => p.x === x && p.y === y);
+ if (playersHere.length > 0) {
+ playersHere.forEach((p, pIdx) => {
+ const offsetX = (pIdx - (playersHere.length - 1) / 2) * 16;
+ const isThisActive = (p.id === activePlayer.id);
+ svgHtml += `
+ <g transform="translate(${center.x + offsetX}, ${center.y + (node.city ? -10 : 0)})" ${isThisActive ? 'filter="url(#player-glow)"' : ''}>
+ <circle cx="0" cy="0" r="10" fill="${p.color}" stroke="#ffffff" stroke-width="${isThisActive ? '2.5' : '1.5'}" />
+ <text x="0" y="3.5" font-size="9" font-weight="bold" text-anchor="middle" fill="#ffffff" pointer-events="none">
+ P${p.num}
+ </text>
+ </g>
+ `;
+ });
+ }
+ svgHtml += `</g>`;
+ }
+ }
+ svgContainer.innerHTML = svgHtml;
+ },
+ onHexClicked(x, y) {
+ const activePlayer = this.game.getActivePlayer();
+ const dist = hexDistance(activePlayer.x, activePlayer.y, x, y);
+ if (!this.game.hasMoved && dist <= this.game.movementPoints && dist > 0) {
+ this.game.movePlayerTo(x, y);
+ return;
+ }
+ const node = this.game.hexMap.getNode(x, y);
+ if (!node) return;
+ let info = `📍 Casilla (${x}, ${y}) - Bioma: ${BIOMES[node.biome].name}.\n`;
+ if (node.city) info += `🏛️ Ciudad: ${node.city} (${node.gym.name} - Líder: ${node.gym.leaderName}, Tier ${node.gym.tier})\n`;
+ if (node.poi) info += `✨ Punto de Interés: ${node.poi.name} (${node.poi.desc})\n`;
+ const players = this.game.players.filter(p => p.x === x && p.y === y);
+ if (players.length > 0) {
+ info += `👤 Jugadores aquí: ${players.map(p => p.name).join(', ')}`;
+ }
+ this.showNotification('Información del Hexágono', info.replace(/\n/g, '<br>'));
+ },
+ renderActionBar() {
+ const activePlayer = this.game.getActivePlayer();
+ const currentNode = this.game.hexMap.getNode(activePlayer.x, activePlayer.y);
+ const btnSearch = document.getElementById('btn-act-search');
+ const btnFight = document.getElementById('btn-act-fight');
+ const btnShop = document.getElementById('btn-act-shop');
+ const btnPoi = document.getElementById('btn-act-poi');
+ const btnTravel = document.getElementById('btn-act-travel');
+ if (btnSearch) btnSearch.disabled = this.game.hasActed;
+ if (btnShop) btnShop.disabled = false; // Always viewable, buying is an action or can inspect
+ if (btnPoi) btnPoi.disabled = this.game.hasActed || !currentNode.poi;
+ if (btnTravel) btnTravel.disabled = this.game.hasActed || !currentNode.city;
+ if (btnFight) {
+ btnFight.disabled = this.game.hasActed;
+ if (currentNode.gym) {
+ btnFight.innerHTML = `⚔️ Desafiar ${currentNode.gym.name} (Tier ${currentNode.gym.tier})`;
+ } else {
+ btnFight.innerHTML = `⚔️ Pelear con Entrenador Rival`;
+ }
+ }
+ },
+ handleFightAction() {
+ const activePlayer = this.game.getActivePlayer();
+ if (this.game.hasActed) {
+ alert('Ya has tomado tu acción en este turno.');
+ return;
+ }
+ const currentNode = this.game.hexMap.getNode(activePlayer.x, activePlayer.y);
+ if (currentNode.gym) {
+ this.game.combatEngine.startBattle({
+ type: 'gym',
+ player1: activePlayer,
+ gym: currentNode.gym,
+ onEnd: () => {
+ this.game.hasActed = true;
+ this.renderAll();
+ }
+ });
+ } else {
+ const randomGymTier = Math.min(4, Math.max(1, (activePlayer.badges.length || 0) + 1));
+ const availableMonsters = MONSTERS_DATABASE.filter(m => m.captureTier <= randomGymTier);
+ const m1 = availableMonsters[Math.floor(Math.random() * availableMonsters.length)];
+ const m2 = availableMonsters[Math.floor(Math.random() * availableMonsters.length)];
+ this.game.combatEngine.startBattle({
+ type: 'npc',
+ player1: activePlayer,
+ npc: {
+ name: 'Entrenador Errante ' + ['Leo', 'Maya', 'Lucas', 'Zack'][Math.floor(Math.random() * 4)],
+ monsters: [m1, m2]
+ },
+ onEnd: () => {
+ this.game.hasActed = true;
+ this.renderAll();
+ }
+ });
+ }
+ },
+ renderPlayerBoard() {
+ const tabContainer = document.getElementById('player-tabs-bar');
+ if (tabContainer) {
+ tabContainer.innerHTML = this.game.players.map((p, idx) => `
+ <button class="player-tab-btn ${idx === this.selectedPlayerTab ? 'active' : ''}" 
+ style="border-bottom-color: ${p.color};"
+ onclick="UI.selectPlayerTab(${idx})">
+ <span class="tab-indicator" style="background: ${p.color};"></span>
+ ${p.name} ${idx === this.game.activePlayerIndex ? '⭐ (Activo)' : ''}
+ </button>
+ `).join('');
+ }
+ const player = this.game.players[this.selectedPlayerTab] || this.game.getActivePlayer();
+ const char = player.character;
+ const nameEl = document.getElementById('board-player-name');
+ if (nameEl) nameEl.textContent = player.name;
+ const charIconEl = document.getElementById('board-char-icon');
+ if (charIconEl) charIconEl.textContent = char.icon;
+ const charNameEl = document.getElementById('board-char-title');
+ if (charNameEl) charNameEl.textContent = `${char.name} - ${char.title}`;
+ const abilityEl = document.getElementById('board-char-ability');
+ if (abilityEl) abilityEl.innerHTML = `<strong>Habilidad:</strong> ${char.abilityName} (${char.abilityDesc})`;
+ const coinsEl = document.getElementById('board-coins-val');
+ if (coinsEl) coinsEl.textContent = `${player.coins} 🪙`;
+ const badgesContainer = document.getElementById('board-badges-list');
+ if (badgesContainer) {
+ badgesContainer.innerHTML = GYMS_DATABASE.map(gym => {
+ const earned = player.badges.includes(gym.tier);
+ return `
+ <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${gym.badgeName} (Tier ${gym.tier}) - ${gym.cityName}">
+ <span>${gym.badgeIcon}</span>
+ <small>T${gym.tier}</small>
+ </div>
+ `;
+ }).join('');
+ }
+ const slotsContainer = document.getElementById('creature-slots-container');
+ if (slotsContainer) {
+ let slotsHtml = '';
+ for (let i = 0; i < 4; i++) {
+ const monster = player.monsters[i];
+ const isBattleParty = (i < 3);
+ if (monster) {
+ const biome = BIOMES[monster.biome] || BIOMES.forest;
+ const typeColor = TYPE_COLORS[monster.type] || '#4caf50';
+ slotsHtml += `
+ <div class="creature-card-slot ${isBattleParty ? 'battle-party' : 'bench-reserve'}">
+ <div class="slot-badge">${isBattleParty ? `⚔️ Puesto ${i + 1} (Combate)` : '📦 Puesto 4 (Reserva)'}</div>
+ <div class="monster-card-inner">
+ <div class="monster-header">
+ <div class="monster-avatar" style="border-color: ${biome.color};">${monster.icon}</div>
+ <div class="monster-titles">
+ <div class="monster-name">${monster.name}</div>
+ <div class="type-pill" style="background: ${typeColor};">${monster.type}</div>
+ </div>
+ <div class="tier-pill" title="Tier de Captura">T${monster.captureTier}</div>
+ </div>
+ <!-- HP Tracker on player board (Rule 22) -->
+ <div class="hp-tracker-row">
+ <span class="stat-lbl">Vida (HP):</span>
+ <div class="hp-adjuster">
+ <button class="btn-micro" onclick="UI.adjustHp('${monster.instanceId}', -1)">-</button>
+ <strong class="hp-val ${monster.hp <= 3 ? 'low-hp' : ''}">${monster.hp} / ${monster.maxHp}</strong>
+ <button class="btn-micro" onclick="UI.adjustHp('${monster.instanceId}', 1)">+</button>
+ </div>
+ </div>
+ <div class="hp-bar-outer">
+ <div class="hp-bar-fill" style="width: ${(monster.hp / monster.maxHp) * 100}%;"></div>
+ </div>
+ <!-- Speed & Weakness Tag (Rule 18) -->
+ <div class="stats-row">
+ <div class="stat-box">Velocidad: <strong>${monster.speed} ⚡</strong></div>
+ <div class="stat-box weakness-tag" title="Sufre +2 de daño de este tipo">Weak +2: <strong>${monster.weakness}</strong></div>
+ </div>
+ <!-- Attacks list (Rule 1 & Rule 31) -->
+ <div class="attacks-section">
+ <div class="section-title">Ataques:</div>
+ ${monster.attacks.map(atk => `
+ <div class="attack-item">
+ <span class="atk-name">${atk.name} (${atk.type}):</span>
+ <span class="atk-math">${atk.baseDmg} base + ${atk.diceCount}d [0,1,1,1,1,2]</span>
+ </div>
+ `).join('')}
+ </div>
+ <!-- Equipped Item (Rule 10: max 1 item) -->
+ <div class="item-slot-row">
+ <span class="stat-lbl">Objeto:</span>
+ ${monster.equippedItem ? `
+ <div class="equipped-item-chip" title="${monster.equippedItem.desc}">
+ <span>${monster.equippedItem.icon} ${monster.equippedItem.name}</span>
+ <button class="btn-micro-remove" onclick="UI.game.unequipItemFromMonster('${monster.instanceId}')">✕</button>
+ </div>
+ ` : `
+ <span class="empty-item-text">Sin objeto (máx. 1)</span>
+ `}
+ </div>
+ <!-- Overworld Ability Button (Rule 17) -->
+ ${monster.overworldAbility ? `
+ <div class="overworld-row">
+ <button class="btn-overworld" onclick="UI.game.useOverworldAbility('${monster.instanceId}')" title="${monster.overworldAbility.desc}">
+ ✨ ${monster.overworldAbility.name}
+ </button>
+ </div>
+ ` : ''}
+ <!-- Reordering controls (Rule 27) -->
+ <div class="reorder-row">
+ <button class="btn-reorder" onclick="UI.game.moveMonsterOrder(${i}, ${i - 1})" ${i === 0 ? 'disabled' : ''}>⬆️ Subir</button>
+ <button class="btn-reorder" onclick="UI.game.moveMonsterOrder(${i}, ${i + 1})" ${i === player.monsters.length - 1 ? 'disabled' : ''}>⬇️ Bajar</button>
+ </div>
+ </div>
+ </div>
+ `;
+ } else {
+ slotsHtml += `
+ <div class="creature-card-slot empty-slot ${isBattleParty ? 'battle-party' : 'bench-reserve'}">
+ <div class="slot-badge">${isBattleParty ? `Puesto ${i + 1} (Combate)` : 'Puesto 4 (Reserva)'}</div>
+ <div class="empty-placeholder">
+ <span>➕ Vacío</span>
+ <small>Captura monstruos para llenar este puesto</small>
+ </div>
+ </div>
+ `;
+ }
+ }
+ slotsContainer.innerHTML = slotsHtml;
+ }
+ const inventoryContainer = document.getElementById('board-inventory-items');
+ if (inventoryContainer) {
+ if (player.inventory.length === 0) {
+ inventoryContainer.innerHTML = `<div class="empty-stash">Mano vacía. Visita la tienda o descubre Puntos de Interés para obtener cartas de objetos.</div>`;
+ } else {
+ inventoryContainer.innerHTML = player.inventory.map((item, idx) => `
+ <div class="inventory-card">
+ <div class="inv-top">
+ <span class="inv-icon">${item.icon}</span>
+ <span class="inv-cat tag-${item.category}">${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}</span>
+ </div>
+ <div class="inv-name">${item.name}</div>
+ <div class="inv-desc">${item.desc}</div>
+ ${item.category === 'combat' ? `
+ <div class="inv-actions">
+ <button class="btn-action-small" onclick="UI.promptEquipItem(${idx})">Equipar a Criatura</button>
+ </div>
+ ` : ''}
+ </div>
+ `).join('');
+ }
+ }
+ },
+ selectPlayerTab(index) {
+ this.selectedPlayerTab = index;
+ this.renderPlayerBoard();
+ },
+ adjustHp(monsterInstanceId, delta) {
+ const player = this.game.players[this.selectedPlayerTab];
+ const mon = player.monsters.find(m => m.instanceId === monsterInstanceId);
+ if (mon) {
+ mon.hp = Math.min(mon.maxHp, Math.max(0, mon.hp + delta));
+ this.renderPlayerBoard();
+ }
+ },
+ promptEquipItem(itemIndex) {
+ const player = this.game.players[this.selectedPlayerTab];
+ const item = player.inventory[itemIndex];
+ if (!item) return;
+ let promptText = `¿A qué criatura deseas equipar "${item.name}"?\n(Recuerda: Máximo 1 objeto por criatura)\n`;
+ player.monsters.forEach((m, idx) => {
+ promptText += `${idx + 1}. ${m.name} ${m.equippedItem ? `(Reemplaza: ${m.equippedItem.name})` : '(Libre)'}\n`;
+ });
+ const choice = prompt(promptText, '1');
+ if (choice) {
+ const idx = parseInt(choice, 10) - 1;
+ if (idx >= 0 && idx < player.monsters.length) {
+ this.game.equipItemToMonster(itemIndex, player.monsters[idx].instanceId);
+ }
+ }
+ },
+ showSearchModal({ biome, cards, player }) {
+ this.activeSearchData = { biome, cards, player };
+ const modal = document.getElementById('modal-search');
+ if (!modal) return;
+ const maxGymBadge = player.badges.length > 0 ? Math.max(...player.badges) : 0;
+ let highestToolTier = 0;
+ player.inventory.forEach(item => {
+ if (item.category === 'capture' && item.tier) {
+ if (item.tier > highestToolTier) highestToolTier = item.tier;
+ }
+ });
+ highestToolTier += (player.temporaryModifiers.captureTierBonus || 0);
+ const container = document.getElementById('search-cards-grid');
+ if (container) {
+ container.innerHTML = cards.map((monster, idx) => {
+ const canCapture = highestToolTier >= monster.captureTier;
+ const canTeach = maxGymBadge >= monster.captureTier;
+ return `
+ <div class="wild-card-container">
+ <div class="wild-card-biome-back ${biome.cardback}">
+ <div class="cardback-emblem">${biome.icon}</div>
+ <div class="cardback-title">Bioma ${biome.name}</div>
+ </div>
+ <div class="wild-card-front" style="border-top: 5px solid ${biome.color};">
+ <div class="wild-header">
+ <span class="wild-icon">${monster.icon}</span>
+ <div>
+ <div class="wild-name">${monster.name}</div>
+ <span class="type-pill" style="background: ${TYPE_COLORS[monster.type]};">${monster.type}</span>
+ </div>
+ <span class="tier-pill">Tier ${monster.captureTier}</span>
+ </div>
+ <div class="wild-stats">
+ <div>❤️ HP: ${monster.hp}</div>
+ <div>⚡ Vel: ${monster.speed}</div>
+ <div class="weakness-tag">Weak +2: ${monster.weakness}</div>
+ </div>
+ <div class="wild-attack">
+ <strong>Ataque:</strong> ${monster.attacks[0].name} (${monster.attacks[0].baseDmg} + ${monster.attacks[0].diceCount}d)
+ </div>
+ <div class="wild-actions">
+ <button class="btn-wild-capture ${canCapture ? 'btn-can-capture' : 'btn-cannot'}" 
+ onclick="UI.game.captureMonster(${idx})">
+ 🪤 Capturar (Req: T${monster.captureTier} - Tienes: T${highestToolTier})
+ </button>
+ <button class="btn-wild-teach ${canTeach ? 'btn-can-teach' : 'btn-cannot'}" 
+ onclick="UI.promptTeachAttack(${idx})">
+ 📖 Aprender Ataque (Req: ${monster.captureTier} Gimnasios - Tienes: ${maxGymBadge})
+ </button>
+ </div>
+ </div>
+ </div>
+ `;
+ }).join('');
+ }
+ modal.classList.add('open');
+ },
+ hideSearchModal() {
+ const modal = document.getElementById('modal-search');
+ if (modal) modal.classList.remove('open');
+ },
+ promptTeachAttack(monsterIndex) {
+ const player = this.game.getActivePlayer();
+ const wildMon = this.activeSearchData.cards[monsterIndex];
+ let msg = `¿A qué criatura de tu equipo deseas enseñarle "${wildMon.attacks[0].name}"?\n`;
+ player.monsters.forEach((m, i) => {
+ msg += `${i + 1}. ${m.name} (Ataques: ${m.attacks.map(a => a.name).join(', ')})\n`;
+ });
+ const choice = prompt(msg, '1');
+ if (choice) {
+ const idx = parseInt(choice, 10) - 1;
+ if (idx >= 0 && idx < player.monsters.length) {
+ this.game.teachAttackFromWild(monsterIndex, player.monsters[idx].instanceId);
+ }
+ }
+ },
+ showShopModal() {
+ const modal = document.getElementById('modal-shop');
+ if (!modal) return;
+ this.renderShopModal();
+ modal.classList.add('open');
+ },
+ hideShopModal() {
+ const modal = document.getElementById('modal-shop');
+ if (modal) modal.classList.remove('open');
+ },
+ renderShopModal() {
+ const player = this.game.getActivePlayer();
+ const riverContainer = document.getElementById('shop-river-grid');
+ const shopCoinsEl = document.getElementById('shop-player-coins');
+ if (shopCoinsEl) shopCoinsEl.textContent = `${player.coins} 🪙`;
+ if (riverContainer) {
+ riverContainer.innerHTML = this.game.shopRiver.map((item, idx) => {
+ const canAfford = player.coins >= item.cost;
+ return `
+ <div class="shop-card-item">
+ <div class="shop-card-badge tag-${item.category}">
+ ${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}
+ </div>
+ <div class="shop-card-icon">${item.icon}</div>
+ <div class="shop-card-name">${item.name}</div>
+ <div class="shop-card-desc">${item.desc}</div>
+ <div class="shop-card-bottom">
+ <span class="shop-card-cost">${item.cost} 🪙</span>
+ <button class="btn-buy ${canAfford ? 'can-buy' : 'cannot-buy'}" 
+ ${!canAfford ? 'disabled' : ''} 
+ onclick="UI.game.buyShopItem(${idx})">
+ Comprar
+ </button>
+ </div>
+ </div>
+ `;
+ }).join('');
+ }
+ },
+ showCityTravelModal(isFlyingAbility = false) {
+ const modal = document.getElementById('modal-travel');
+ if (!modal) return;
+ const container = document.getElementById('travel-cities-list');
+ if (container) {
+ container.innerHTML = GYMS_DATABASE.map(gym => `
+ <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${gym.id}')">
+ <div class="travel-city-icon">${gym.badgeIcon}</div>
+ <div>
+ <strong>${gym.cityName}</strong>
+ <div>${gym.name} (${gym.leaderName})</div>
+ <small>Coords: (${gym.hexX}, ${gym.hexY})</small>
+ </div>
+ <button class="btn-action-small">Viajar Aquí</button>
+ </div>
+ `).join('');
+ }
+ modal.classList.add('open');
+ },
+ hideCityTravelModal() {
+ const modal = document.getElementById('modal-travel');
+ if (modal) modal.classList.remove('open');
+ },
+ showCombatModal() {
+ const modal = document.getElementById('modal-combat');
+ if (modal) modal.classList.add('open');
+ },
+ hideCombatModal() {
+ const modal = document.getElementById('modal-combat');
+ if (modal) modal.classList.remove('open');
+ },
+ renderCombatArena() {
+ const combat = this.game.combatEngine;
+ if (!combat.inCombat) return;
+ const p1Mon = combat.getP1Active();
+ const p2Mon = combat.getP2Active();
+ const p1NameEl = document.getElementById('combat-p1-mon-name');
+ if (p1NameEl) p1NameEl.textContent = `${p1Mon.name} (${p1Mon.type})`;
+ const p1IconEl = document.getElementById('combat-p1-mon-icon');
+ if (p1IconEl) p1IconEl.textContent = p1Mon.icon;
+ const p1HpTextEl = document.getElementById('combat-p1-hp-text');
+ if (p1HpTextEl) p1HpTextEl.textContent = `${p1Mon.hp} / ${p1Mon.maxHp} HP`;
+ const p1HpBar = document.getElementById('combat-p1-hp-bar');
+ if (p1HpBar) p1HpBar.style.width = `${(p1Mon.hp / p1Mon.maxHp) * 100}%`;
+ const p1SpeedEl = document.getElementById('combat-p1-speed');
+ if (p1SpeedEl) p1SpeedEl.textContent = `Velocidad: ${p1Mon.speed} ⚡`;
+ const p1WeakEl = document.getElementById('combat-p1-weak');
+ if (p1WeakEl) p1WeakEl.textContent = `Weak +2: ${p1Mon.weakness}`;
+ const p2NameEl = document.getElementById('combat-p2-mon-name');
+ if (p2NameEl) p2NameEl.textContent = `${p2Mon.name} (${p2Mon.type})`;
+ const p2IconEl = document.getElementById('combat-p2-mon-icon');
+ if (p2IconEl) p2IconEl.textContent = p2Mon.icon;
+ const p2HpTextEl = document.getElementById('combat-p2-hp-text');
+ if (p2HpTextEl) p2HpTextEl.textContent = `${p2Mon.hp} / ${p2Mon.maxHp} HP`;
+ const p2HpBar = document.getElementById('combat-p2-hp-bar');
+ if (p2HpBar) p2HpBar.style.width = `${(p2Mon.hp / p2Mon.maxHp) * 100}%`;
+ const p2SpeedEl = document.getElementById('combat-p2-speed');
+ if (p2SpeedEl) p2SpeedEl.textContent = `Velocidad: ${p2Mon.speed} ⚡`;
+ const p2WeakEl = document.getElementById('combat-p2-weak');
+ if (p2WeakEl) p2WeakEl.textContent = `Weak +2: ${p2Mon.weakness}`;
+ const actionsContainer = document.getElementById('combat-actions-bar');
+ if (actionsContainer) {
+ let actionsHtml = '';
+ p1Mon.attacks.forEach((atk, idx) => {
+ actionsHtml += `
+ <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx})" ${combat.isProcessing ? 'disabled' : ''}>
+ 💥 ${atk.name} (${atk.type}): ${atk.baseDmg} + ${atk.diceCount}d [0,1,1,1,1,2]
+ </button>
+ `;
+ });
+ actionsHtml += `
+ <button class="btn-combat-switch" onclick="UI.promptCombatSwitch()" ${combat.isProcessing ? 'disabled' : ''}>
+ 🔄 Cambiar Monstruo (⚠️ Recibe Daño)
+ </button>
+ `;
+ actionsContainer.innerHTML = actionsHtml;
+ }
+ },
+ promptCombatSwitch() {
+ const combat = this.game.combatEngine;
+ let msg = `Selecciona a qué monstruo deseas cambiar:\n(⚠️ Regla 2: El nuevo monstruo recibirá el ataque del oponente inmediatamente)\n`;
+ combat.p1Team.forEach((m, idx) => {
+ msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === combat.p1ActiveIndex ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
+ });
+ const choice = prompt(msg, '2');
+ if (choice) {
+ const idx = parseInt(choice, 10) - 1;
+ if (idx >= 0 && idx < combat.p1Team.length) {
+ combat.playerSwitchMonster(idx);
+ }
+ }
+ },
+ updateCombatLog(msg) {
+ const logBox = document.getElementById('combat-log-stream');
+ if (logBox) {
+ const p = document.createElement('div');
+ p.className = 'combat-log-entry';
+ p.innerHTML = msg;
+ logBox.appendChild(p);
+ logBox.scrollTop = logBox.scrollHeight;
+ }
+ },
+ showCombatResultModal({ won, coins, badge, moveTeaching, onContinue }) {
+ const resultModal = document.getElementById('modal-combat-result');
+ if (!resultModal) return;
+ const titleEl = document.getElementById('result-title');
+ if (titleEl) titleEl.textContent = won ? '🎉 ¡VICTORIA EN COMBATE!' : '💥 DERROTA EN COMBATE';
+ const bodyEl = document.getElementById('result-body');
+ if (bodyEl) {
+ let html = `
+ <p><strong>Recompensa en dinero:</strong> +${coins} monedas de oro ${!won ? '(¡Regla 14: otorgadas aun perdiendo!)' : ''}</p>
+ <p>🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud.</p>
+ `;
+ if (badge) {
+ html += `
+ <div class="result-badge-highlight">
+ <h3>🏅 ¡Nueva Medalla Obtenida: ${badge.badgeName}!</h3>
+ <p>${badge.badgeIcon} Has superado el ${badge.name} (Tier ${badge.tier}).</p>
+ </div>
+ `;
+ }
+ if (moveTeaching) {
+ html += `
+ <div class="result-move-teaching">
+ <h4>📖 ¡Enseñanza de Ataque Desbloqueada!</h4>
+ <p>Has derrotado a <strong>${moveTeaching.monsterName}</strong>. Puedes enseñarle su técnica <strong>${moveTeaching.attack.name}</strong> a una de tus criaturas:</p>
+ <button class="btn-primary" onclick="UI.promptTeachDefeatedMove()">Enseñar Ataque Ahora</button>
+ </div>
+ `;
+ }
+ bodyEl.innerHTML = html;
+ }
+ const btnContinue = document.getElementById('btn-result-continue');
+ if (btnContinue) {
+ btnContinue.onclick = () => {
+ resultModal.classList.remove('open');
+ if (onContinue) onContinue();
+ };
+ }
+ resultModal.classList.add('open');
+ },
+ promptTeachDefeatedMove() {
+ const combat = this.game.combatEngine;
+ if (!combat.pendingMoveTeaching) return;
+ const move = combat.pendingMoveTeaching.attack;
+ const player = combat.player1;
+ let msg = `¿A qué criatura deseas enseñarle "${move.name}" (${move.type} - ${move.baseDmg} base + ${move.diceCount}d)?\n`;
+ player.monsters.forEach((m, idx) => {
+ msg += `${idx + 1}. ${m.name} (Ataques: ${m.attacks.map(a => a.name).join(', ')})\n`;
+ });
+ const choice = prompt(msg, '1');
+ if (choice) {
+ const idx = parseInt(choice, 10) - 1;
+ if (idx >= 0 && idx < player.monsters.length) {
+ const targetMon = player.monsters[idx];
+ if (targetMon.attacks.length >= 3) {
+ targetMon.attacks[1] = JSON.parse(JSON.stringify(move));
+ } else {
+ targetMon.attacks.push(JSON.parse(JSON.stringify(move)));
+ }
+ alert(`¡${targetMon.name} aprendió ${move.name}!`);
+ combat.pendingMoveTeaching = null;
+ this.renderPlayerBoard();
+ }
+ }
+ },
+ showTournamentModal() {
+ const modal = document.getElementById('modal-tournament');
+ if (modal) modal.classList.add('open');
+ },
+ hideTournamentModal() {
+ const modal = document.getElementById('modal-tournament');
+ if (modal) modal.classList.remove('open');
+ },
+ renderTournamentBracket() {
+ const tourney = this.game.tournamentEngine;
+ const container = document.getElementById('tournament-bracket-view');
+ if (!container) return;
+ let html = `
+ <div class="tournament-header">
+ <h2>🏆 Gran Torneo de Campeones (Ronda 20)</h2>
+ <p>Formato activo: <strong>${tourney.format.toUpperCase()}</strong></p>
+ </div>
+ <div class="tournament-matches-list">
+ `;
+ tourney.matches.forEach((m, idx) => {
+ const isCurrent = (idx === tourney.currentMatchIndex && !m.winner);
+ const p1Label = m.p1 ? m.p1.name : 'Por definir';
+ const p2Label = m.isNpc ? m.npcName : (m.p2 ? m.p2.name : 'Por definir');
+ html += `
+ <div class="tournament-match-card ${isCurrent ? 'current-active-match' : ''} ${m.winner ? 'finished' : ''}">
+ <div class="match-name">${m.name}</div>
+ <div class="match-combatants">
+ <span class="combatant ${m.winner === p1Label ? 'winner-combatant' : ''}">${p1Label}</span>
+ <span class="vs-badge">VS</span>
+ <span class="combatant ${m.winner === p2Label ? 'winner-combatant' : ''}">${p2Label}</span>
+ </div>
+ ${m.winner ? `
+ <div class="match-winner-tag">Ganador: <strong>${m.winner}</strong> 🏆</div>
+ ` : isCurrent ? `
+ <button class="btn-play-match" onclick="UI.game.tournamentEngine.playCurrentMatch()">⚔️ Pelear este Combate</button>
+ ` : `
+ <div class="match-pending">Pendiente</div>
+ `}
+ </div>
+ `;
+ });
+ html += `</div>`;
+ container.innerHTML = html;
+ },
+ showVictoryModal(winner) {
+ const modal = document.getElementById('modal-victory');
+ if (!modal) return;
+ const nameEl = document.getElementById('victory-champion-name');
+ if (nameEl) nameEl.textContent = winner ? winner.name : 'El Campeón';
+ modal.classList.add('open');
+ },
+ showRulesModal() {
+ const modal = document.getElementById('modal-rules');
+ if (modal) modal.classList.add('open');
+ },
+ hideRulesModal() {
+ const modal = document.getElementById('modal-rules');
+ if (modal) modal.classList.remove('open');
+ },
+ showNotification(title, message) {
+ const toast = document.getElementById('toast-notification');
+ if (!toast) return;
+ toast.innerHTML = `<strong>${title}</strong><div>${message}</div>`;
+ toast.classList.add('show');
+ setTimeout(() => {
+ toast.classList.remove('show');
+ }, 4000);
+ },
+ logGame(msg) {
+ const logBox = document.getElementById('game-event-log');
+ if (logBox) {
+ const div = document.createElement('div');
+ div.className = 'game-log-line';
+ div.innerHTML = `<span class="log-time">[R${this.game.currentRound}]</span> ${msg}`;
+ logBox.appendChild(div);
+ logBox.scrollTop = logBox.scrollHeight;
+ }
+ }
+};
+window.UI = UI;
+ </script>
+ <script>
+ let selectedCount = 2;
+ function selectPlayerCount(count) {
+ selectedCount = count;
+ document.querySelectorAll('.btn-count-choice').forEach((b, i) => {
+ b.classList.toggle('active', i + 1 === count);
+ });
+ renderSetupRows();
+ }
+ function renderSetupRows() {
+ const container = document.getElementById('player-setup-rows');
+ if (!container) return;
+ let html = '';
+ for (let i = 0; i < selectedCount; i++) {
+ const charPreset = CHARACTERS_DATABASE[i % CHARACTERS_DATABASE.length];
+ html += `
+ <div class="player-config-row">
+ <div>
+ <strong style="color: ${['#ef4444', '#3b82f6', '#10b981', '#8b5cf6'][i]};">Jugador ${i + 1}</strong>
+ <input type="text" id="setup-p${i}-name" class="setup-input" value="Jugador ${i + 1}" style="margin-top: 4px;">
+ </div>
+ <div>
+ <label style="font-size: 0.72rem; color: #9ca3af;">Personaje:</label>
+ <select id="setup-p${i}-char" class="setup-select">
+ ${CHARACTERS_DATABASE.map(c => `
+ <option value="${c.id}" ${c.id === charPreset.id ? 'selected' : ''}>
+ ${c.icon} ${c.name} (${c.title})
+ </option>
+ `).join('')}
+ </select>
+ </div>
+ <div>
+ <label style="font-size: 0.72rem; color: #9ca3af;">Monstruo Inicial:</label>
+ <select id="setup-p${i}-starter" class="setup-select">
+ <option value="mon_for_1">🌱 Hojarín (Planta)</option>
+ <option value="mon_pln_2">🔥 Candilín (Fuego)</option>
+ <option value="mon_frw_1">💧 Renacuajito (Agua)</option>
+ <option value="mon_mtn_1">🪨 Guijarrón (Roca)</option>
+ </select>
+ </div>
+ </div>
+ `;
+ }
+ container.innerHTML = html;
+ }
+ function startGameFromSetup() {
+ const configs = [];
+ for (let i = 0; i < selectedCount; i++) {
+ const name = document.getElementById(`setup-p${i}-name`).value || `Jugador ${i + 1}`;
+ const charId = document.getElementById(`setup-p${i}-char`).value;
+ const starterId = document.getElementById(`setup-p${i}-starter`).value;
+ configs.push({ name, characterId: charId, starterMonsterId: starterId });
+ }
+ document.getElementById('modal-setup').classList.remove('open');
+ const game = new MonsterJourneyGame();
+ window.gameInstance = game;
+ UI.init(game);
+ game.initGame(configs);
+ }
+ window.addEventListener('DOMContentLoaded', () => {
+ renderSetupRows();
+ });
+ </script>
+</body>
+</html>

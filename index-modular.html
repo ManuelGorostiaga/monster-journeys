@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Journeys - Prototipo de Juego de Mesa (1 a 4 Jugadores)</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ========================================================
+         APP HEADER
+         ======================================================== -->
+    <header class="app-header">
+        <div class="header-left">
+            <h1 class="app-title">
+                <span>🎲</span> Monster Journeys
+            </h1>
+            <div class="round-tracker">
+                <span>Ronda:</span>
+                <strong id="display-round">1 / 20</strong>
+            </div>
+            <div class="round-tracker">
+                <span>Turno de:</span>
+                <strong id="display-active-player">Jugador 1</strong>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <span id="status-movement" class="status-pill tag-success">Movimiento: Disponible</span>
+            <span id="status-action" class="status-pill tag-primary">Acción: Disponible</span>
+        </div>
+
+        <div class="header-right">
+            <button id="btn-sound-toggle" class="btn-debug">🔊 Sonido</button>
+            <button id="btn-rules" class="btn-debug">📖 Reglas (31)</button>
+            <button id="btn-restart" class="btn-debug" onclick="location.reload()">🔄 Nueva Partida</button>
+        </div>
+    </header>
+
+    <!-- ========================================================
+         DEBUG / SOLO TESTING TOOLBAR
+         ======================================================== -->
+    <div class="debug-toolbar">
+        <span class="debug-label">🛠️ Herramientas de Testeo Rápido:</span>
+        <button id="btn-dbg-tournament" class="btn-debug btn-debug-highlight" title="Salta directamente a la Ronda 20 para probar el Torneo Final">
+            🏆 Ir a Ronda 20 (Probar Torneo)
+        </button>
+        <button id="btn-dbg-coins" class="btn-debug">+10 Monedas 🪙</button>
+        <button id="btn-dbg-badges" class="btn-debug">🏅 Desbloquear 4 Medallas</button>
+        <button id="btn-dbg-heal" class="btn-debug">🌿 Curar al 100%</button>
+    </div>
+
+    <!-- ========================================================
+         MAIN WORKSPACE
+         ======================================================== -->
+    <main class="main-workspace">
+
+        <!-- MAP & ACTIONS CONTAINER -->
+        <div class="map-view-card">
+            <div class="map-header-bar">
+                <div class="map-legend">
+                    <span style="font-weight: 700; color: #fff;">Mapa Hexagonal (18 x 12):</span>
+                    <span class="legend-item"><span class="legend-color" style="background: #2e7d32;"></span> Bosque</span>
+                    <span class="legend-item"><span class="legend-color" style="background: #6d4c41;"></span> Montaña</span>
+                    <span class="legend-item"><span class="legend-color" style="background: #f9a825;"></span> Pradera</span>
+                    <span class="legend-item"><span class="legend-color" style="background: #00838f;"></span> Agua Dulce</span>
+                    <span class="legend-item"><span class="legend-color" style="background: #1565c0;"></span> Agua Salada (Océano)</span>
+                </div>
+                <div style="font-size: 0.78rem; color: #9ca3af;">
+                    🏛️ 4 Ciudades (Distancia ≥ 5 casilleros) &nbsp;|&nbsp; ✨ 50% Puntos de Interés
+                </div>
+            </div>
+
+            <!-- SCROLLABLE SVG HEX MAP -->
+            <div class="hex-map-scroll-wrapper">
+                <svg id="hex-map-svg" width="1240" height="660" viewBox="0 0 1240 660"></svg>
+            </div>
+
+            <!-- ACTION CONTROLS BAR (Rule 25 & 26) -->
+            <div class="action-controls-bar">
+                <div class="action-buttons-group">
+                    <button id="btn-act-search" class="btn-action btn-action-primary" title="Miras las 3 primeras cartas del mazo de bioma para capturar o aprender ataque">
+                        🔍 Buscar Monstruos (Robar 3)
+                    </button>
+                    <button id="btn-act-fight" class="btn-action btn-action-fight" title="Desafiar el gimnasio local o pelear contra un entrenador rival">
+                        ⚔️ Pelear
+                    </button>
+                    <button id="btn-act-shop" class="btn-action" title="Abrir el River de 8 cartas de objetos sin duplicados">
+                        🛒 Tienda (River 8 Objetos)
+                    </button>
+                    <button id="btn-act-poi" class="btn-action" title="Explorar el Punto de Interés de la casilla actual">
+                        📍 Visitar Punto de Interés
+                    </button>
+                    <button id="btn-act-travel" class="btn-action" title="Viajar rápidamente de una ciudad a otra">
+                        ✈️ Viaje Rápido entre Ciudades
+                    </button>
+                </div>
+
+                <div>
+                    <button id="btn-act-endturn" class="btn-action btn-action-endturn">
+                        Terminar Turno ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAYER DASHBOARD (Rule 22 & 24) -->
+        <div class="player-dashboard-container">
+            <!-- Tabs for 1 to 4 players -->
+            <div id="player-tabs-bar" class="player-tabs-bar"></div>
+
+            <div class="player-board-content">
+                <!-- Player & Character Meta Header -->
+                <div class="player-header-meta">
+                    <div class="char-card-summary">
+                        <div id="board-char-icon" class="char-avatar-icon">🧢</div>
+                        <div>
+                            <div id="board-player-name" style="font-weight: 800; font-size: 1.15rem; color: #fff;">Jugador 1</div>
+                            <div id="board-char-title" class="char-title-text">Red (El Audaz) - Entrenador Nato</div>
+                            <div id="board-char-ability" class="char-ability-text">Habilidad: Determinación Ardiente</div>
+                        </div>
+                    </div>
+
+                    <div class="player-resources">
+                        <div class="resource-box">
+                            <span class="resource-label">Oro / Monedas</span>
+                            <span id="board-coins-val" class="resource-value">10 🪙</span>
+                        </div>
+                        <div class="resource-box">
+                            <span class="resource-label">Medallas de Gimnasio</span>
+                            <div id="board-badges-list" class="badges-row"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Board Creature Slots (4 slots: 3 Battle + 1 Reserve) (Rule 24 & Rule 3) -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h3 style="font-size: 0.95rem; color: #e5e7eb; font-weight: 700;">
+                            🐾 Tablero Personal de Criaturas (Máximo 3 en Combate + 1 Reserva):
+                        </h3>
+                        <span style="font-size: 0.75rem; color: #9ca3af;">
+                            Regla 27: Puedes cambiar el orden en cualquier momento | Regla 18: Weak +2 indicada en cada carta
+                        </span>
+                    </div>
+
+                    <div id="creature-slots-container" class="creature-slots-grid"></div>
+                </div>
+
+                <!-- Hand of Items / Inventory (Rule 24) -->
+                <div class="inventory-hand-section">
+                    <div class="inventory-header">
+                        <span>🎒 Mano de Cartas de Objetos (Herramientas, Combate y Utilidad):</span>
+                        <span style="font-size: 0.75rem; color: #9ca3af;">Regla 10: Máximo 1 objeto equipado por criatura</span>
+                    </div>
+                    <div id="board-inventory-items" class="inventory-cards-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME EVENT LOG -->
+        <div class="game-log-card">
+            <div class="game-log-title">📜 Registro de Eventos de la Partida:</div>
+            <div id="game-event-log" class="game-log-container"></div>
+        </div>
+
+    </main>
+
+    <!-- ========================================================
+         MODAL: SEARCH ENCOUNTER (Rule 7, 5, 6, 30)
+         ======================================================== -->
+    <div id="modal-search" class="modal-overlay">
+        <div class="modal-box" style="max-width: 860px;">
+            <div class="modal-header">
+                <h3>🔍 Mazo de Encuentro Salvaje (Miras 3 cartas)</h3>
+                <button class="modal-close-btn" onclick="UI.hideSearchModal()">✕</button>
+            </div>
+            <div class="modal-content">
+                <p style="font-size: 0.85rem; color: #cbd5e1;">
+                    <strong>Regla 7 &amp; 30:</strong> Has explorado el bioma. Elige una de estas cartas para 
+                    <strong>Capturar</strong> (si tienes la Herramienta del Tier requerido) o 
+                    <strong>Aprender su Ataque</strong> (si tienes suficientes medallas de gimnasio derrotados).
+                </p>
+                <div id="search-cards-grid" class="search-cards-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: RIVER SHOP (Rule 16)
+         ======================================================== -->
+    <div id="modal-shop" class="modal-overlay">
+        <div class="modal-box" style="max-width: 960px;">
+            <div class="modal-header">
+                <h3>🛒 Tienda del River (8 Cartas sin duplicados)</h3>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="font-weight: bold; color: #fbbf24;">Tus Monedas: <span id="shop-player-coins">10 🪙</span></span>
+                    <button class="modal-close-btn" onclick="UI.hideShopModal()">✕</button>
+                </div>
+            </div>
+            <div class="modal-content">
+                <p style="font-size: 0.85rem; color: #9ca3af;">
+                    <strong>Regla 16:</strong> El river siempre mantiene 8 cartas distintas. Al comprar una carta, se repone inmediatamente sin permitir duplicados en el mostrador.
+                </p>
+                <div id="shop-river-grid" class="shop-river-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: COMBAT ARENA (Rule 1, 2, 18, 19, 31)
+         ======================================================== -->
+    <div id="modal-combat" class="modal-overlay">
+        <div class="modal-box" style="max-width: 850px;">
+            <div class="modal-header">
+                <h3 id="combat-modal-title">⚔️ Arena de Combate 1v1</h3>
+            </div>
+            <div class="modal-content">
+                <div class="combat-arena-box">
+                    <!-- Left: Player 1 Fighter -->
+                    <div class="combatant-side">
+                        <div id="combat-p1-mon-icon" class="combat-mon-avatar">🦖</div>
+                        <div id="combat-p1-mon-name" class="combat-mon-name">Monstruo P1</div>
+                        <div class="combat-hp-container">
+                            <div id="combat-p1-hp-text" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 2px;">10 / 10 HP</div>
+                            <div class="hp-bar-outer"><div id="combat-p1-hp-bar" class="hp-bar-fill" style="width: 100%;"></div></div>
+                        </div>
+                        <div style="font-size: 0.78rem; display: flex; gap: 8px;">
+                            <span id="combat-p1-speed" class="stat-box">Velocidad: 5 ⚡</span>
+                            <span id="combat-p1-weak" class="stat-box weakness-tag">Weak +2: Fuego</span>
+                        </div>
+                    </div>
+
+                    <!-- Center: VS Divider -->
+                    <div class="combat-vs-divider">VS</div>
+
+                    <!-- Right: Opponent Fighter -->
+                    <div class="combatant-side">
+                        <div id="combat-p2-mon-icon" class="combat-mon-avatar">🐉</div>
+                        <div id="combat-p2-mon-name" class="combat-mon-name">Monstruo Oponente</div>
+                        <div class="combat-hp-container">
+                            <div id="combat-p2-hp-text" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 2px;">10 / 10 HP</div>
+                            <div class="hp-bar-outer"><div id="combat-p2-hp-bar" class="hp-bar-fill" style="width: 100%;"></div></div>
+                        </div>
+                        <div style="font-size: 0.78rem; display: flex; gap: 8px;">
+                            <span id="combat-p2-speed" class="stat-box">Velocidad: 4 ⚡</span>
+                            <span id="combat-p2-weak" class="stat-box weakness-tag">Weak +2: Agua</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dice specification note (Rule 31) -->
+                <div style="font-size: 0.75rem; color: #9ca3af; text-align: center;">
+                    🎲 <strong>Dados de Ataque:</strong> Caras con valores [0, 1, 1, 1, 1, 2] | ⚡ <strong>Debilidad:</strong> +2 daño si el ataque explota la debilidad
+                </div>
+
+                <!-- Action choices: Attack or Switch (Rule 2) -->
+                <div id="combat-actions-bar" class="combat-actions-bar"></div>
+
+                <!-- Combat Log -->
+                <div id="combat-log-stream" class="combat-log-stream"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: COMBAT RESULT (Rule 13, 14, 29)
+         ======================================================== -->
+    <div id="modal-combat-result" class="modal-overlay">
+        <div class="modal-box" style="max-width: 500px; text-align: center;">
+            <div class="modal-header">
+                <h3 id="result-title">Fin del Combate</h3>
+            </div>
+            <div class="modal-content">
+                <div id="result-body"></div>
+                <button id="btn-result-continue" class="btn-action btn-action-primary" style="margin-top: 15px; width: 100%; justify-content: center;">
+                    Continuar Aventura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: CITY FAST TRAVEL (Rule 15)
+         ======================================================== -->
+    <div id="modal-travel" class="modal-overlay">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>✈️ Viaje Rápido entre Ciudades</h3>
+                <button class="modal-close-btn" onclick="UI.hideCityTravelModal()">✕</button>
+            </div>
+            <div class="modal-content">
+                <p style="font-size: 0.85rem; color: #9ca3af;">
+                    <strong>Regla 15:</strong> Puedes viajar inmediatamente de una ciudad a cualquier otra ciudad de la isla.
+                </p>
+                <div id="travel-cities-list" class="travel-cities-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: TOURNAMENT ENDGAME (Rule 28 & 9)
+         ======================================================== -->
+    <div id="modal-tournament" class="modal-overlay">
+        <div class="modal-box" style="max-width: 750px;">
+            <div class="modal-content" id="tournament-bracket-view"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: VICTORY CEREMONY
+         ======================================================== -->
+    <div id="modal-victory" class="modal-overlay">
+        <div class="modal-box" style="max-width: 500px; text-align: center; padding: 20px;">
+            <h2 style="font-size: 2.5rem; margin-bottom: 10px;">👑</h2>
+            <h2 style="font-size: 1.6rem; color: #fbbf24; margin-bottom: 10px;">¡TENEMOS UN CAMPEÓN!</h2>
+            <h3 id="victory-champion-name" style="font-size: 1.4rem; color: #fff; margin-bottom: 20px;">Jugador 1</h3>
+            <p style="color: #cbd5e1; margin-bottom: 25px;">
+                ¡Ha superado el Gran Torneo Final tras 20 intensas rondas de exploración, capturas y estrategia!
+            </p>
+            <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="location.reload()">
+                Jugar Otra Partida
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: GAME RULES GUIDE (All 31 Rules)
+         ======================================================== -->
+    <div id="modal-rules" class="modal-overlay">
+        <div class="modal-box" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>📖 Reglas Completas del Juego de Mesa</h3>
+                <button class="modal-close-btn" onclick="UI.hideRulesModal()">✕</button>
+            </div>
+            <div class="modal-content" style="font-size: 0.85rem; line-height: 1.6; color: #cbd5e1;">
+                <ol style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+                    <li><strong>Monstruos:</strong> Cada monstruo es una carta con vida, velocidad y ataque.</li>
+                    <li><strong>Cambio de Monstruo:</strong> En combate puedes cambiar de monstruo o atacar. Si cambias de monstruo recibes el daño sin atacar ese turno.</li>
+                    <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate, el resto se guardan.</li>
+                    <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
+                    <li><strong>Mazos de Biomas:</strong> Salen de 5 biomas (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada) con dorsos diferentes.</li>
+                    <li><strong>Herramientas de Captura:</strong> Cada monstruo tiene un tier de captura (1 a 4). Sin la herramienta adecuada no puede ser capturado.</li>
+                    <li><strong>Mazo de Encuentro:</strong> Al buscar miras las primeras 3 cartas del mazo del bioma y eliges una.</li>
+                    <li><strong>Zonas:</strong> Hay 5 biomas principales.</li>
+                    <li><strong>Combate Final:</strong> Al final los jugadores se enfrentan en un torneo.</li>
+                    <li><strong>Objetos Equipados:</strong> Máximo un objeto equipado por monstruo.</li>
+                    <li><strong>Mapa:</strong> Nodos hexagonales de 18 columnas por 12 filas.</li>
+                    <li><strong>Puntos de Interés:</strong> En el 50% de los nodos hay POIs visitables.</li>
+                    <li><strong>Recuperación:</strong> Los monstruos recuperan toda su salud tras una pelea.</li>
+                    <li><strong>Recompensa de Derrota:</strong> Al perder una pelea, obtienes dinero de todas maneras como si hubieras ganado.</li>
+                    <li><strong>Viaje Rápido:</strong> Se puede viajar de una ciudad a otra si estás en una ciudad.</li>
+                    <li><strong>Tienda River:</strong> 8 cartas de objetos sin duplicados (combate, utilidad y captura). Se repone de inmediato al comprar.</li>
+                    <li><strong>Habilidad de Overworld:</strong> Los tipos otorgan habilidades adicionales de mapa en lugar de la acción normal.</li>
+                    <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 puntos adicionales de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
+                    <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas.</li>
+                    <li><strong>Personajes:</strong> Cartas de personaje con objetos iniciales y habilidad única.</li>
+                    <li><strong>NPCs:</strong> Los NPCs no cambian de monstruo voluntariamente.</li>
+                    <li><strong>Tracking de Salud:</strong> La vida de los monstruos se trackea en el tablero del jugador.</li>
+                    <li><strong>Dimensiones y Gimnasios:</strong> Al menos 5 casilleros de distancia entre gimnasios y rodeado de agua (18x12).</li>
+                    <li><strong>Tablero Personal:</strong> Lugar para 4 criaturas (3 combate + 1 reserva) y pila de mano de items.</li>
+                    <li><strong>Turnos:</strong> Mover 1 casilla y tomar 1 acción por turno.</li>
+                    <li><strong>Acciones:</strong> Buscar monstruos, pelear, visitar tienda o POI.</li>
+                    <li><strong>Reordenar:</strong> Puedes cambiar el orden de tus criaturas en cualquier momento fuera de combate.</li>
+                    <li><strong>Final a 20 Rondas:</strong> Se activa el torneo final (Playoffs, Triangular, o Mejor de 3 según el número de jugadores).</li>
+                    <li><strong>Aprender Ataques en Victoria:</strong> Al derrotar a un monstruo en combate puedes enseñarle su ataque a una de tus criaturas.</li>
+                    <li><strong>Monstruos Salvajes:</strong> No se pelea contra monstruos salvajes; solo se capturan o se enseñan como ataques si tienes suficientes gimnasios derrotados.</li>
+                    <li><strong>Dados de Ataque:</strong> Los dados tienen caras [0, 1, 1, 1, 1, 2] que determinan el daño total.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: GAME SETUP (1 to 4 Players)
+         ======================================================== -->
+    <div id="modal-setup" class="modal-overlay open">
+        <div class="modal-box" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3>🎮 Configuración de Partida (1 a 4 Jugadores)</h3>
+            </div>
+            <div class="modal-content">
+                <p style="font-size: 0.88rem; color: #cbd5e1;">
+                    Elige el número de jugadores. Si juegas en solitario, podrás controlar a todos los jugadores por turnos para testear todas las mecánicas del juego de mesa:
+                </p>
+
+                <div class="setup-players-count">
+                    <button class="btn-count-choice" onclick="selectPlayerCount(1)">1 Jugador (Solo)</button>
+                    <button class="btn-count-choice active" onclick="selectPlayerCount(2)">2 Jugadores</button>
+                    <button class="btn-count-choice" onclick="selectPlayerCount(3)">3 Jugadores</button>
+                    <button class="btn-count-choice" onclick="selectPlayerCount(4)">4 Jugadores</button>
+                </div>
+
+                <div id="player-setup-rows"></div>
+
+                <button class="btn-start-game" onclick="startGameFromSetup()">
+                    🚀 Comenzar Partida de Testeo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification"></div>
+
+    <!-- SCRIPTS -->
+    <script src="js/audio.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/hexgrid.js"></script>
+    <script src="js/combat.js"></script>
+    <script src="js/tournament.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+
+    <script>
+        let selectedCount = 2;
+
+        function selectPlayerCount(count) {
+            selectedCount = count;
+            document.querySelectorAll('.btn-count-choice').forEach((b, i) => {
+                b.classList.toggle('active', i + 1 === count);
+            });
+            renderSetupRows();
+        }
+
+        function renderSetupRows() {
+            const container = document.getElementById('player-setup-rows');
+            if (!container) return;
+
+            let html = '';
+            for (let i = 0; i < selectedCount; i++) {
+                const charPreset = CHARACTERS_DATABASE[i % CHARACTERS_DATABASE.length];
+                html += `
+                    <div class="player-config-row">
+                        <div>
+                            <strong style="color: ${['#ef4444', '#3b82f6', '#10b981', '#8b5cf6'][i]};">Jugador ${i + 1}</strong>
+                            <input type="text" id="setup-p${i}-name" class="setup-input" value="Jugador ${i + 1}" style="margin-top: 4px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; color: #9ca3af;">Personaje:</label>
+                            <select id="setup-p${i}-char" class="setup-select">
+                                ${CHARACTERS_DATABASE.map(c => `
+                                    <option value="${c.id}" ${c.id === charPreset.id ? 'selected' : ''}>
+                                        ${c.icon} ${c.name} (${c.title})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; color: #9ca3af;">Monstruo Inicial:</label>
+                            <select id="setup-p${i}-starter" class="setup-select">
+                                <option value="mon_for_1">🌱 Hojarín (Planta)</option>
+                                <option value="mon_pln_2">🔥 Candilín (Fuego)</option>
+                                <option value="mon_frw_1">💧 Renacuajito (Agua)</option>
+                                <option value="mon_mtn_1">🪨 Guijarrón (Roca)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function startGameFromSetup() {
+            const configs = [];
+            for (let i = 0; i < selectedCount; i++) {
+                const name = document.getElementById(`setup-p${i}-name`).value || `Jugador ${i + 1}`;
+                const charId = document.getElementById(`setup-p${i}-char`).value;
+                const starterId = document.getElementById(`setup-p${i}-starter`).value;
+                configs.push({ name, characterId: charId, starterMonsterId: starterId });
+            }
+
+            document.getElementById('modal-setup').classList.remove('open');
+
+            const game = new MonsterJourneyGame();
+            window.gameInstance = game;
+            UI.init(game);
+            game.initGame(configs);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderSetupRows();
+        });
+    </script>
+</body>
+</html>

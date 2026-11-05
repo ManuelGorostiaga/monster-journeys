@@ -1,0 +1,10 @@
+# Graphify
+graphify-out/
+.graphify/
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db
+
+.vercel
