@@ -583,8 +583,29 @@ class CombatEngine {
         }
     }
 
-    applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer) {
+    applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer, damageDealt = 0) {
         if (!attack.effect) return;
+
+        if (attack.effect === 'drain' && attacker.hp > 0 && damageDealt > 0) {
+            const healAmount = Math.max(1, Math.floor(damageDealt / 2));
+            const prevHp = attacker.hp;
+            attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmount);
+            const actualHealed = attacker.hp - prevHp;
+            if (actualHealed > 0) {
+                this.log(`🌿 ¡Drenaje de Vida! ${attacker.name} absorbe ${actualHealed} HP (${attacker.hp}/${attacker.maxHp} HP).`);
+                if (typeof SoundFX !== 'undefined' && SoundFX.victory) SoundFX.victory();
+            }
+        }
+
+        if (attack.effect === 'recoil' && attacker.hp > 0) {
+            const recoilDmg = attack.recoilDmg || 2;
+            attacker.hp = Math.max(0, attacker.hp - recoilDmg);
+            this.log(`💥 ¡Retroceso violento! ${attacker.name} sufre ${recoilDmg} de daño por el impacto (${attacker.hp}/${attacker.maxHp} HP).`);
+            if (typeof SoundFX !== 'undefined' && SoundFX.hit) SoundFX.hit();
+            if (attacker.hp <= 0) {
+                this.handleFaint(attacker, attackerPlayer);
+            }
+        }
 
         // 1. Paralizar (0 speed)
         if (attack.effect === 'paralyze' && defender.hp > 0) {
