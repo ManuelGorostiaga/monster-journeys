@@ -504,7 +504,43 @@ combatEngine.p1ActiveIndex = 0;
 combatEngine.playerPivotSwitch(1);
 console.assert(combatEngine.p1ActiveIndex === 1, 'Player safely pivoted to new monster without receiving switch damage');
 
-console.log('Test 16 Passed: All 12 attack effects and tier base damage scaling function accurately.');
+// 14. Life Drain
+attackerMon.hp = 10;
+attackerMon.maxHp = 30;
+defenderMon.hp = 30;
+const defenderHpBeforeDrain = defenderMon.hp;
+combatEngine.executeAttack({
+    attacker: attackerMon,
+    defender: defenderMon,
+    attack: { name: 'Drenaje de Savia', type: 'Planta', baseDmg: 4, diceCount: 0, effect: 'drain' }
+});
+console.assert(defenderMon.hp === defenderHpBeforeDrain - 4, 'Drain attack dealt damage to defender');
+console.assert(attackerMon.hp === 12, `Drain attack recovered 2 HP (half of 4 damage), got ${attackerMon.hp}`);
+
+// 15. Recoil Move
+attackerMon.hp = 20;
+defenderMon.hp = 30;
+const defenderHpBeforeRecoil = defenderMon.hp;
+combatEngine.executeAttack({
+    attacker: attackerMon,
+    defender: defenderMon,
+    attack: { name: 'Embestida Desesperada', type: 'Roca', baseDmg: 6, diceCount: 0, recoilDmg: 2, effect: 'recoil' }
+});
+console.assert(defenderMon.hp === defenderHpBeforeRecoil - 6, 'Recoil move dealt damage to defender');
+console.assert(attackerMon.hp === 18, `Attacker suffered 2 recoil damage, got ${attackerMon.hp}`);
+
+// 16. Attack Uniqueness & Coverage Verification
+const allAttackNames = [];
+MONSTERS_DATABASE.forEach(m => {
+    console.assert(m.attacks.length === 2, `${m.name} must have exactly 2 attacks, got ${m.attacks.length}`);
+    m.attacks.forEach(a => allAttackNames.push(a.name));
+});
+ANCESTRAL_ATTACKS.forEach(a => allAttackNames.push(a.name));
+const uniqueAttacksSet = new Set(allAttackNames);
+console.assert(uniqueAttacksSet.size === allAttackNames.length, `All ${allAttackNames.length} attacks must be uniquely named across all monsters and ancestral pool! Found duplicate.`);
+console.assert(allAttackNames.length === 106, `Expected exactly 106 total attacks in game, got ${allAttackNames.length}`);
+
+console.log('Test 16 Passed: All attack effects, life drain, recoil, and 100% unique movesets function accurately.');
 
 console.log('\n=== TEST 17: All 21 Items Functionality & Light Boots Movement ===');
 const testGame = new MonsterJourneyGame();
@@ -900,8 +936,10 @@ console.log('\n=== TEST 23: Tier 3 Location Unlocks (Vórtice Legendario) & Atta
     console.assert(starterMon.attacks.length === initialMoveCount + 1, 'Attack count increased by 1');
 
     // Test replacing move when monster has 3 attacks
-    const dummyMove = { name: 'Surf', type: 'Agua', baseDmg: 3 };
-    starterMon.attacks.push(dummyMove);
+    if (starterMon.attacks.length < 3) {
+        const dummyMove = { name: 'Surf', type: 'Agua', baseDmg: 3 };
+        starterMon.attacks.push(dummyMove);
+    }
     console.assert(starterMon.attacks.length === 3, 'Monster now has 3 attacks');
 
     // Combat move teaching flow using UI.confirmTeachAttack

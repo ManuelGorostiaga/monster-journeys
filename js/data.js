@@ -177,7 +177,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌱',
         attacks: [
-            { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: null }
+            { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+            { name: 'Pedrada Defensiva', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ Roca anti-fuego + Escudo -2 próx. turno.' }
         ]
     },
     {
@@ -193,7 +194,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🐛',
         attacks: [
-            { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' }
+            { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' },
+            { name: 'Drenaje de Savia', type: 'Planta', baseDmg: 2, diceCount: 1, effect: 'drain', desc: '🌿 Drena vida: recupera el 50% del daño infligido.' }
         ]
     },
     {
@@ -209,7 +211,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌵',
         attacks: [
-            { name: 'Trío de Espinas', type: 'Planta', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 3 golpes.' }
+            { name: 'Trío de Espinas', type: 'Planta', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Descarga 3 espinas consecutivas.' },
+            { name: 'Proyectil Rocoso', type: 'Roca', baseDmg: 3, diceCount: 1, effect: null, desc: '🪨 Cobertura de Roca anti-Fuego y Volador.' }
         ]
     },
     {
@@ -225,7 +228,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🦗',
         attacks: [
-            { name: 'Ida y Vuelta', type: 'Bicho', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Cambio táctico.' }
+            { name: 'Ida y Vuelta', type: 'Bicho', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataque y cambio táctico inmediato sin daño.' },
+            { name: 'Tajo Aéreo', type: 'Volador', baseDmg: 4, diceCount: 1, effect: null, desc: '🌪️ Cobertura aérea cortante anti-Planta y Bicho.' }
         ]
     },
     {
@@ -241,7 +245,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🍄',
         attacks: [
-            { name: 'Espora Somnífera', type: 'Planta', baseDmg: 4, diceCount: 1, effect: 'drowsy', desc: '💤 Somnolencia (+1 daño recibido).' }
+            { name: 'Espora Somnífera', type: 'Planta', baseDmg: 4, diceCount: 1, effect: 'drowsy', desc: '💤 Somnolencia: rival recibe +1 de daño.' },
+            { name: 'Bomba Ácida', type: 'Bicho', baseDmg: 3, diceCount: 1, effect: 'poison', desc: '☠️ Esporas corrosivas venenosas.' }
         ]
     },
     {
@@ -257,7 +262,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🪲',
         attacks: [
-            { name: 'Furia Agónica', type: 'Bicho', baseDmg: 4, diceCount: 1, effect: 'facade_status', desc: '🔥 +4 daño si sufre estado.' }
+            { name: 'Furia Agónica', type: 'Bicho', baseDmg: 4, diceCount: 1, effect: 'facade_status', desc: '🔥 Si sufre estado alterado, inflige +4 de daño base.' },
+            { name: 'Embestida Desesperada', type: 'Roca', baseDmg: 6, diceCount: 1, recoilDmg: 2, effect: 'recoil', desc: '💥 Retroceso: 6 daño de Roca pero sufre 2 de daño propio.' }
         ]
     },
     {
@@ -273,7 +279,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌳',
         attacks: [
-            { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 7, diceCount: 2, effect: null, desc: null }
+            { name: 'Fuerza de Bosque', type: 'Planta', baseDmg: 7, diceCount: 2, effect: null, desc: null },
+            { name: 'Arraigo Nutritivo', type: 'Tierra', baseDmg: 4, diceCount: 1, effect: 'drain', desc: '🌿 Absorbe nutrientes de la tierra recuperando 50% del daño.' }
         ]
     },
     {
@@ -289,7 +296,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '🐝',
         attacks: [
-            { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' }
+            { name: 'Aguijón Letal', type: 'Bicho', baseDmg: 5, diceCount: 2, effect: 'poison', desc: '☠️ Veneno letal (-1 HP/turno).' },
+            { name: 'Aguijón Perforante', type: 'Volador', baseDmg: 6, diceCount: 1, effect: 'white_dice_crit', desc: '🎯 Dados blancos (0) se convierten en críticos (+2 daño).' }
         ]
     },
 
@@ -307,7 +315,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🪨',
         attacks: [
-            { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' }
+            { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' },
+            { name: 'Follaje Protector', type: 'Planta', baseDmg: 2, diceCount: 1, effect: null, desc: '🌿 Cobertura de Planta anti-Agua y Tierra.' }
         ]
     },
     {
@@ -323,7 +332,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🐦',
         attacks: [
-            { name: 'Picotazo', type: 'Volador', baseDmg: 3, diceCount: 1, effect: null, desc: null }
+            { name: 'Picotazo', type: 'Volador', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+            { name: 'Viento Helado', type: 'Hielo', baseDmg: 2, diceCount: 1, effect: 'drowsy', desc: '❄️ Ráfaga gélida somnolienta.' }
         ]
     },
     {
@@ -339,7 +349,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🦡',
         attacks: [
-            { name: 'Fijación Sísmica', type: 'Tierra', baseDmg: 5, fixedDmg: 5, effect: 'fixed_damage', desc: '🎯 5 daño fijo.' }
+            { name: 'Fijación Sísmica', type: 'Tierra', baseDmg: 5, fixedDmg: 5, effect: 'fixed_damage', desc: '🎯 Daño fijo garantizado de 5 (ignora tirada de dados).' },
+            { name: 'Taladro Rocoso', type: 'Roca', baseDmg: 3, diceCount: 1, effect: null, desc: '🪨 Cobertura de Roca anti-Volador y Fuego.' }
         ]
     },
     {
@@ -355,7 +366,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🗿',
         attacks: [
-            { name: 'Golpe Fuerte', type: 'Roca', baseDmg: 5, diceCount: 1, effect: null, desc: null }
+            { name: 'Golpe de Peñasco', type: 'Roca', baseDmg: 5, diceCount: 1, effect: null, desc: null },
+            { name: 'Descarga Terrestre', type: 'Tierra', baseDmg: 4, diceCount: 1, effect: 'paralyze', desc: '⚡ Cobertura de Tierra anti-Eléctrico.' }
         ]
     },
     {
@@ -371,7 +383,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🦅',
         attacks: [
-            { name: 'Ojo de Francotirador', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Caras 0 = Crítico (+2).' }
+            { name: 'Ojo de Francotirador', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Dados blancos (0) se convierten en impactos críticos (+2 daño).' },
+            { name: 'Picado Flamígero', type: 'Fuego', baseDmg: 5, diceCount: 1, effect: null, desc: '🔥 Cobertura ígnea aérea anti-Hielo y Planta.' }
         ]
     },
     {
@@ -387,7 +400,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🌋',
         attacks: [
-            { name: 'Armadura Terrestre', type: 'Tierra', baseDmg: 5, diceCount: 1, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' }
+            { name: 'Armadura Terrestre', type: 'Tierra', baseDmg: 5, diceCount: 1, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' },
+            { name: 'Colisión Pesada', type: 'Roca', baseDmg: 7, diceCount: 1, recoilDmg: 2, effect: 'recoil', desc: '💥 Impacto titánico de 7 daño con 2 de retroceso propio.' }
         ]
     },
     {
@@ -403,7 +417,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '⛰️',
         attacks: [
-            { name: 'Avalancha Titán', type: 'Roca', baseDmg: 7, diceCount: 2, effect: null, desc: null }
+            { name: 'Avalancha Titán', type: 'Roca', baseDmg: 7, diceCount: 2, effect: null, desc: null },
+            { name: 'Fisura Sísmica', type: 'Tierra', baseDmg: 5, diceCount: 2, effect: 'force_switch', desc: '🌪️ Terremoto que expulsa al oponente hacia la reserva.' }
         ]
     },
     {
@@ -419,7 +434,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🕊️',
         attacks: [
-            { name: 'Tornado Expulsor', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Expulsa al rival.' }
+            { name: 'Tornado Expulsor', type: 'Volador', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Expulsa al monstruo rival obligándolo a cambiar por su reserva.' },
+            { name: 'Ráfaga de Plumas', type: 'Bicho', baseDmg: 2, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Torbellino de 3 golpes continuos.' }
         ]
     },
 
@@ -437,7 +453,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '⚡',
         attacks: [
-            { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' }
+            { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' },
+            { name: 'Burbuja de Chispa', type: 'Agua', baseDmg: 2, diceCount: 1, effect: null, desc: '💧 Cobertura acuática anti-Tierra.' }
         ]
     },
     {
@@ -453,7 +470,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🔥',
         attacks: [
-            { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: null }
+            { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+            { name: 'Raíz Ígnea', type: 'Planta', baseDmg: 2, diceCount: 1, effect: 'drain', desc: '🌿 Cobertura de Planta anti-Agua y Tierra con absorción de vida.' }
         ]
     },
     {
@@ -469,7 +487,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🦊',
         attacks: [
-            { name: 'Voltiocambio', type: 'Eléctrico', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Cambio táctico.' }
+            { name: 'Voltiocambio', type: 'Eléctrico', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataque y cambio táctico inmediato sin daño.' },
+            { name: 'Mordisco Helado', type: 'Hielo', baseDmg: 3, diceCount: 1, effect: null, desc: '❄️ Cobertura de Hielo anti-Tierra, Dragón y Volador.' }
         ]
     },
     {
@@ -485,7 +504,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🐎',
         attacks: [
-            { name: 'Carga Ígnea', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: 'charge_next', desc: '⚡ +3 daño próx. turno.' }
+            { name: 'Carga Ígnea', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: 'charge_next', desc: '⚡ Carga de poder: +3 daño en el próximo ataque.' },
+            { name: 'Cocotazo Rocoso', type: 'Roca', baseDmg: 4, diceCount: 1, effect: null, desc: '🪨 Cobertura de Roca anti-Agua y Volador.' }
         ]
     },
     {
@@ -501,7 +521,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🦁',
         attacks: [
-            { name: 'Electroimpulso', type: 'Eléctrico', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ Daño = Velocidad.' }
+            { name: 'Electroimpulso', type: 'Eléctrico', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ Daño base igual a la Velocidad del atacante.' },
+            { name: 'Colmillo Ígneo', type: 'Fuego', baseDmg: 4, diceCount: 1, effect: null, desc: '🔥 Cobertura de Fuego anti-Planta y Bicho.' }
         ]
     },
     {
@@ -517,7 +538,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🦬',
         attacks: [
-            { name: 'Golpe Fuerte', type: 'Fuego', baseDmg: 5, diceCount: 1, effect: null, desc: null }
+            { name: 'Fogonazo Brutal', type: 'Fuego', baseDmg: 5, diceCount: 1, effect: null, desc: null },
+            { name: 'Carga Suicida', type: 'Tierra', baseDmg: 8, diceCount: 1, recoilDmg: 3, effect: 'recoil', desc: '💥 Embestida volcánica de 8 daño con 3 de retroceso propio.' }
         ]
     },
     {
@@ -533,7 +555,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '🐅',
         attacks: [
-            { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' }
+            { name: 'Trueno Ancestral', type: 'Eléctrico', baseDmg: 5, diceCount: 2, effect: 'paralyze', desc: '⚡ Paraliza al rival reduciendo su Velocidad a 0.' },
+            { name: 'Aliento Dracónico', type: 'Dragón', baseDmg: 5, diceCount: 1, effect: 'white_dice_crit', desc: '🐉 Cobertura dracónica con críticos en dados blancos.' }
         ]
     },
     {
@@ -549,7 +572,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🦚',
         attacks: [
-            { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 7, diceCount: 2, effect: null, desc: null }
+            { name: 'Llamarada Solar', type: 'Fuego', baseDmg: 7, diceCount: 2, effect: null, desc: null },
+            { name: 'Vuelo Renaciente', type: 'Volador', baseDmg: 4, diceCount: 1, effect: 'drain', desc: '🦅 Alas de ceniza que curan el 50% del daño infligido.' }
         ]
     },
 
@@ -567,7 +591,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐸',
         attacks: [
-            { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: null }
+            { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+            { name: 'Lodo Terrestre', type: 'Tierra', baseDmg: 2, diceCount: 1, effect: null, desc: '🦡 Cobertura de Tierra anti-Eléctrico.' }
         ]
     },
     {
@@ -583,7 +608,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦆',
         attacks: [
-            { name: 'Bostezo Sedante', type: 'Agua', baseDmg: 2, diceCount: 1, effect: 'drowsy', desc: '💤 Somnolencia (+1 daño recibido).' }
+            { name: 'Bostezo Sedante', type: 'Agua', baseDmg: 2, diceCount: 1, effect: 'drowsy', desc: '💤 Somnolencia: el rival recibe +1 de daño.' },
+            { name: 'Latigazo de Caña', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: '🌿 Cobertura de Planta anti-Agua y Roca.' }
         ]
     },
     {
@@ -599,7 +625,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦦',
         attacks: [
-            { name: 'Giro Rápido', type: 'Agua', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ Daño = Velocidad.' }
+            { name: 'Giro Rápido', type: 'Agua', baseDmg: 0, diceCount: 1, effect: 'speed_damage', desc: '⚡ Daño base calculado a partir de la Velocidad del atacante.' },
+            { name: 'Mordisco Eléctrico', type: 'Eléctrico', baseDmg: 3, diceCount: 1, effect: 'paralyze', desc: '⚡ Dientes cargados de estática que paralizan.' }
         ]
     },
     {
@@ -615,7 +642,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐸',
         attacks: [
-            { name: 'Lodazo Tóxico', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' }
+            { name: 'Lodazo Tóxico', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' },
+            { name: 'Tierra Movediza', type: 'Tierra', baseDmg: 4, diceCount: 1, effect: 'shield_next', desc: '🛡️ Fango protector que reduce 2 de daño el próx. turno.' }
         ]
     },
     {
@@ -631,7 +659,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐊',
         attacks: [
-            { name: 'Mordisco Certero', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Caras 0 = Crítico (+2).' }
+            { name: 'Mordisco Certero', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Dados blancos (0) se convierten en impactos críticos (+2 daño).' },
+            { name: 'Coleotazo Pétreo', type: 'Roca', baseDmg: 5, diceCount: 1, effect: null, desc: '🪨 Cobertura de Roca anti-Fuego y Hielo.' }
         ]
     },
     {
@@ -647,7 +676,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐍',
         attacks: [
-            { name: 'Maremoto Expulsor', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Expulsa al rival.' }
+            { name: 'Maremoto Expulsor', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'force_switch', desc: '🌪️ Expulsa al monstruo rival obligándolo a cambiar por su reserva.' },
+            { name: 'Escamas Gélidas', type: 'Hielo', baseDmg: 4, diceCount: 1, effect: 'drowsy', desc: '❄️ Frío adormecedor anti-Dragón y Planta.' }
         ]
     },
     {
@@ -663,7 +693,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Hidrobomba', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: null }
+            { name: 'Hidrobomba', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: null },
+            { name: 'Furia de Dragón Marino', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🐉 6 de daño fijo garantizado sin depender del dado.' }
         ]
     },
     {
@@ -679,7 +710,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐢',
         attacks: [
-            { name: 'Caparazón Espejo', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' }
+            { name: 'Caparazón Espejo', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' },
+            { name: 'Espiga Drenadora', type: 'Planta', baseDmg: 3, diceCount: 1, effect: 'drain', desc: '🌿 Absorbe 50% del daño en vitalidad para la tortuga.' }
         ]
     },
 
@@ -697,7 +729,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦀',
         attacks: [
-            { name: 'Tenaza Férrea', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: null }
+            { name: 'Tenaza Férrea', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+            { name: 'Pellizco Tóxico', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Veneno de arrecife (-1 HP/turno).' }
         ]
     },
     {
@@ -713,7 +746,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐟',
         attacks: [
-            { name: 'Triple Aguijón', type: 'Agua', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 3 golpes.' }
+            { name: 'Triple Aguijón', type: 'Agua', baseDmg: 1, diceCount: 1, hits: 3, effect: 'multi_hit', desc: '💥 Descarga 3 impactos de aguijón consecutivos.' },
+            { name: 'Dardo Relámpago', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Descarga marina que paraliza.' }
         ]
     },
     {
@@ -729,7 +763,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🪼',
         attacks: [
-            { name: 'Tentáculo Paralizante', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' }
+            { name: 'Tentáculo Paralizante', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' },
+            { name: 'Absorción Abisal', type: 'Planta', baseDmg: 3, diceCount: 1, effect: 'drain', desc: '🌿 Sifón bioluminiscente que drena 50% del daño.' }
         ]
     },
     {
@@ -745,7 +780,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐡',
         attacks: [
-            { name: 'Giro Marino', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Cambio táctico.' }
+            { name: 'Giro Marino', type: 'Agua', baseDmg: 3, diceCount: 1, effect: 'pivot_switch', desc: '🔄 Ataque y cambio táctico inmediato sin daño.' },
+            { name: 'Onda Sónica Aérea', type: 'Volador', baseDmg: 4, diceCount: 1, effect: null, desc: '🦅 Planeo sobre las olas anti-Planta y Bicho.' }
         ]
     },
     {
@@ -761,7 +797,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🦈',
         attacks: [
-            { name: 'Mandíbula Letal', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Caras 0 = Crítico (+2).' }
+            { name: 'Mandíbula Letal', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'white_dice_crit', desc: '🎯 Dados blancos (0) se convierten en impactos críticos (+2 daño).' },
+            { name: 'Dentellada Cruenta', type: 'Tierra', baseDmg: 7, diceCount: 1, recoilDmg: 2, effect: 'recoil', desc: '💥 Mordisco salvaje de 7 daño con 2 de retroceso propio.' }
         ]
     },
     {
@@ -777,7 +814,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐙',
         attacks: [
-            { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'drowsy', desc: '💤 Somnolencia (+1 daño recibido).' }
+            { name: 'Tentáculo Voraz', type: 'Agua', baseDmg: 4, diceCount: 2, effect: 'drowsy', desc: '💤 Somnolencia: el rival recibe +1 de daño.' },
+            { name: 'Tinta Cegadora', type: 'Bicho', baseDmg: 4, diceCount: 1, effect: 'shield_next', desc: '🛡️ Nube oscura que reduce 2 de daño el próx. turno.' }
         ]
     },
     {
@@ -793,7 +831,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐋',
         attacks: [
-            { name: 'Tsunami Titánico', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: null }
+            { name: 'Tsunami Titánico', type: 'Agua', baseDmg: 7, diceCount: 2, effect: null, desc: null },
+            { name: 'Vórtice Helado', type: 'Hielo', baseDmg: 5, diceCount: 2, effect: 'drowsy', desc: '❄️ Congelación adormecedora anti-Dragón y Planta.' }
         ]
     },
     {
@@ -809,7 +848,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Furia Dragón', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🎯 6 daño fijo.' }
+            { name: 'Furia Dragón', type: 'Dragón', baseDmg: 6, fixedDmg: 6, effect: 'fixed_damage', desc: '🎯 6 de daño fijo garantizado (ignora dados).' },
+            { name: 'Resplandor Solar', type: 'Fuego', baseDmg: 5, diceCount: 1, effect: 'charge_next', desc: '🔥 Cobertura ígnea anti-Hielo + Carga +3 próximo ataque.' }
         ]
     },
 
@@ -828,7 +868,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.grass,
         icon: '🌳',
         attacks: [
-            { name: 'Ira de Gaia', type: 'Planta', baseDmg: 8, diceCount: 2, hits: 2, effect: 'multi_hit', desc: '🌿 2 golpes.' }
+            { name: 'Ira de Gaia', type: 'Planta', baseDmg: 8, diceCount: 2, hits: 2, effect: 'multi_hit', desc: '💥 Descarga 2 embestidas colosales continuas de 8+dados.' },
+            { name: 'Seiva Primordial', type: 'Agua', baseDmg: 6, diceCount: 1, effect: 'drain', desc: '🌿 Drenaje milenario: restaura 50% del daño en vitalidad.' }
         ]
     },
     {
@@ -845,7 +886,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.bug,
         icon: '👑',
         attacks: [
-            { name: 'Enjambre Apocalíptico', type: 'Bicho', baseDmg: 9, diceCount: 2, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' }
+            { name: 'Enjambre Apocalíptico', type: 'Bicho', baseDmg: 9, diceCount: 2, effect: 'poison', desc: '☠️ Veneno devastador (-1 HP/turno).' },
+            { name: 'Danza de Escamas', type: 'Roca', baseDmg: 7, diceCount: 1, effect: 'shield_next', desc: '🪨 Escudo de quitina mineral -2 daño próx. turno.' }
         ]
     },
     {
@@ -862,7 +904,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.rock,
         icon: '🗿',
         attacks: [
-            { name: 'Cataclismo Pétreo', type: 'Roca', baseDmg: 9, diceCount: 2, effect: 'shield_next', desc: '🛡️ Escudo -4 próx. turno.' }
+            { name: 'Cataclismo Pétreo', type: 'Roca', baseDmg: 9, diceCount: 2, effect: 'shield_next', desc: '🛡️ Escudo protector titánico (-2 daño próx. turno).' },
+            { name: 'Impacto Meteoro', type: 'Fuego', baseDmg: 11, diceCount: 1, recoilDmg: 3, effect: 'recoil', desc: '💥 Meteoro ardiente de 11 daño con 3 de retroceso.' }
         ]
     },
     {
@@ -879,7 +922,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.ground,
         icon: '🦣',
         attacks: [
-            { name: 'Fisura Devastadora', type: 'Tierra', baseDmg: 9, diceCount: 2, fixedDmg: 10, effect: 'fixed_damage', desc: '💥 10 daño fijo.' }
+            { name: 'Fisura Devastadora', type: 'Tierra', baseDmg: 9, fixedDmg: 10, diceCount: 2, effect: 'fixed_damage', desc: '🎯 Daño colosal fijo de 10 garantizado.' },
+            { name: 'Alud de Hielo', type: 'Hielo', baseDmg: 7, diceCount: 2, effect: 'drowsy', desc: '❄️ Cobertura de Hielo anti-Planta y Volador.' }
         ]
     },
     {
@@ -896,7 +940,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🦅',
         attacks: [
-            { name: 'Tornado del Juicio', type: 'Volador', baseDmg: 9, diceCount: 2, effect: 'force_switch', desc: '🌪️ Expulsa al rival.' }
+            { name: 'Tornado del Juicio', type: 'Volador', baseDmg: 9, diceCount: 2, effect: 'force_switch', desc: '🌪️ Viento supremo que expulsa al oponente hacia la reserva.' },
+            { name: 'Lanza Relámpago', type: 'Eléctrico', baseDmg: 8, diceCount: 1, effect: 'white_dice_crit', desc: '⚡ Rayo certero con impactos críticos en dados blancos.' }
         ]
     },
     {
@@ -913,7 +958,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '❄️',
         attacks: [
-            { name: 'Cero Absoluto', type: 'Hielo', baseDmg: 9, diceCount: 2, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' }
+            { name: 'Cero Absoluto', type: 'Hielo', baseDmg: 9, diceCount: 2, effect: 'paralyze', desc: '⚡ Congelación absoluta que paraliza al rival (Velocidad 0).' },
+            { name: 'Geiser Subterráneo', type: 'Tierra', baseDmg: 7, diceCount: 1, effect: null, desc: '🦡 Cobertura de Tierra anti-Fuego, Roca y Acero.' }
         ]
     },
     {
@@ -930,7 +976,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.electric,
         icon: '⚡',
         attacks: [
-            { name: 'Juicio del Rayo', type: 'Eléctrico', baseDmg: 8, diceCount: 2, effect: 'speed_damage', desc: '⚡ Daño = Velocidad.' }
+            { name: 'Juicio del Rayo', type: 'Eléctrico', baseDmg: 8, diceCount: 2, effect: 'speed_damage', desc: '⚡ Poder titánico potenciado por la Velocidad extrema.' },
+            { name: 'Chorro de Plasma', type: 'Agua', baseDmg: 7, diceCount: 1, effect: 'drain', desc: '💧 Cobertura marina anti-Tierra que recupera vida.' }
         ]
     },
     {
@@ -947,7 +994,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.fire,
         icon: '🔥',
         attacks: [
-            { name: 'Llama del Fin', type: 'Fuego', baseDmg: 9, diceCount: 2, effect: 'charge_next', desc: '🔥 +4 daño próx. turno.' }
+            { name: 'Llama del Fin', type: 'Fuego', baseDmg: 9, diceCount: 2, effect: 'charge_next', desc: '⚡ Carga cataclísmica: +3 daño en el próximo turno.' },
+            { name: 'Erupción Telúrica', type: 'Tierra', baseDmg: 8, diceCount: 2, effect: 'force_switch', desc: '🦡 Sismo volcánico que expulsa al rival del combate.' }
         ]
     },
     {
@@ -964,7 +1012,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.water,
         icon: '🐉',
         attacks: [
-            { name: 'Tsunami Celestial', type: 'Agua', baseDmg: 9, diceCount: 2, effect: 'drowsy', desc: '🌊 Somnolencia (+1 daño recibido).' }
+            { name: 'Tsunami Celestial', type: 'Agua', baseDmg: 9, diceCount: 2, effect: 'drowsy', desc: '💤 Maremoto somnoliento (+1 daño a todos los ataques recibidos).' },
+            { name: 'Tormenta de Escarcha', type: 'Hielo', baseDmg: 8, diceCount: 1, effect: 'paralyze', desc: '❄️ Congela y paraliza al rival (Velocidad 0).' }
         ]
     },
     {
@@ -981,7 +1030,8 @@ const MONSTERS_DATABASE = [
         overworldAbility: OVERWORLD_ABILITIES.flying,
         icon: '🌀',
         attacks: [
-            { name: 'Cometa Ancestral', type: 'Dragón', baseDmg: 10, diceCount: 2, effect: null, desc: null }
+            { name: 'Cometa Ancestral', type: 'Dragón', baseDmg: 10, diceCount: 2, effect: null, desc: null },
+            { name: 'Aliento Ígneo Supremo', type: 'Fuego', baseDmg: 8, diceCount: 1, effect: 'charge_next', desc: '🔥 Cobertura ígnea anti-Hielo + Carga +3 daño próx. turno.' }
         ]
     }
 ];
@@ -1648,12 +1698,12 @@ const LOCATION_CARDS_DATABASE = [
 ];
 
 const ANCESTRAL_ATTACKS = [
-    { name: 'Látigo Cepa', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: null },
-    { name: 'Ascua', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: null },
-    { name: 'Pistola Agua', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: null },
-    { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' },
-    { name: 'Refugio Rocoso', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' },
-    { name: 'Picadura Tóxica', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' }
+    { name: 'Danza de Espinas', type: 'Planta', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+    { name: 'Ignición Mística', type: 'Fuego', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+    { name: 'Chorro Torrencial', type: 'Agua', baseDmg: 3, diceCount: 1, effect: null, desc: null },
+    { name: 'Electrochoque', type: 'Eléctrico', baseDmg: 2, diceCount: 1, effect: 'paralyze', desc: '⚡ Paraliza (Velocidad 0).' },
+    { name: 'Muralla de Granito', type: 'Roca', baseDmg: 2, diceCount: 1, effect: 'shield_next', desc: '🛡️ Escudo -2 próx. turno.' },
+    { name: 'Veneno Arácnido', type: 'Bicho', baseDmg: 2, diceCount: 1, effect: 'poison', desc: '☠️ Veneno (-1 HP/turno).' }
 ];
 
 const EXPANSION_DECKS = {

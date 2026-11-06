@@ -361,7 +361,7 @@ class CombatEngine {
         }
 
         // Standard dice rolling
-        const diceCount = attack.diceCount || 1;
+        const diceCount = (attack.diceCount !== undefined) ? attack.diceCount : 1;
         let { rolls, total: diceSum } = rollDice(diceCount);
 
         // Check Lente Preciso: turns 0 into 1

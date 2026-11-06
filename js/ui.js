@@ -1229,8 +1229,12 @@ const UI = {
                             </div>
 
                             <div class="wild-attack">
-                                <strong>Ataque:</strong> ${monster.attacks[0].name} (${monster.attacks[0].type}) — ${monster.attacks[0].effect === 'speed_damage' ? 'Velocidad' : monster.attacks[0].effect === 'fixed_damage' ? `${monster.attacks[0].fixedDmg} Daño Fijo` : `${monster.attacks[0].baseDmg} daño`}
-                                ${monster.attacks[0].desc ? `<div style="font-size: 0.72rem; color: #fde047; margin-top: 2px;">${monster.attacks[0].desc}</div>` : ''}
+                                ${monster.attacks.map(atk => `
+                                    <div style="margin-bottom: 3px;">
+                                        <strong>Ataque:</strong> ${atk.name} (${atk.type}) — ${atk.effect === 'speed_damage' ? 'Velocidad' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Daño Fijo` : `${atk.baseDmg} daño`}
+                                        ${atk.desc ? `<div style="font-size: 0.68rem; color: #fde047; margin-top: 1px;">${atk.desc}</div>` : ''}
+                                    </div>
+                                `).join('')}
                             </div>
 
                             <div class="wild-actions">
@@ -1919,8 +1923,13 @@ const UI = {
                     <button class="codex-chip ${this.codexFilter === 'Planta' ? 'active' : ''}" onclick="UI.setCodexFilter('Planta')">Planta</button>
                     <button class="codex-chip ${this.codexFilter === 'Fuego' ? 'active' : ''}" onclick="UI.setCodexFilter('Fuego')">Fuego</button>
                     <button class="codex-chip ${this.codexFilter === 'Agua' ? 'active' : ''}" onclick="UI.setCodexFilter('Agua')">Agua</button>
-                    <button class="codex-chip ${this.codexFilter === 'Roca' ? 'active' : ''}" onclick="UI.setCodexFilter('Roca')">Roca</button>
                     <button class="codex-chip ${this.codexFilter === 'Eléctrico' ? 'active' : ''}" onclick="UI.setCodexFilter('Eléctrico')">Eléctrico</button>
+                    <button class="codex-chip ${this.codexFilter === 'Tierra' ? 'active' : ''}" onclick="UI.setCodexFilter('Tierra')">Tierra</button>
+                    <button class="codex-chip ${this.codexFilter === 'Volador' ? 'active' : ''}" onclick="UI.setCodexFilter('Volador')">Volador</button>
+                    <button class="codex-chip ${this.codexFilter === 'Roca' ? 'active' : ''}" onclick="UI.setCodexFilter('Roca')">Roca</button>
+                    <button class="codex-chip ${this.codexFilter === 'Bicho' ? 'active' : ''}" onclick="UI.setCodexFilter('Bicho')">Bicho</button>
+                    <button class="codex-chip ${this.codexFilter === 'Dragón' ? 'active' : ''}" onclick="UI.setCodexFilter('Dragón')">Dragón</button>
+                    <button class="codex-chip ${this.codexFilter === 'Hielo' ? 'active' : ''}" onclick="UI.setCodexFilter('Hielo')">Hielo</button>
                 `;
             }
 
@@ -1935,6 +1944,13 @@ const UI = {
                         attacksMap[atk.name].learners.push(m.name);
                     }
                 });
+            });
+
+            const ancestralPool = (typeof ANCESTRAL_ATTACKS !== 'undefined' ? ANCESTRAL_ATTACKS : window.ANCESTRAL_ATTACKS) || [];
+            ancestralPool.forEach(atk => {
+                if (!attacksMap[atk.name]) {
+                    attacksMap[atk.name] = { ...atk, learners: ['Enseñanza Ancestral'] };
+                }
             });
 
             let attacksList = Object.values(attacksMap);
