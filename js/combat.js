@@ -48,10 +48,11 @@ class CombatEngine {
         if (type === 'gym') {
             this.p2Team = gym.teamMonsterIds.map(id => {
                 const base = MONSTERS_DATABASE.find(m => m.id === id);
+                if (!base) throw new Error(`Gym monster ${id} not found in MONSTERS_DATABASE`);
                 return this.cloneMonster(base);
             });
             this.p2ActiveIndex = 0;
-            this.log(`⚔️ ¡Comienza el combate de gimnasio contra ${gym.leaderName} (${gym.cityName})!`);
+            this.log(`⚔️ ¡Comienza el combate de gimnasio contra ${gym.leaderName} (${gym.cityName}) - Tier Adaptativo ${gym.tier} (${this.p2Team.length} criaturas)!`);
         } else if (type === 'npc') {
             this.p2Team = npc.monsters.map(m => this.cloneMonster(m));
             this.p2ActiveIndex = 0;
@@ -142,7 +143,7 @@ class CombatEngine {
         // Opponent gets a free attack on the incoming monster!
         setTimeout(() => {
             const oppMon = this.getP2Active();
-            const oppAttack = oppMon.attacks[0];
+            const oppAttack = this.chooseOpponentAttack(oppMon, newMon);
             this.executeAttack({
                 attacker: oppMon,
                 defender: newMon,
@@ -181,7 +182,7 @@ class CombatEngine {
         const p1Attack = p1Mon.attacks[attackIndex] || p1Mon.attacks[0];
 
         // Opponent attack choice (NPCs use attack 0; in PvP player 2 chooses)
-        const p2Attack = p2Mon.attacks[0];
+        const p2Attack = this.chooseOpponentAttack(p2Mon, p1Mon);
 
         // Calculate initiative (Paralysis sets effective speed to 0)
         let p1Speed = (p1Mon.status === 'paralysis') ? 0 : p1Mon.speed;
@@ -214,6 +215,21 @@ class CombatEngine {
         }
     }
 
+    chooseOpponentAttack(attacker, defender) {
+        if (!attacker || !attacker.attacks || attacker.attacks.length === 0) return null;
+        if (attacker.attacks.length === 1) return attacker.attacks[0];
+
+        const superEffective = attacker.attacks.find(a => (defender.weakness === a.type) || (TYPE_WEAKNESS[defender.type] === a.type));
+        if (superEffective) return superEffective;
+
+        if (attacker.hp <= attacker.maxHp / 2) {
+            const drainAtk = attacker.attacks.find(a => a.effect === 'drain');
+            if (drainAtk) return drainAtk;
+        }
+
+        return attacker.attacks[0];
+    }
+
     executeTurnSequence(firstStrike, secondStrike) {
         this.executeAttack(firstStrike);
         SoundFX.diceRoll();
@@ -243,7 +259,9 @@ class CombatEngine {
                 const activeSecondAttacker = (secondStrike.attackerPlayer === this.player1) ? this.getP1Active() : this.getP2Active();
                 if (secondStrike.attacker !== activeSecondAttacker) {
                     secondStrike.attacker = activeSecondAttacker;
-                    secondStrike.attack = activeSecondAttacker.attacks[0];
+                    secondStrike.attack = (secondStrike.attackerPlayer === this.player1)
+                        ? activeSecondAttacker.attacks[0]
+                        : this.chooseOpponentAttack(activeSecondAttacker, secondStrike.defender);
                 }
 
                 if (secondStrike.attacker && secondStrike.attacker.hp > 0) {
@@ -292,8 +310,8 @@ class CombatEngine {
 
         // Attack Effect: Multiple hits (3 hits)
         if (attack.effect === 'multi_hit') {
-            this.executeMultiHitAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first });
-            this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer);
+            const multiDmg = this.executeMultiHitAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first });
+            this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer, multiDmg);
             return;
         }
 
@@ -338,7 +356,7 @@ class CombatEngine {
             }
 
             this.applyDamageToDefender(attacker, defender, fixedDmg);
-            this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer);
+            this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer, fixedDmg);
             return;
         }
 
@@ -475,7 +493,7 @@ class CombatEngine {
         this.log(`Ataque de **${attack.name}**: ${damage} de daño total.${weaknessBonus > 0 ? ' (¡+2 por debilidad!)' : ''}`);
 
         this.applyDamageToDefender(attacker, defender, damage);
-        this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer);
+        this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer, damage);
     }
 
     executeMultiHitAttack({ attacker, defender, attack, attackerPlayer, defenderPlayer, first }) {
@@ -534,6 +552,7 @@ class CombatEngine {
         }
 
         this.log(`💥 Total de la ráfaga múltiple: ${totalMultiDamage} de daño.`);
+        return totalMultiDamage;
     }
 
     applyDamageToDefender(attacker, defender, damage) {
@@ -747,12 +766,12 @@ class CombatEngine {
                 if (!this.player1.badges.includes(this.gymData.tier)) {
                     this.player1.badges.push(this.gymData.tier);
                     this.player1.badges.sort((a, b) => a - b);
-                    this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
-                    this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
+                }
+                this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
+                this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
 
-                    if (this.game && this.game.onGymDefeated) {
-                        this.game.onGymDefeated(this.player1, this.gymData);
-                    }
+                if (this.game && this.game.onGymDefeated) {
+                    this.game.onGymDefeated(this.player1, this.gymData);
                 }
             }
         } else {

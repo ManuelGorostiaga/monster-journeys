@@ -1288,6 +1288,69 @@ class MonsterJourneyGame {
         if (window.UI) UI.renderAll();
     }
 
+    getAdaptiveGymForPlayer(gymOrCity, player) {
+        if (!gymOrCity) throw new Error('gymOrCity is required for getAdaptiveGymForPlayer');
+        if (!player) throw new Error('player is required for getAdaptiveGymForPlayer');
+        const gym = gymOrCity.gym || gymOrCity;
+
+        const defeatedCount = (player.defeatedGymIds ? player.defeatedGymIds.length : 0);
+        let tier = 1;
+        let monsterCount = 2;
+        let rewardCoins = 3;
+        let rewardLuck = 1;
+
+        if (defeatedCount === 0) {
+            tier = 1;
+            monsterCount = 2;
+            rewardCoins = 3;
+            rewardLuck = 1;
+        } else if (defeatedCount === 1) {
+            tier = 2;
+            monsterCount = 2;
+            rewardCoins = 4;
+            rewardLuck = 1;
+        } else {
+            tier = 3;
+            monsterCount = 3;
+            rewardCoins = 6;
+            rewardLuck = 2;
+        }
+
+        let teamMonsterIds = [];
+        if (gym.teamsByTier && gym.teamsByTier[tier]) {
+            teamMonsterIds = [...gym.teamsByTier[tier]];
+        } else {
+            teamMonsterIds = this.getDefaultGymTeamForTier(gym, tier, monsterCount);
+        }
+
+        if (teamMonsterIds.length !== monsterCount) {
+            throw new Error(`Adaptive gym tier ${tier} requires ${monsterCount} monsters, got ${teamMonsterIds.length}`);
+        }
+
+        return {
+            id: gym.id,
+            name: gym.name,
+            cityName: gym.cityName || gym.name,
+            tier: tier,
+            badgeName: gym.badgeName,
+            badgeIcon: gym.badgeIcon,
+            leaderName: gym.leaderName,
+            rewardCoins: rewardCoins,
+            rewardLuck: rewardLuck,
+            teamMonsterIds: teamMonsterIds,
+            teamsByTier: gym.teamsByTier
+        };
+    }
+
+    getDefaultGymTeamForTier(gym, tier, monsterCount) {
+        const pool = (typeof MONSTERS_DATABASE !== 'undefined' ? MONSTERS_DATABASE : window.MONSTERS_DATABASE) || [];
+        const matching = pool.filter(m => m.captureTier === tier && !m.isLegendary);
+        if (matching.length < monsterCount) {
+            throw new Error(`Not enough tier ${tier} monsters in database for gym team`);
+        }
+        return matching.slice(0, monsterCount).map(m => m.id);
+    }
+
     // Challenge Gym in current City node
     challengeGym() {
         const player = this.getActivePlayer();
@@ -1304,19 +1367,20 @@ class MonsterJourneyGame {
         }
 
         const gym = gymCard.gym;
-        const alreadyDefeated = (player.defeatedGymIds && player.defeatedGymIds.includes(gym.id)) ||
-                                (player.badges.includes(gym.tier) && gym.tier < 3);
+        const alreadyDefeated = Boolean(player.defeatedGymIds && player.defeatedGymIds.includes(gym.id));
         if (alreadyDefeated) {
             alert(`Ya has derrotado este Gimnasio y posees la ${gym.badgeName}.`);
             return;
         }
+
+        const adaptiveGym = this.getAdaptiveGymForPlayer(gym, player);
 
         this.hasActed = true;
         this.hasEncounterActed = true;
         this.combatEngine.startBattle({
             type: 'gym',
             player1: player,
-            gym: gym,
+            gym: adaptiveGym,
             onEnd: (won) => {
                 if (window.UI) UI.renderAll();
                 this.endTurn();

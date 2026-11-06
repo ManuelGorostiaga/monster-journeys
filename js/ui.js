@@ -309,7 +309,7 @@ const UI = {
                                          onclick="event.stopPropagation(); UI.onMiniCardClicked('${node.id}', '${card.id}')">
                                         <div class="mini-card-icon">${card.icon || biome.icon}</div>
                                         <div class="mini-card-title">${card.name}</div>
-                                        ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
+                                        ${card.gym ? `<div class="mini-card-gym" title="Gimnasio Adaptativo">🏛️ ${this.game.getAdaptiveGymForPlayer ? `T${this.game.getAdaptiveGymForPlayer(card.gym, activePlayer).tier}` : `T${card.gym.tier}`}</div>` : ''}
                                         ${card.locationAction ? `<div class="mini-card-action">🔄</div>` : ''}
                                         ${usedDots}
                                     </div>
@@ -453,7 +453,11 @@ const UI = {
             msg += `**[Carta ${idx + 1}] ${card.name}** (${biome.name})\n`;
             if (card.flavor) msg += `*${card.flavor}*\n`;
             if (card.locationAction) msg += `🔄 **Acción:** ${card.locationAction.name} - ${card.locationAction.desc}\n`;
-            if (card.gym) msg += `🏛️ **Gimnasio:** Líder ${card.gym.leaderName} (Tier ${card.gym.tier})\n`;
+            if (card.gym) {
+                const adaptiveGym = this.game.getAdaptiveGymForPlayer ? this.game.getAdaptiveGymForPlayer(card.gym, activePlayer) : card.gym;
+                const isDefeated = Boolean(activePlayer.defeatedGymIds && activePlayer.defeatedGymIds.includes(card.gym.id));
+                msg += `🏛️ **Gimnasio:** Líder ${card.gym.leaderName} (Tier Adaptativo: ${adaptiveGym.tier} - ${adaptiveGym.teamMonsterIds.length} criaturas${isDefeated ? ' | Superado ✅' : ''})\n`;
+            }
             msg += `\n`;
         });
 
@@ -489,7 +493,7 @@ const UI = {
                     <div class="location-hand-card cities-deck-card" style="cursor: pointer;" onclick="UI.confirmPlaceCity('${targetNode.id}')">
                         <div class="location-card-banner" style="background: #1e293b; color: #fbbf24; border-bottom: 1px solid #fbbf24;">
                             <span>🏛️ Mazo de Ciudades</span>
-                            <span>T${nextCity.gym.tier}</span>
+                            <span>Adaptativo</span>
                         </div>
                         <div class="location-card-art">🏛️</div>
                         <div class="location-card-title">${nextCity.name}</div>
@@ -844,9 +848,17 @@ const UI = {
 
         if (btnGym) {
             btnGym.style.display = hasGym ? 'flex' : 'none';
-            btnGym.disabled = this.game.hasEncounterActed || (hasGym && activePlayer.badges.includes(gymCard.gym.tier));
+            const isDefeated = hasGym && Boolean(activePlayer.defeatedGymIds && activePlayer.defeatedGymIds.includes(gymCard.gym.id));
+            btnGym.disabled = this.game.hasEncounterActed || isDefeated;
             if (hasGym) {
-                btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${gymCard.gym.tier})`;
+                const adaptiveGym = this.game.getAdaptiveGymForPlayer(gymCard.gym, activePlayer);
+                if (isDefeated) {
+                    btnGym.innerHTML = `✅ ${gymCard.gym.name} (Superado)`;
+                    btnGym.title = 'Ya has derrotado este gimnasio y obtenido su medalla';
+                } else {
+                    btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${adaptiveGym.tier}: ${adaptiveGym.teamMonsterIds.length} 👾)`;
+                    btnGym.title = `Combate adaptativo Tier ${adaptiveGym.tier} (${adaptiveGym.teamMonsterIds.length} criaturas) contra ${gymCard.gym.leaderName}`;
+                }
             }
         }
 
@@ -933,12 +945,11 @@ const UI = {
         const badgesContainer = document.getElementById('board-badges-list');
         if (badgesContainer) {
             badgesContainer.innerHTML = CITIES_DATABASE.map(city => {
-                const earned = (player.defeatedGymIds && player.defeatedGymIds.includes(city.gym.id)) ||
-                               player.badges.includes(city.gym.tier);
+                const earned = Boolean(player.defeatedGymIds && player.defeatedGymIds.includes(city.gym.id));
                 return `
-                    <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${city.gym.badgeName} (Tier ${city.gym.tier}) - ${city.name}">
+                    <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${city.gym.badgeName} - ${city.name} (${earned ? 'Conseguida ✅' : 'Pendiente'})">
                         <span>${city.gym.badgeIcon}</span>
-                        <small>T${city.gym.tier}</small>
+                        <small>${earned ? '✅' : city.gym.badgeName}</small>
                     </div>
                 `;
             }).join('');
@@ -956,7 +967,7 @@ const UI = {
                     <div class="cities-deck-card" title="Mazo de Ciudades (${this.game.citiesDeck.length} restantes)">
                         <div class="location-card-banner" style="background: #1e293b; color: #fbbf24; border-bottom: 1px solid #fbbf24;">
                             <span>🏛️ Mazo Ciudades</span>
-                            <span>T${nextCity.gym.tier}</span>
+                            <span>Adaptativo</span>
                         </div>
                         <div class="location-card-art">🏛️</div>
                         <div class="location-card-title">${nextCity.name}</div>

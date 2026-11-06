@@ -2711,7 +2711,8 @@ main.main-workspace {
                     <li><strong>Habilidades de Overworld:</strong> Los tipos otorgan habilidades especiales en el mapa en vez de la acción normal.</li>
                     <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
                     <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas con tirada de dados de ataque.</li>
-                    <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, y derrotar al 2do gimnasio añade Tier 3. Hay 3 tiers en total (1, 2 y 3).</li>
+                    <li><strong>Gimnasios Adaptativos:</strong> Los gimnasios escalan según cuántos hayas derrotado: 0 derrotados = 2 monstruos de Tier 1; 1 derrotado = 2 monstruos de Tier 2; 2 o más derrotados = 3 monstruos de Tier 3.</li>
+                    <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, derrotar al 2do gimnasio añade Tier 3, y derrotar al 3ro despierta a los Legendarios de Tier 4.</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 10 rondas) activa el Gran Torneo Final!</li>
                 </ol>
             </div>
@@ -4068,8 +4069,13 @@ const CITIES_DATABASE = [
         rewardCoins: 3,
         rewardLuck: 1,
         teamMonsterIds: ['mon_for_1', 'mon_for_2'],
+        teamsByTier: {
+            1: ['mon_for_1', 'mon_for_2'],
+            2: ['mon_for_3', 'mon_for_4'],
+            3: ['mon_for_5', 'mon_for_6', 'mon_for_7']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T1.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_1',
             name: 'Gimnasio Arbóreo',
@@ -4080,7 +4086,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Erika',
             rewardCoins: 3,
             rewardLuck: 1,
-            teamMonsterIds: ['mon_for_1', 'mon_for_2']
+            teamMonsterIds: ['mon_for_1', 'mon_for_2'],
+            teamsByTier: {
+                1: ['mon_for_1', 'mon_for_2'],
+                2: ['mon_for_3', 'mon_for_4'],
+                3: ['mon_for_5', 'mon_for_6', 'mon_for_7']
+            }
         },
         locationAction: {
             name: 'Mercado de la Hoja',
@@ -4104,8 +4115,13 @@ const CITIES_DATABASE = [
         rewardCoins: 4,
         rewardLuck: 1,
         teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4'],
+        teamsByTier: {
+            1: ['mon_mtn_1', 'mon_mtn_2'],
+            2: ['mon_mtn_3', 'mon_mtn_4'],
+            3: ['mon_mtn_6', 'mon_mtn_7', 'mon_mtn_5']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T2.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_2',
             name: 'Gimnasio Cumbre',
@@ -4116,7 +4132,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Brock',
             rewardCoins: 4,
             rewardLuck: 1,
-            teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4']
+            teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4'],
+            teamsByTier: {
+                1: ['mon_mtn_1', 'mon_mtn_2'],
+                2: ['mon_mtn_3', 'mon_mtn_4'],
+                3: ['mon_mtn_6', 'mon_mtn_7', 'mon_mtn_5']
+            }
         },
         locationAction: {
             name: 'Fundición Montañesa',
@@ -4140,8 +4161,13 @@ const CITIES_DATABASE = [
         rewardCoins: 5,
         rewardLuck: 2,
         teamMonsterIds: ['mon_frw_5', 'mon_ocn_5'],
+        teamsByTier: {
+            1: ['mon_frw_1', 'mon_frw_2'],
+            2: ['mon_frw_3', 'mon_ocn_3'],
+            3: ['mon_frw_5', 'mon_ocn_5', 'mon_frw_7']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T3.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_3',
             name: 'Gimnasio Marejada',
@@ -4152,7 +4178,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Misty',
             rewardCoins: 5,
             rewardLuck: 2,
-            teamMonsterIds: ['mon_frw_5', 'mon_ocn_5']
+            teamMonsterIds: ['mon_frw_5', 'mon_ocn_5'],
+            teamsByTier: {
+                1: ['mon_frw_1', 'mon_frw_2'],
+                2: ['mon_frw_3', 'mon_ocn_3'],
+                3: ['mon_frw_5', 'mon_ocn_5', 'mon_frw_7']
+            }
         },
         locationAction: {
             name: 'Aduana Portuaria',
@@ -4176,8 +4207,13 @@ const CITIES_DATABASE = [
         rewardCoins: 6,
         rewardLuck: 2,
         teamMonsterIds: ['mon_pln_6', 'mon_pln_7'],
+        teamsByTier: {
+            1: ['mon_pln_1', 'mon_pln_2'],
+            2: ['mon_pln_3', 'mon_pln_4'],
+            3: ['mon_pln_5', 'mon_pln_6', 'mon_pln_7']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T3.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_4',
             name: 'Gimnasio Volcán',
@@ -4188,7 +4224,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Blaine',
             rewardCoins: 6,
             rewardLuck: 2,
-            teamMonsterIds: ['mon_pln_6', 'mon_pln_7']
+            teamMonsterIds: ['mon_pln_6', 'mon_pln_7'],
+            teamsByTier: {
+                1: ['mon_pln_1', 'mon_pln_2'],
+                2: ['mon_pln_3', 'mon_pln_4'],
+                3: ['mon_pln_5', 'mon_pln_6', 'mon_pln_7']
+            }
         },
         locationAction: {
             name: 'Altar de la Flama',
@@ -4954,10 +4995,11 @@ class CombatEngine {
         if (type === 'gym') {
             this.p2Team = gym.teamMonsterIds.map(id => {
                 const base = MONSTERS_DATABASE.find(m => m.id === id);
+                if (!base) throw new Error(`Gym monster ${id} not found in MONSTERS_DATABASE`);
                 return this.cloneMonster(base);
             });
             this.p2ActiveIndex = 0;
-            this.log(`⚔️ ¡Comienza el combate de gimnasio contra ${gym.leaderName} (${gym.cityName})!`);
+            this.log(`⚔️ ¡Comienza el combate de gimnasio contra ${gym.leaderName} (${gym.cityName}) - Tier Adaptativo ${gym.tier} (${this.p2Team.length} criaturas)!`);
         } else if (type === 'npc') {
             this.p2Team = npc.monsters.map(m => this.cloneMonster(m));
             this.p2ActiveIndex = 0;
@@ -5048,7 +5090,7 @@ class CombatEngine {
         // Opponent gets a free attack on the incoming monster!
         setTimeout(() => {
             const oppMon = this.getP2Active();
-            const oppAttack = oppMon.attacks[0];
+            const oppAttack = this.chooseOpponentAttack(oppMon, newMon);
             this.executeAttack({
                 attacker: oppMon,
                 defender: newMon,
@@ -5087,7 +5129,7 @@ class CombatEngine {
         const p1Attack = p1Mon.attacks[attackIndex] || p1Mon.attacks[0];
 
         // Opponent attack choice (NPCs use attack 0; in PvP player 2 chooses)
-        const p2Attack = p2Mon.attacks[0];
+        const p2Attack = this.chooseOpponentAttack(p2Mon, p1Mon);
 
         // Calculate initiative (Paralysis sets effective speed to 0)
         let p1Speed = (p1Mon.status === 'paralysis') ? 0 : p1Mon.speed;
@@ -5120,6 +5162,21 @@ class CombatEngine {
         }
     }
 
+    chooseOpponentAttack(attacker, defender) {
+        if (!attacker || !attacker.attacks || attacker.attacks.length === 0) return null;
+        if (attacker.attacks.length === 1) return attacker.attacks[0];
+
+        const superEffective = attacker.attacks.find(a => (defender.weakness === a.type) || (TYPE_WEAKNESS[defender.type] === a.type));
+        if (superEffective) return superEffective;
+
+        if (attacker.hp <= attacker.maxHp / 2) {
+            const drainAtk = attacker.attacks.find(a => a.effect === 'drain');
+            if (drainAtk) return drainAtk;
+        }
+
+        return attacker.attacks[0];
+    }
+
     executeTurnSequence(firstStrike, secondStrike) {
         this.executeAttack(firstStrike);
         SoundFX.diceRoll();
@@ -5149,7 +5206,9 @@ class CombatEngine {
                 const activeSecondAttacker = (secondStrike.attackerPlayer === this.player1) ? this.getP1Active() : this.getP2Active();
                 if (secondStrike.attacker !== activeSecondAttacker) {
                     secondStrike.attacker = activeSecondAttacker;
-                    secondStrike.attack = activeSecondAttacker.attacks[0];
+                    secondStrike.attack = (secondStrike.attackerPlayer === this.player1)
+                        ? activeSecondAttacker.attacks[0]
+                        : this.chooseOpponentAttack(activeSecondAttacker, secondStrike.defender);
                 }
 
                 if (secondStrike.attacker && secondStrike.attacker.hp > 0) {
@@ -5653,12 +5712,12 @@ class CombatEngine {
                 if (!this.player1.badges.includes(this.gymData.tier)) {
                     this.player1.badges.push(this.gymData.tier);
                     this.player1.badges.sort((a, b) => a - b);
-                    this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
-                    this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
+                }
+                this.log(`🏅 ¡OBTIENES LA ${this.gymData.badgeName.toUpperCase()}! (Tier ${this.gymData.tier}).`);
+                this.log(`✨ ¡Ahora puedes enseñar ataques de monstruos de Tier ${this.gymData.tier}!`);
 
-                    if (this.game && this.game.onGymDefeated) {
-                        this.game.onGymDefeated(this.player1, this.gymData);
-                    }
+                if (this.game && this.game.onGymDefeated) {
+                    this.game.onGymDefeated(this.player1, this.gymData);
                 }
             }
         } else {
@@ -7248,6 +7307,69 @@ class MonsterJourneyGame {
         if (window.UI) UI.renderAll();
     }
 
+    getAdaptiveGymForPlayer(gymOrCity, player) {
+        if (!gymOrCity) throw new Error('gymOrCity is required for getAdaptiveGymForPlayer');
+        if (!player) throw new Error('player is required for getAdaptiveGymForPlayer');
+        const gym = gymOrCity.gym || gymOrCity;
+
+        const defeatedCount = (player.defeatedGymIds ? player.defeatedGymIds.length : 0);
+        let tier = 1;
+        let monsterCount = 2;
+        let rewardCoins = 3;
+        let rewardLuck = 1;
+
+        if (defeatedCount === 0) {
+            tier = 1;
+            monsterCount = 2;
+            rewardCoins = 3;
+            rewardLuck = 1;
+        } else if (defeatedCount === 1) {
+            tier = 2;
+            monsterCount = 2;
+            rewardCoins = 4;
+            rewardLuck = 1;
+        } else {
+            tier = 3;
+            monsterCount = 3;
+            rewardCoins = 6;
+            rewardLuck = 2;
+        }
+
+        let teamMonsterIds = [];
+        if (gym.teamsByTier && gym.teamsByTier[tier]) {
+            teamMonsterIds = [...gym.teamsByTier[tier]];
+        } else {
+            teamMonsterIds = this.getDefaultGymTeamForTier(gym, tier, monsterCount);
+        }
+
+        if (teamMonsterIds.length !== monsterCount) {
+            throw new Error(`Adaptive gym tier ${tier} requires ${monsterCount} monsters, got ${teamMonsterIds.length}`);
+        }
+
+        return {
+            id: gym.id,
+            name: gym.name,
+            cityName: gym.cityName || gym.name,
+            tier: tier,
+            badgeName: gym.badgeName,
+            badgeIcon: gym.badgeIcon,
+            leaderName: gym.leaderName,
+            rewardCoins: rewardCoins,
+            rewardLuck: rewardLuck,
+            teamMonsterIds: teamMonsterIds,
+            teamsByTier: gym.teamsByTier
+        };
+    }
+
+    getDefaultGymTeamForTier(gym, tier, monsterCount) {
+        const pool = (typeof MONSTERS_DATABASE !== 'undefined' ? MONSTERS_DATABASE : window.MONSTERS_DATABASE) || [];
+        const matching = pool.filter(m => m.captureTier === tier && !m.isLegendary);
+        if (matching.length < monsterCount) {
+            throw new Error(`Not enough tier ${tier} monsters in database for gym team`);
+        }
+        return matching.slice(0, monsterCount).map(m => m.id);
+    }
+
     // Challenge Gym in current City node
     challengeGym() {
         const player = this.getActivePlayer();
@@ -7264,19 +7386,20 @@ class MonsterJourneyGame {
         }
 
         const gym = gymCard.gym;
-        const alreadyDefeated = (player.defeatedGymIds && player.defeatedGymIds.includes(gym.id)) ||
-                                (player.badges.includes(gym.tier) && gym.tier < 3);
+        const alreadyDefeated = Boolean(player.defeatedGymIds && player.defeatedGymIds.includes(gym.id));
         if (alreadyDefeated) {
             alert(`Ya has derrotado este Gimnasio y posees la ${gym.badgeName}.`);
             return;
         }
+
+        const adaptiveGym = this.getAdaptiveGymForPlayer(gym, player);
 
         this.hasActed = true;
         this.hasEncounterActed = true;
         this.combatEngine.startBattle({
             type: 'gym',
             player1: player,
-            gym: gym,
+            gym: adaptiveGym,
             onEnd: (won) => {
                 if (window.UI) UI.renderAll();
                 this.endTurn();
@@ -7767,7 +7890,7 @@ const UI = {
                                          onclick="event.stopPropagation(); UI.onMiniCardClicked('${node.id}', '${card.id}')">
                                         <div class="mini-card-icon">${card.icon || biome.icon}</div>
                                         <div class="mini-card-title">${card.name}</div>
-                                        ${card.gym ? `<div class="mini-card-gym">🏛️ T${card.gym.tier}</div>` : ''}
+                                        ${card.gym ? `<div class="mini-card-gym" title="Gimnasio Adaptativo">🏛️ ${this.game.getAdaptiveGymForPlayer ? `T${this.game.getAdaptiveGymForPlayer(card.gym, activePlayer).tier}` : `T${card.gym.tier}`}</div>` : ''}
                                         ${card.locationAction ? `<div class="mini-card-action">🔄</div>` : ''}
                                         ${usedDots}
                                     </div>
@@ -7911,7 +8034,11 @@ const UI = {
             msg += `**[Carta ${idx + 1}] ${card.name}** (${biome.name})\n`;
             if (card.flavor) msg += `*${card.flavor}*\n`;
             if (card.locationAction) msg += `🔄 **Acción:** ${card.locationAction.name} - ${card.locationAction.desc}\n`;
-            if (card.gym) msg += `🏛️ **Gimnasio:** Líder ${card.gym.leaderName} (Tier ${card.gym.tier})\n`;
+            if (card.gym) {
+                const adaptiveGym = this.game.getAdaptiveGymForPlayer ? this.game.getAdaptiveGymForPlayer(card.gym, activePlayer) : card.gym;
+                const isDefeated = Boolean(activePlayer.defeatedGymIds && activePlayer.defeatedGymIds.includes(card.gym.id));
+                msg += `🏛️ **Gimnasio:** Líder ${card.gym.leaderName} (Tier Adaptativo: ${adaptiveGym.tier} - ${adaptiveGym.teamMonsterIds.length} criaturas${isDefeated ? ' | Superado ✅' : ''})\n`;
+            }
             msg += `\n`;
         });
 
@@ -7947,7 +8074,7 @@ const UI = {
                     <div class="location-hand-card cities-deck-card" style="cursor: pointer;" onclick="UI.confirmPlaceCity('${targetNode.id}')">
                         <div class="location-card-banner" style="background: #1e293b; color: #fbbf24; border-bottom: 1px solid #fbbf24;">
                             <span>🏛️ Mazo de Ciudades</span>
-                            <span>T${nextCity.gym.tier}</span>
+                            <span>Adaptativo</span>
                         </div>
                         <div class="location-card-art">🏛️</div>
                         <div class="location-card-title">${nextCity.name}</div>
@@ -8302,9 +8429,17 @@ const UI = {
 
         if (btnGym) {
             btnGym.style.display = hasGym ? 'flex' : 'none';
-            btnGym.disabled = this.game.hasEncounterActed || (hasGym && activePlayer.badges.includes(gymCard.gym.tier));
+            const isDefeated = hasGym && Boolean(activePlayer.defeatedGymIds && activePlayer.defeatedGymIds.includes(gymCard.gym.id));
+            btnGym.disabled = this.game.hasEncounterActed || isDefeated;
             if (hasGym) {
-                btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${gymCard.gym.tier})`;
+                const adaptiveGym = this.game.getAdaptiveGymForPlayer(gymCard.gym, activePlayer);
+                if (isDefeated) {
+                    btnGym.innerHTML = `✅ ${gymCard.gym.name} (Superado)`;
+                    btnGym.title = 'Ya has derrotado este gimnasio y obtenido su medalla';
+                } else {
+                    btnGym.innerHTML = `🏛️ Desafiar ${gymCard.gym.name} (T${adaptiveGym.tier}: ${adaptiveGym.teamMonsterIds.length} 👾)`;
+                    btnGym.title = `Combate adaptativo Tier ${adaptiveGym.tier} (${adaptiveGym.teamMonsterIds.length} criaturas) contra ${gymCard.gym.leaderName}`;
+                }
             }
         }
 
@@ -8391,12 +8526,11 @@ const UI = {
         const badgesContainer = document.getElementById('board-badges-list');
         if (badgesContainer) {
             badgesContainer.innerHTML = CITIES_DATABASE.map(city => {
-                const earned = (player.defeatedGymIds && player.defeatedGymIds.includes(city.gym.id)) ||
-                               player.badges.includes(city.gym.tier);
+                const earned = Boolean(player.defeatedGymIds && player.defeatedGymIds.includes(city.gym.id));
                 return `
-                    <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${city.gym.badgeName} (Tier ${city.gym.tier}) - ${city.name}">
+                    <div class="badge-token ${earned ? 'earned' : 'locked'}" title="${city.gym.badgeName} - ${city.name} (${earned ? 'Conseguida ✅' : 'Pendiente'})">
                         <span>${city.gym.badgeIcon}</span>
-                        <small>T${city.gym.tier}</small>
+                        <small>${earned ? '✅' : city.gym.badgeName}</small>
                     </div>
                 `;
             }).join('');
@@ -8414,7 +8548,7 @@ const UI = {
                     <div class="cities-deck-card" title="Mazo de Ciudades (${this.game.citiesDeck.length} restantes)">
                         <div class="location-card-banner" style="background: #1e293b; color: #fbbf24; border-bottom: 1px solid #fbbf24;">
                             <span>🏛️ Mazo Ciudades</span>
-                            <span>T${nextCity.gym.tier}</span>
+                            <span>Adaptativo</span>
                         </div>
                         <div class="location-card-art">🏛️</div>
                         <div class="location-card-title">${nextCity.name}</div>

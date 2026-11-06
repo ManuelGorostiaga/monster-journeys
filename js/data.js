@@ -1233,8 +1233,13 @@ const CITIES_DATABASE = [
         rewardCoins: 3,
         rewardLuck: 1,
         teamMonsterIds: ['mon_for_1', 'mon_for_2'],
+        teamsByTier: {
+            1: ['mon_for_1', 'mon_for_2'],
+            2: ['mon_for_3', 'mon_for_4'],
+            3: ['mon_for_5', 'mon_for_6', 'mon_for_7']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T1.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_1',
             name: 'Gimnasio Arbóreo',
@@ -1245,7 +1250,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Erika',
             rewardCoins: 3,
             rewardLuck: 1,
-            teamMonsterIds: ['mon_for_1', 'mon_for_2']
+            teamMonsterIds: ['mon_for_1', 'mon_for_2'],
+            teamsByTier: {
+                1: ['mon_for_1', 'mon_for_2'],
+                2: ['mon_for_3', 'mon_for_4'],
+                3: ['mon_for_5', 'mon_for_6', 'mon_for_7']
+            }
         },
         locationAction: {
             name: 'Mercado de la Hoja',
@@ -1269,8 +1279,13 @@ const CITIES_DATABASE = [
         rewardCoins: 4,
         rewardLuck: 1,
         teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4'],
+        teamsByTier: {
+            1: ['mon_mtn_1', 'mon_mtn_2'],
+            2: ['mon_mtn_3', 'mon_mtn_4'],
+            3: ['mon_mtn_6', 'mon_mtn_7', 'mon_mtn_5']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T2.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_2',
             name: 'Gimnasio Cumbre',
@@ -1281,7 +1296,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Brock',
             rewardCoins: 4,
             rewardLuck: 1,
-            teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4']
+            teamMonsterIds: ['mon_mtn_3', 'mon_mtn_4'],
+            teamsByTier: {
+                1: ['mon_mtn_1', 'mon_mtn_2'],
+                2: ['mon_mtn_3', 'mon_mtn_4'],
+                3: ['mon_mtn_6', 'mon_mtn_7', 'mon_mtn_5']
+            }
         },
         locationAction: {
             name: 'Fundición Montañesa',
@@ -1305,8 +1325,13 @@ const CITIES_DATABASE = [
         rewardCoins: 5,
         rewardLuck: 2,
         teamMonsterIds: ['mon_frw_5', 'mon_ocn_5'],
+        teamsByTier: {
+            1: ['mon_frw_1', 'mon_frw_2'],
+            2: ['mon_frw_3', 'mon_ocn_3'],
+            3: ['mon_frw_5', 'mon_ocn_5', 'mon_frw_7']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T3.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_3',
             name: 'Gimnasio Marejada',
@@ -1317,7 +1342,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Misty',
             rewardCoins: 5,
             rewardLuck: 2,
-            teamMonsterIds: ['mon_frw_5', 'mon_ocn_5']
+            teamMonsterIds: ['mon_frw_5', 'mon_ocn_5'],
+            teamsByTier: {
+                1: ['mon_frw_1', 'mon_frw_2'],
+                2: ['mon_frw_3', 'mon_ocn_3'],
+                3: ['mon_frw_5', 'mon_ocn_5', 'mon_frw_7']
+            }
         },
         locationAction: {
             name: 'Aduana Portuaria',
@@ -1341,8 +1371,13 @@ const CITIES_DATABASE = [
         rewardCoins: 6,
         rewardLuck: 2,
         teamMonsterIds: ['mon_pln_6', 'mon_pln_7'],
+        teamsByTier: {
+            1: ['mon_pln_1', 'mon_pln_2'],
+            2: ['mon_pln_3', 'mon_pln_4'],
+            3: ['mon_pln_5', 'mon_pln_6', 'mon_pln_7']
+        },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio T3.',
+        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
         gym: {
             id: 'gym_4',
             name: 'Gimnasio Volcán',
@@ -1353,7 +1388,12 @@ const CITIES_DATABASE = [
             leaderName: 'Líder Blaine',
             rewardCoins: 6,
             rewardLuck: 2,
-            teamMonsterIds: ['mon_pln_6', 'mon_pln_7']
+            teamMonsterIds: ['mon_pln_6', 'mon_pln_7'],
+            teamsByTier: {
+                1: ['mon_pln_1', 'mon_pln_2'],
+                2: ['mon_pln_3', 'mon_pln_4'],
+                3: ['mon_pln_5', 'mon_pln_6', 'mon_pln_7']
+            }
         },
         locationAction: {
             name: 'Altar de la Flama',

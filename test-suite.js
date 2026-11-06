@@ -643,7 +643,8 @@ dGame.activePlayerIndex = 0;
 
 // Test additional updated special location actions
 // Cascada Cristalina (+1 Luck)
-const cardWaterfall = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_frw_1');
+const cardWaterfall = JSON.parse(JSON.stringify(LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_frw_1')));
+cardWaterfall.usedByPlayerIds = [];
 dGame.cardMap.placeCardOnNode('node_s_valley', cardWaterfall);
 dGame.hasMoved = false;
 dGame.movementPoints = 1;
@@ -1001,6 +1002,126 @@ console.log('\n=== TEST 24: Economy Rebalance, 10 Rounds Limit, Draft Toggle, Si
     console.assert(bobBlocked === true, 'Bob is blocked from using it a second time');
 
     console.log('Test 24 Passed: Economy (2 coins per win), 10 rounds max, draft toggle replacement, and single-use locations with player dot tracking verified.');
+}
+
+console.log('\n=== TEST 25: Adaptive Gyms Progression (0 defeated -> 2 T1, 1 defeated -> 2 T2, 2 defeated -> 3 T3) ===');
+{
+    const adaptGame = new MonsterJourneyGame();
+    adaptGame.initGame([
+        { name: 'Red Player', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Blue Player', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+    ]);
+    UI.game = adaptGame;
+
+    const pRed = adaptGame.players[0];
+    const pBlue = adaptGame.players[1];
+
+    const cityHoja = CITIES_DATABASE.find(c => c.id === 'city_hoja');
+    const cityPico = CITIES_DATABASE.find(c => c.id === 'city_pico');
+    const cityPuerto = CITIES_DATABASE.find(c => c.id === 'city_puerto');
+    const cityFlama = CITIES_DATABASE.find(c => c.id === 'city_flama');
+
+    // 1. None defeated (0 defeated): Any gym must adapt to 2 Tier 1 monsters
+    const hoja0 = adaptGame.getAdaptiveGymForPlayer(cityHoja, pRed);
+    console.assert(hoja0.tier === 1, `Hoja at 0 defeated is Tier 1: ${hoja0.tier}`);
+    console.assert(hoja0.teamMonsterIds.length === 2, `Hoja at 0 defeated has 2 monsters: ${hoja0.teamMonsterIds.length}`);
+    const hoja0Monsters = hoja0.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(hoja0Monsters.every(m => m.captureTier === 1), 'All monsters in Hoja tier 1 are Tier 1');
+    console.assert(hoja0.rewardCoins === 3, `Hoja Tier 1 awards 3 coins: ${hoja0.rewardCoins}`);
+    console.assert(hoja0.rewardLuck === 1, `Hoja Tier 1 awards 1 luck: ${hoja0.rewardLuck}`);
+
+    // Check Ciudad Puerto at 0 defeated as well
+    const puerto0 = adaptGame.getAdaptiveGymForPlayer(cityPuerto, pRed);
+    console.assert(puerto0.tier === 1, `Puerto at 0 defeated adapts to Tier 1: ${puerto0.tier}`);
+    console.assert(puerto0.teamMonsterIds.length === 2, `Puerto at 0 defeated has 2 monsters: ${puerto0.teamMonsterIds.length}`);
+    const puerto0Monsters = puerto0.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(puerto0Monsters.every(m => m.captureTier === 1), 'All monsters in Puerto tier 1 are Tier 1');
+
+    // Also check Ciudad Pico and Ciudad Flama at 0 defeated
+    const pico0 = adaptGame.getAdaptiveGymForPlayer(cityPico, pRed);
+    console.assert(pico0.tier === 1 && pico0.teamMonsterIds.length === 2, 'Pico at 0 defeated is 2 T1 monsters');
+    const flama0 = adaptGame.getAdaptiveGymForPlayer(cityFlama, pRed);
+    console.assert(flama0.tier === 1 && flama0.teamMonsterIds.length === 2, 'Flama at 0 defeated is 2 T1 monsters');
+
+    // 2. Red defeats Gym 1 (Ciudad Hoja)
+    adaptGame.combatEngine.player1 = pRed;
+    adaptGame.combatEngine.gymData = hoja0;
+    adaptGame.combatEngine.inCombat = true;
+    adaptGame.combatEngine.endBattle(true);
+
+    console.assert(pRed.defeatedGymIds.includes('gym_1'), 'Red defeated gym_1');
+    console.assert(pRed.badges.includes(1), 'Red earned Tier 1 badge');
+    console.assert(pRed.defeatedGymIds.length === 1, 'Red has exactly 1 defeated gym');
+    console.assert(adaptGame.expansionsUnlocked.tier2 === true, 'Tier 2 expansion unlocked after 1st gym');
+
+    // 3. One defeated (1 defeated): Remaining gyms adapt to 2 Tier 2 monsters for Red
+    const pico1 = adaptGame.getAdaptiveGymForPlayer(cityPico, pRed);
+    console.assert(pico1.tier === 2, `Pico at 1 defeated is Tier 2: ${pico1.tier}`);
+    console.assert(pico1.teamMonsterIds.length === 2, `Pico at 1 defeated has 2 monsters: ${pico1.teamMonsterIds.length}`);
+    const pico1Monsters = pico1.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(pico1Monsters.every(m => m.captureTier === 2), 'All monsters in Pico tier 2 are Tier 2');
+    console.assert(pico1.rewardCoins === 4, `Pico Tier 2 awards 4 coins: ${pico1.rewardCoins}`);
+    console.assert(pico1.rewardLuck === 1, `Pico Tier 2 awards 1 luck: ${pico1.rewardLuck}`);
+
+    const puerto1 = adaptGame.getAdaptiveGymForPlayer(cityPuerto, pRed);
+    console.assert(puerto1.tier === 2 && puerto1.teamMonsterIds.length === 2, 'Puerto at 1 defeated has 2 T2 monsters');
+    const puerto1Monsters = puerto1.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(puerto1Monsters.every(m => m.captureTier === 2), 'All monsters in Puerto tier 2 are Tier 2');
+
+    // 4. Verify Blue (with 0 gyms defeated) still gets Tier 1 at Ciudad Pico
+    const picoBlue = adaptGame.getAdaptiveGymForPlayer(cityPico, pBlue);
+    console.assert(picoBlue.tier === 1, `Blue (0 defeated) faces Tier 1 at Pico: ${picoBlue.tier}`);
+    console.assert(picoBlue.teamMonsterIds.length === 2, 'Blue faces 2 monsters at Pico');
+    const picoBlueMonsters = picoBlue.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(picoBlueMonsters.every(m => m.captureTier === 1), 'Blue faces Tier 1 monsters');
+
+    // 5. Red defeats Gym 2 (Ciudad Pico)
+    adaptGame.combatEngine.player1 = pRed;
+    adaptGame.combatEngine.gymData = pico1;
+    adaptGame.combatEngine.inCombat = true;
+    adaptGame.combatEngine.endBattle(true);
+
+    console.assert(pRed.defeatedGymIds.includes('gym_2'), 'Red defeated gym_2');
+    console.assert(pRed.badges.includes(2), 'Red earned Tier 2 badge');
+    console.assert(pRed.defeatedGymIds.length === 2, 'Red has exactly 2 defeated gyms');
+    console.assert(adaptGame.expansionsUnlocked.tier3 === true, 'Tier 3 expansion unlocked after 2nd gym');
+
+    // 6. Two defeated (2 defeated): Remaining gyms adapt to 3 Tier 3 monsters for Red
+    const puerto2 = adaptGame.getAdaptiveGymForPlayer(cityPuerto, pRed);
+    console.assert(puerto2.tier === 3, `Puerto at 2 defeated is Tier 3: ${puerto2.tier}`);
+    console.assert(puerto2.teamMonsterIds.length === 3, `Puerto at 2 defeated has 3 monsters: ${puerto2.teamMonsterIds.length}`);
+    const puerto2Monsters = puerto2.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(puerto2Monsters.every(m => m.captureTier === 3), 'All monsters in Puerto tier 3 are Tier 3');
+    console.assert(puerto2.rewardCoins === 6, `Puerto Tier 3 awards 6 coins: ${puerto2.rewardCoins}`);
+    console.assert(puerto2.rewardLuck === 2, `Puerto Tier 3 awards 2 luck: ${puerto2.rewardLuck}`);
+
+    const flama2 = adaptGame.getAdaptiveGymForPlayer(cityFlama, pRed);
+    console.assert(flama2.tier === 3, `Flama at 2 defeated is Tier 3: ${flama2.tier}`);
+    console.assert(flama2.teamMonsterIds.length === 3, `Flama at 2 defeated has 3 monsters: ${flama2.teamMonsterIds.length}`);
+    const flama2Monsters = flama2.teamMonsterIds.map(id => MONSTERS_DATABASE.find(m => m.id === id));
+    console.assert(flama2Monsters.every(m => m.captureTier === 3), 'All monsters in Flama tier 3 are Tier 3');
+
+    // 7. Red defeats Gym 3 (Ciudad Puerto) -> unlocks T4 and triggers Grand Tournament
+    adaptGame.combatEngine.player1 = pRed;
+    adaptGame.combatEngine.gymData = puerto2;
+    adaptGame.combatEngine.inCombat = true;
+    adaptGame.combatEngine.endBattle(true);
+
+    console.assert(pRed.defeatedGymIds.includes('gym_3'), 'Red defeated gym_3');
+    console.assert(pRed.badges.includes(3), 'Red earned Tier 3 badge');
+    console.assert(pRed.badges.length === 3, 'Red has 3 badges');
+    console.assert(adaptGame.expansionsUnlocked.tier4 === true, 'Tier 4 Legendaries unlocked after 3rd gym');
+    console.assert(adaptGame.tournamentEngine.active === true, 'Grand Tournament activated after 3 gyms');
+
+    // 8. Defeated gym cannot be challenged again
+    pRed.currentNodeId = 'node_sw'; // Ciudad Hoja (gym_1)
+    adaptGame.hasEncounterActed = false;
+    let blockedChallenge = false;
+    global.alert = () => { blockedChallenge = true; };
+    adaptGame.challengeGym();
+    console.assert(blockedChallenge === true, 'Cannot challenge already defeated gym');
+
+    console.log('Test 25 Passed: Adaptive gyms scale accurately (0 defeated: 2 T1, 1 defeated: 2 T2, 2 defeated: 3 T3) per player.');
 }
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

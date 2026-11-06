@@ -527,7 +527,8 @@ ${css}
                     <li><strong>Habilidades de Overworld:</strong> Los tipos otorgan habilidades especiales en el mapa en vez de la acción normal.</li>
                     <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
                     <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas con tirada de dados de ataque.</li>
-                    <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, y derrotar al 2do gimnasio añade Tier 3. Hay 3 tiers en total (1, 2 y 3).</li>
+                    <li><strong>Gimnasios Adaptativos:</strong> Los gimnasios escalan según cuántos hayas derrotado: 0 derrotados = 2 monstruos de Tier 1; 1 derrotado = 2 monstruos de Tier 2; 2 o más derrotados = 3 monstruos de Tier 3.</li>
+                    <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, derrotar al 2do gimnasio añade Tier 3, y derrotar al 3ro despierta a los Legendarios de Tier 4.</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 10 rondas) activa el Gran Torneo Final!</li>
                 </ol>
             </div>
