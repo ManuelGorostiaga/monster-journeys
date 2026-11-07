@@ -215,7 +215,7 @@ console.assert(game.expansionsUnlocked.tier4 === true, 'Tier 4 Legendaries unloc
 console.assert(game.tournamentEngine.active === true, 'Grand Tournament triggered after defeating 3 gyms!');
 console.log('Test 9 Passed: Higher tier cards strictly unlock after Gym 1, Gym 2, and Gym 3; total 4 tiers.');
 
-console.log('\n=== TEST 10: Combat with Luck Boost ===');
+console.log('\n=== TEST 10: Combat with Luck Reroll (Dice Reroll, No Flat Damage) ===');
 const combat = game.combatEngine;
 p1.luck = 2;
 combat.startBattle({
@@ -230,7 +230,7 @@ combat.toggleLuckBoost();
 console.assert(combat.useLuckNextAttack === true, 'Luck boost toggled ON');
 
 const initialLuck = p1.luck;
-// Execute attack with luck boost
+// Execute attack with luck boost (must reroll dice, not add flat +1 damage)
 const p1Mon = combat.getP1Active();
 const oppMon = combat.getP2Active();
 combat.executeAttack({
@@ -243,7 +243,7 @@ combat.executeAttack({
 });
 console.assert(p1.luck === initialLuck - 1, 'Spent 1 luck on attack roll');
 console.assert(combat.useLuckNextAttack === false, 'Luck boost reset after attack');
-console.log('Test 10 Passed: Combat with Luck point boost works.');
+console.log('Test 10 Passed: Combat with Luck point dice reroll works without flat damage.');
 
 console.log('\n=== TEST 11: Baya Aranja (Oran Berry) Activates at 0 HP ===');
 const testMonAttacker = game.instantiateMonster(MONSTERS_DATABASE[0]);
@@ -622,8 +622,10 @@ const dPlayer = dGame.players[0];
 const multiHubNode = dGame.cardMap.getNode('node_w_cross');
 console.assert(multiHubNode.maxCards === 2, `Hub node supports maxCards: 2, got ${multiHubNode.maxCards}`);
 
-const cardAncestral = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_3');
-const cardDruid = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_4');
+const cardAncestral = JSON.parse(JSON.stringify(LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_3')));
+cardAncestral.usedByPlayerIds = [];
+const cardDruid = JSON.parse(JSON.stringify(LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_4')));
+cardDruid.usedByPlayerIds = [];
 dGame.cardMap.placeCardOnNode('node_w_cross', cardAncestral);
 dGame.cardMap.placeCardOnNode('node_w_cross', cardDruid);
 console.assert(multiHubNode.cards.length === 2, `Hub node contains 2 cards, got ${multiHubNode.cards.length}`);
@@ -1160,6 +1162,122 @@ console.log('\n=== TEST 25: Adaptive Gyms Progression (0 defeated -> 2 T1, 1 def
     console.assert(blockedChallenge === true, 'Cannot challenge already defeated gym');
 
     console.log('Test 25 Passed: Adaptive gyms scale accurately (0 defeated: 2 T1, 1 defeated: 2 T2, 2 defeated: 3 T3) per player.');
+}
+
+console.log('\n=== TEST 26: Combat Initiative & Sequential Turns (No Simultaneous Selection) ===');
+{
+    const seqGame = new MonsterJourneyGame();
+    seqGame.initGame([
+        { name: 'Red', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+    ]);
+    const seqCombat = seqGame.combatEngine;
+
+    const fastMon = seqCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
+    const slowMon = seqCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
+    fastMon.hp = 30; fastMon.maxHp = 30;
+    slowMon.hp = 30; slowMon.maxHp = 30;
+
+    const fastSpeed = seqCombat.getEffectiveSpeed(fastMon, seqGame.players[0]);
+    const slowSpeed = seqCombat.getEffectiveSpeed(slowMon, null);
+    console.assert(fastSpeed > slowSpeed, 'Faster monster has strictly higher effective speed');
+
+    seqCombat.inCombat = true;
+    seqCombat.player1 = seqGame.players[0];
+    seqCombat.p1Team = [fastMon];
+    seqCombat.p2Team = [slowMon];
+    seqCombat.p1ActiveIndex = 0;
+    seqCombat.p2ActiveIndex = 0;
+    seqCombat.turnNumber = 1;
+
+    seqCombat.startRound();
+    console.assert(seqCombat.roundFirst === 1, 'Faster monster (P1) won initiative');
+    console.assert(seqCombat.activeTurnActor === 1, 'Active actor is Player 1');
+    console.assert(seqCombat.actionsTakenThisRound === 0, 'No actions taken yet this round');
+
+    const slowHpBefore = slowMon.hp;
+    seqCombat.playerAttack(0, 1);
+    console.assert(slowMon.hp < slowHpBefore, 'P1 attack resolved first against opponent');
+    console.assert(seqCombat.actionsTakenThisRound >= 1, 'P1 action consumed');
+
+    // Reversed speed scenario (Opponent is faster)
+    const reverseCombat = new CombatEngine(seqGame);
+    reverseCombat.inCombat = true;
+    reverseCombat.player1 = seqGame.players[0];
+    const playerSlow = reverseCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
+    const oppFast = reverseCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
+    playerSlow.hp = 30; playerSlow.maxHp = 30;
+    oppFast.hp = 30; oppFast.maxHp = 30;
+
+    reverseCombat.p1Team = [playerSlow];
+    reverseCombat.p2Team = [oppFast];
+    reverseCombat.p1ActiveIndex = 0;
+    reverseCombat.p2ActiveIndex = 0;
+    reverseCombat.turnNumber = 2; // Not turn 1 so Blue character passive doesn't trigger
+
+    reverseCombat.startRound();
+    console.assert(reverseCombat.roundFirst === 2, 'Faster opponent (P2) won initiative');
+    console.assert(reverseCombat.activeTurnActor === 2, 'Active actor is Opponent');
+    console.log('Test 26 Passed: Initiative correctly determines who acts first with sequential turn resolution.');
+}
+
+console.log('\n=== TEST 27: Monster Switching Consumes Turn (No Free Immediate Damage Penalty) ===');
+{
+    const switchGame = new MonsterJourneyGame();
+    switchGame.initGame([
+        { name: 'Ash', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+    ]);
+    const switchCombat = switchGame.combatEngine;
+
+    const monA = switchCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
+    const monB = switchCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 5));
+    const opp = switchCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
+    monA.hp = 30; monA.maxHp = 30;
+    monB.hp = 30; monB.maxHp = 30;
+    opp.hp = 30; opp.maxHp = 30;
+
+    switchCombat.inCombat = true;
+    switchCombat.player1 = switchGame.players[0];
+    switchCombat.p1Team = [monA, monB];
+    switchCombat.p2Team = [opp];
+    switchCombat.p1ActiveIndex = 0;
+    switchCombat.p2ActiveIndex = 0;
+    switchCombat.turnNumber = 2;
+
+    switchCombat.startRound();
+    console.assert(switchCombat.activeTurnActor === 1, 'P1 has initiative');
+
+    const monBHpBefore = monB.hp;
+    switchCombat.playerSwitchMonster(1, 1);
+    console.assert(switchCombat.p1ActiveIndex === 1, 'P1 switched to monster B');
+    console.assert(monB.hp === monBHpBefore, 'New monster did NOT take any immediate free penalty damage upon switching');
+    console.assert(switchCombat.actionsTakenThisRound === 1, 'Switching consumed P1 turn');
+    console.assert(switchCombat.activeTurnActor === 2, 'Turn passed to opponent after switch');
+
+    // Scenario: When player switches after opponent already acted (second actor)
+    const switchCombat2 = new CombatEngine(switchGame);
+    switchCombat2.inCombat = true;
+    switchCombat2.player1 = switchGame.players[0];
+    const pMon1 = switchCombat2.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
+    const pMon2 = switchCombat2.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
+    const fastOpp = switchCombat2.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
+    pMon1.hp = 30; pMon1.maxHp = 30;
+    pMon2.hp = 30; pMon2.maxHp = 30;
+    fastOpp.hp = 30; fastOpp.maxHp = 30;
+
+    switchCombat2.p1Team = [pMon1, pMon2];
+    switchCombat2.p2Team = [fastOpp];
+    switchCombat2.p1ActiveIndex = 0;
+    switchCombat2.p2ActiveIndex = 0;
+    switchCombat2.turnNumber = 2;
+    switchCombat2.actionsTakenThisRound = 1; // Opponent already acted
+    switchCombat2.activeTurnActor = 1;
+
+    const pMon2HpBefore = pMon2.hp;
+    switchCombat2.playerSwitchMonster(1, 1);
+    console.assert(switchCombat2.p1ActiveIndex === 1, 'P1 switched to monster 2');
+    console.assert(pMon2.hp === pMon2HpBefore, 'Switching as second actor does not trigger extra damage');
+    console.assert(switchCombat2.actionsTakenThisRound === 2, 'Both actors took actions this round');
+    console.log('Test 27 Passed: Switching monster consumes turn cleanly without immediate penalty attack.');
 }
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

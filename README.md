@@ -35,7 +35,8 @@ node test-suite.js
 5. **Combate 1v1:**
    - Dados de ataque con caras `[0, 1, 1, 1, 1, 2]`.
    - Tabla de debilidades con etiqueta `Weak +2` en cada carta (añade +2 daño si el ataque explota la debilidad, sin resistencias ni inmunidades).
-   - Opción de atacar o cambiar de criatura. Si cambias de criatura, la nueva criatura recibe el ataque del oponente de inmediato sin atacar ese turno.
+   - Iniciativa por Velocidad al inicio del turno: la criatura más rápida actúa primero (puede elegir su ataque o cambiar de monstruo). Cambiar de criatura consume el turno del jugador (sin penalización de daño gratuito inmediato). Los ataques no son simultáneos; quien actúa primero elige su ataque primero. Si el rival sobrevive y no ha actuado en el turno, realiza su acción a continuación.
+   - Puntos de Suerte 🍀 en combate: permiten tirar de vuelta los dados de ataque en vez de sumar daño plano adicional.
    - Los NPCs no cambian de criatura voluntariamente.
    - Recompensa de dinero garantizada incluso en derrota.
    - Curación total del equipo tras cada pelea.

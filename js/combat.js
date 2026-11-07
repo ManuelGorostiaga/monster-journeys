@@ -20,6 +20,9 @@ class CombatEngine {
         this.pendingMoveTeaching = null;
         this.onCombatEndCallback = null;
         this.useLuckNextAttack = false;
+        this.roundFirst = 1;
+        this.activeTurnActor = 1;
+        this.actionsTakenThisRound = 0;
     }
 
     startBattle({ type, player1, player2 = null, gym = null, npc = null, onEnd = null }) {
@@ -35,6 +38,9 @@ class CombatEngine {
         this.pendingMoveTeaching = null;
         this.onCombatEndCallback = onEnd;
         this.useLuckNextAttack = false;
+        this.roundFirst = 1;
+        this.activeTurnActor = 1;
+        this.actionsTakenThisRound = 0;
 
         // Player 1 team (active top 3 monsters from board)
         this.p1Team = player1.monsters.slice(0, 3).map(m => this.cloneMonster(m));
@@ -73,6 +79,8 @@ class CombatEngine {
             UI.showCombatModal();
             UI.renderCombatArena();
         }
+
+        this.startRound();
     }
 
     cloneMonster(m) {
@@ -120,49 +128,105 @@ class CombatEngine {
         return this.p2Team[this.p2ActiveIndex];
     }
 
-    // Switch monster for Player 1
-    // Rule 2: "En un turno el jugador puede cambiar de monstruo o seguir peleando. Si cambia de monstruo recibe el danio."
-    playerSwitchMonster(newIndex) {
-        if (this.isProcessing) return;
-        if (newIndex === this.p1ActiveIndex) return;
-        if (this.p1Team[newIndex].hp <= 0) {
-            alert('¡Ese monstruo está debilitado y no puede entrar a luchar!');
+    getEffectiveSpeed(monster, player) {
+        if (!monster) return 0;
+        if (monster.status === 'paralysis') return 0;
+        let spd = (monster.speed !== undefined) ? monster.speed : 0;
+        if (monster.equippedItem && monster.equippedItem.id === 'item_cmb_3') spd += 2;
+        if (this.turnNumber === 1 && player && player.characterId === 'char_blue') spd += 2;
+        return Math.max(0, spd);
+    }
+
+    startRound() {
+        if (!this.inCombat) return;
+
+        const p1Mon = this.getP1Active();
+        const p2Mon = this.getP2Active();
+        if (!p1Mon || !p2Mon || p1Mon.hp <= 0 || p2Mon.hp <= 0) {
+            this.checkFaints();
             return;
         }
 
-        this.isProcessing = true;
-        const oldMon = this.getP1Active();
-        this.p1ActiveIndex = newIndex;
-        const newMon = this.getP1Active();
+        this.isProcessing = false;
+        this.actionsTakenThisRound = 0;
 
-        this.log(`🔄 ${this.player1.name} retira a ${oldMon.name} y envía a ${newMon.name}.`);
-        this.log(`⚠️ Regla de cambio: ¡${newMon.name} recibe el ataque enemigo sin poder atacar este turno!`);
+        const p1Speed = this.getEffectiveSpeed(p1Mon, this.player1);
+        const p2Speed = this.getEffectiveSpeed(p2Mon, this.player2);
+        const p1GoesFirst = (p1Speed > p2Speed) || (p1Speed === p2Speed && Math.random() < 0.5);
 
-        SoundFX.step();
+        this.roundFirst = p1GoesFirst ? 1 : 2;
+        this.activeTurnActor = this.roundFirst;
 
-        // Opponent gets a free attack on the incoming monster!
-        setTimeout(() => {
-            const oppMon = this.getP2Active();
-            const oppAttack = this.chooseOpponentAttack(oppMon, newMon);
-            this.executeAttack({
-                attacker: oppMon,
-                defender: newMon,
-                attack: oppAttack,
-                attackerPlayer: this.player2,
-                defenderPlayer: this.player1,
-                isFreeAttackOnSwitch: true
-            });
+        const fasterName = p1GoesFirst ? p1Mon.name : p2Mon.name;
+        const slowerName = p1GoesFirst ? p2Mon.name : p1Mon.name;
+        const maxSpd = Math.max(p1Speed, p2Speed);
+        const minSpd = Math.min(p1Speed, p2Speed);
 
-            this.checkFaints();
-            this.turnNumber++;
+        this.log(`--- Turno ${this.turnNumber} ---`);
+        this.log(`⚡ Iniciativa: **${fasterName}** es más veloz (${maxSpd} vs ${minSpd}) y actúa primero.`);
+
+        if (window.UI) {
+            UI.renderCombatArena();
+        }
+
+        if (this.activeTurnActor === 2 && !this.player2) {
+            this.isProcessing = true;
+            setTimeout(() => {
+                if (!this.inCombat) return;
+                this.executeOpponentAction();
+            }, 600);
+        }
+    }
+
+    executeOpponentAction() {
+        if (!this.inCombat) return;
+        const oppMon = this.getP2Active();
+        const p1Mon = this.getP1Active();
+        if (!oppMon || oppMon.hp <= 0 || !p1Mon || p1Mon.hp <= 0) return;
+
+        const oppAttack = this.chooseOpponentAttack(oppMon, p1Mon);
+        this.executeAttack({
+            attacker: oppMon,
+            defender: p1Mon,
+            attack: oppAttack,
+            attackerPlayer: this.player2,
+            defenderPlayer: this.player1,
+            first: (this.actionsTakenThisRound === 0)
+        });
+
+        SoundFX.diceRoll();
+        this.actionsTakenThisRound++;
+
+        if (window.UI) UI.renderCombatArena();
+
+        if (p1Mon.hp <= 0) {
+            setTimeout(() => {
+                this.handleFaint(p1Mon, this.player1);
+                if (!this.inCombat) return;
+                this.endRound();
+            }, 600);
+            return;
+        }
+
+        if (this.actionsTakenThisRound >= 2) {
+            setTimeout(() => {
+                this.endRound();
+            }, 700);
+        } else {
+            this.activeTurnActor = 1;
             this.isProcessing = false;
+            this.log(`👉 ¡Es el turno de **${this.player1.name}**! Puedes atacar o cambiar de monstruo.`);
             if (window.UI) UI.renderCombatArena();
-        }, 600);
+        }
     }
 
     toggleLuckBoost() {
+        return this.toggleLuckReroll();
+    }
+
+    toggleLuckReroll() {
         if (this.isProcessing) return;
-        const activePlayer = this.player1;
+        const activePlayer = (this.activeTurnActor === 2 && this.player2) ? this.player2 : this.player1;
         if (!activePlayer) return;
         if (!this.useLuckNextAttack && activePlayer.luck <= 0) {
             alert('¡No tienes suficientes Puntos de Suerte 🍀!');
@@ -172,47 +236,125 @@ class CombatEngine {
         if (window.UI) UI.renderCombatArena();
     }
 
-    // Player selects an attack
-    playerAttack(attackIndex = 0) {
-        if (this.isProcessing) return;
+    playerAttack(attackIndex = 0, playerNum = null) {
+        if (this.isProcessing || !this.inCombat) return;
+        const currentActor = playerNum || this.activeTurnActor;
+        if (currentActor !== this.activeTurnActor) return;
+
         this.isProcessing = true;
+        const attackerIsP1 = (currentActor === 1);
+        const attackerMon = attackerIsP1 ? this.getP1Active() : this.getP2Active();
+        const defenderMon = attackerIsP1 ? this.getP2Active() : this.getP1Active();
+        const attackerPlayer = attackerIsP1 ? this.player1 : this.player2;
+        const defenderPlayer = attackerIsP1 ? this.player2 : this.player1;
 
-        const p1Mon = this.getP1Active();
-        const p2Mon = this.getP2Active();
-        const p1Attack = p1Mon.attacks[attackIndex] || p1Mon.attacks[0];
+        const atk = attackerMon.attacks[attackIndex] || attackerMon.attacks[0];
 
-        // Opponent attack choice (NPCs use attack 0; in PvP player 2 chooses)
-        const p2Attack = this.chooseOpponentAttack(p2Mon, p1Mon);
+        this.executeAttack({
+            attacker: attackerMon,
+            defender: defenderMon,
+            attack: atk,
+            attackerPlayer,
+            defenderPlayer,
+            first: (this.actionsTakenThisRound === 0)
+        });
 
-        // Calculate initiative (Paralysis sets effective speed to 0)
-        let p1Speed = (p1Mon.status === 'paralysis') ? 0 : p1Mon.speed;
-        let p2Speed = (p2Mon.status === 'paralysis') ? 0 : p2Mon.speed;
+        SoundFX.diceRoll();
+        this.actionsTakenThisRound++;
 
-        if (p1Mon.equippedItem && p1Mon.equippedItem.id === 'item_cmb_3') p1Speed += 2; // Garra Rápida
-        if (p2Mon.equippedItem && p2Mon.equippedItem.id === 'item_cmb_3') p2Speed += 2;
+        if (window.UI) UI.renderCombatArena();
 
-        // Blue character ability: +2 Speed on turn 1
-        if (this.turnNumber === 1) {
-            if (this.player1 && this.player1.characterId === 'char_blue') p1Speed += 2;
-            if (this.player2 && this.player2.characterId === 'char_blue') p2Speed += 2;
+        if (defenderMon.hp <= 0) {
+            setTimeout(() => {
+                this.handleFaint(defenderMon, defenderPlayer);
+                if (!this.inCombat) return;
+                this.endRound();
+            }, 600);
+            return;
         }
 
-        const p1GoesFirst = p1Speed > p2Speed || (p1Speed === p2Speed && Math.random() < 0.5);
-
-        this.log(`--- Turno ${this.turnNumber} ---`);
-        this.log(`Iniciativa: ${p1GoesFirst ? p1Mon.name : p2Mon.name} es más veloz (${Math.max(p1Speed, p2Speed)} vs ${Math.min(p1Speed, p2Speed)}).`);
-
-        if (p1GoesFirst) {
-            this.executeTurnSequence(
-                { attacker: p1Mon, defender: p2Mon, attack: p1Attack, attackerPlayer: this.player1, defenderPlayer: this.player2, first: true },
-                { attacker: p2Mon, defender: p1Mon, attack: p2Attack, attackerPlayer: this.player2, defenderPlayer: this.player1, first: false }
-            );
+        if (this.actionsTakenThisRound >= 2) {
+            setTimeout(() => {
+                this.endRound();
+            }, 700);
         } else {
-            this.executeTurnSequence(
-                { attacker: p2Mon, defender: p1Mon, attack: p2Attack, attackerPlayer: this.player2, defenderPlayer: this.player1, first: true },
-                { attacker: p1Mon, defender: p2Mon, attack: p1Attack, attackerPlayer: this.player1, defenderPlayer: this.player2, first: false }
-            );
+            const nextActor = attackerIsP1 ? 2 : 1;
+            this.activeTurnActor = nextActor;
+            setTimeout(() => {
+                if (!this.inCombat) return;
+                if (nextActor === 2 && !this.player2) {
+                    this.executeOpponentAction();
+                } else {
+                    this.isProcessing = false;
+                    const nextPlayer = nextActor === 1 ? this.player1 : this.player2;
+                    this.log(`👉 ¡Es el turno de **${nextPlayer.name}**! Puedes atacar o cambiar de monstruo.`);
+                    if (window.UI) UI.renderCombatArena();
+                }
+            }, 700);
         }
+    }
+
+    playerSwitchMonster(newIndex, playerNum = null) {
+        if (this.isProcessing || !this.inCombat) return;
+        const currentActor = playerNum || this.activeTurnActor;
+        if (currentActor !== this.activeTurnActor) return;
+
+        const team = (currentActor === 1) ? this.p1Team : this.p2Team;
+        const currentIdx = (currentActor === 1) ? this.p1ActiveIndex : this.p2ActiveIndex;
+        const player = (currentActor === 1) ? this.player1 : this.player2;
+
+        if (newIndex === currentIdx) return;
+        if (team[newIndex].hp <= 0) {
+            alert('¡Ese monstruo está debilitado y no puede entrar a luchar!');
+            return;
+        }
+
+        this.isProcessing = true;
+        const oldMon = team[currentIdx];
+        if (currentActor === 1) {
+            this.p1ActiveIndex = newIndex;
+        } else {
+            this.p2ActiveIndex = newIndex;
+        }
+        const newMon = team[newIndex];
+
+        this.log(`🔄 ${player.name} retira a ${oldMon.name} y envía a ${newMon.name}.`);
+        this.log(`⏱️ Cambiar de monstruo consume el turno de ${player.name}.`);
+
+        SoundFX.step();
+        this.actionsTakenThisRound++;
+
+        if (window.UI) UI.renderCombatArena();
+
+        if (this.actionsTakenThisRound >= 2) {
+            setTimeout(() => {
+                this.endRound();
+            }, 600);
+        } else {
+            const nextActor = (currentActor === 1) ? 2 : 1;
+            this.activeTurnActor = nextActor;
+            setTimeout(() => {
+                if (!this.inCombat) return;
+                if (nextActor === 2 && !this.player2) {
+                    this.executeOpponentAction();
+                } else {
+                    this.isProcessing = false;
+                    const nextPlayer = nextActor === 1 ? this.player1 : this.player2;
+                    this.log(`👉 ¡Es el turno de **${nextPlayer.name}**! Puedes atacar o cambiar de monstruo.`);
+                    if (window.UI) UI.renderCombatArena();
+                }
+            }, 700);
+        }
+    }
+
+    endRound() {
+        if (!this.inCombat) return;
+
+        this.endTurnPoisonPhase();
+        if (!this.inCombat) return;
+
+        this.turnNumber++;
+        this.startRound();
     }
 
     chooseOpponentAttack(attacker, defender) {
@@ -387,6 +529,20 @@ class CombatEngine {
             }
         }
 
+        if (attackerPlayer && this.useLuckNextAttack && attackerPlayer.luck >= 1) {
+            attackerPlayer.luck -= 1;
+            this.useLuckNextAttack = false;
+            const initialRolls = rolls.slice();
+            const initialSum = diceSum;
+            const rerollRes = rollDice(diceCount);
+            rolls = rerollRes.rolls;
+            if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_5') {
+                rolls = rolls.map(r => r === 0 ? 1 : r);
+            }
+            diceSum = rolls.reduce((a, b) => a + b, 0);
+            this.log(`🍀 ¡${attackerPlayer.name} gasta 1 Suerte para tirar de vuelta los dados en combate! (Tirada inicial: [${initialRolls.join(', ')}] = ${initialSum} ➡️ Nueva tirada: [${rolls.join(', ')}] = ${diceSum}).`);
+        }
+
         // Attack Effect: White dice count as Critical Hits (+2 damage per 0 face)
         if (attack.effect === 'white_dice_crit') {
             let zeroCount = 0;
@@ -426,16 +582,6 @@ class CombatEngine {
             damage += attacker.chargeNextTurn;
             this.log(`⚡ ¡Carga previa! Suma +${attacker.chargeNextTurn} de daño a este ataque.`);
             attacker.chargeNextTurn = 0;
-        }
-
-        // Requirement 3: Luck point spent to add +1 to roll
-        let luckBonus = 0;
-        if (attackerPlayer && this.useLuckNextAttack && attackerPlayer.luck >= 1) {
-            attackerPlayer.luck -= 1;
-            this.useLuckNextAttack = false;
-            luckBonus = 1;
-            damage += luckBonus;
-            this.log(`🍀 ¡${attackerPlayer.name} gasta 1 Suerte para sumar +1 al ataque!`);
         }
 
         // Check Type Weakness: Weak +2!
@@ -501,10 +647,23 @@ class CombatEngine {
         let totalMultiDamage = 0;
         this.log(`💥 ¡Ataque Múltiple! ${attacker.name} descarga una ráfaga de ${hits} golpes.`);
 
+        const useLuckReroll = Boolean(attackerPlayer && this.useLuckNextAttack && attackerPlayer.luck >= 1);
+        if (useLuckReroll) {
+            attackerPlayer.luck -= 1;
+            this.useLuckNextAttack = false;
+            this.log(`🍀 ¡${attackerPlayer.name} gasta 1 Suerte para tirar de vuelta cualquier impacto fallido durante la ráfaga!`);
+        }
+
         for (let h = 1; h <= hits; h++) {
             if (defender.hp <= 0) break;
 
             let roll = rollAttackDie();
+            if (useLuckReroll && roll === 0) {
+                const rerolled = rollAttackDie();
+                this.log(`  🍀 Relanzamiento por Suerte en golpe ${h}: ${roll} ➡️ ${rerolled}`);
+                roll = rerolled;
+            }
+
             if (attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_5' && roll === 0) {
                 roll = 1;
             }

@@ -32,15 +32,15 @@ The project uses a clean modular source structure compiled into a single product
 ## Core Game Rules & Mechanics
 
 1. **Card Monsters**: Each monster card has HP, Speed, an element type, Weakness tag (`Weak +2`), capture tier requirement (1 to 4), and attack moves with base damage + dice rolls. Monsters do not evolve.
-2. **Combat 1v1**: Turn options are either attack or switch monster. Switching absorbs incoming opponent damage without dealing damage that turn. Post-combat fully restores all monsters. Losing a combat still awards full prize money.
-3. **Attack Rolls**: Dice rolls are simulated in the background. Logs and cards display clean total damage values without technical dice string notation.
+2. **Combat 1v1 & Initiative**: At the start of each combat round, initiative (Speed) is checked first. The monster with higher initiative acts first (can choose an attack or switch monster). Switching consumes that player's turn (there is no special incoming damage penalty on switch). Actions/attacks are not chosen simultaneously; whoever acts first chooses their attack first. If the defender survives, it then takes its turn to attack or switch. Post-combat fully restores all monsters. Losing a combat still awards full prize money.
+3. **Attack Rolls & Luck Reroll**: Attack dice are rolled in the background. Luck points in combat can be spent to reroll combat attack dice, not to add flat additional damage.
 4. **Baya Aranja (Oran Berry)**: Activates strictly when HP drops to 0 or below, preventing the faint and healing to 3 HP.
 5. **Team & Storage Limit**: Personal board holds up to 4 monsters (active team of 3 + 1 reserve). Monster order can be rearranged anytime outside combat.
 6. **Card Map Board**: Interconnected card node map. Starts with only Starting Town at (0, 0). Players hold up to 5 location cards in hand. Moving into an empty adjacent (+) slot allows placing a card from hand or a gym city from the top of the Cities Deck, discovering that zone.
 7. **Cities & Shop**: Gym cities are kept in a separate deck, always plantable on any legal empty slot. Shop is strictly accessible while standing in a City node.
 8. **River Shop**: Exactly 8 items displayed without duplicates. Buying an item immediately refills from the item deck without allowing duplicates.
 9. **Luck System (🍀)**: Players can spend 1 Luck point to:
-   - Add +1 to an attack dice roll in combat.
+   - Reroll combat dice during an attack (no flat damage added).
    - Draft 3 location cards from the environment deck and pick 1.
    - Redraw all 3 wild monsters during an encounter search.
 10. **Gyms & Expansions**: Defeating gym 1 unlocks Tier 2 cards; gym 2 unlocks Tier 3; gym 3 unlocks Tier 4. Defeating 3 of the 4 available gyms triggers the Grand Tournament endgame.

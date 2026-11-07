@@ -509,7 +509,7 @@ ${css}
             <div class="modal-body" style="font-size: 0.84rem; line-height: 1.6; color: #cbd5e1;">
                 <ol style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
                     <li><strong>Monstruos:</strong> Cada monstruo es una carta con vida, velocidad y ataque.</li>
-                    <li><strong>Cambio de Monstruo:</strong> En combate puedes cambiar de monstruo o atacar. Si cambias, el entrante recibe el daño sin atacar ese turno.</li>
+                    <li><strong>Iniciativa y Acciones en Combate:</strong> Al inicio de cada turno se comprueba la iniciativa (Velocidad). La criatura con más iniciativa actúa primero: puede elegir qué ataque realizar o cambiar de monstruo. Cambiar de monstruo consume el turno (no se recibe daño gratuito inmediato). No hay selección simultánea de acciones: quien actúa primero simplemente elige primero su ataque.</li>
                     <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate + 1 en reserva (4 en tablero personal).</li>
                     <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
                     <li><strong>Mazos de Biomas:</strong> Salen de biomas temáticos (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada).</li>
@@ -518,7 +518,7 @@ ${css}
                     <li><strong>Mapa de Región Estilo Pokémon:</strong> Mapa con nodos y rutas interconectadas. Los jugadores inician en diferentes esquinas del mapa (SO, NE, NO, SE). La mayoría de nodos alojan 1 carta de entorno, mientras que los grandes cruces (hubs) alojan hasta 2 cartas.</li>
                     <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador en cualquier nodo conectado. La tienda solo es accesible desde Ciudades.</li>
                     <li><strong>Objetos Equipados:</strong> Máximo un objeto equipado por monstruo.</li>
-                    <li><strong>Sistema de Suerte:</strong> Los puntos de Suerte 🍀 permiten sumar +1 al dado en combate, draftear 3 cartas de entorno en vez de robar 1 (con el reemplazo activado), o redibujar los 3 monstruos salvajes vistos. Colocar una carta en una ubicación de 1 sola conexión otorga +1 Suerte.</li>
+                    <li><strong>Sistema de Suerte:</strong> Los puntos de Suerte 🍀 permiten tirar de vuelta los dados en combate (no sumar daño adicional), draftear 3 cartas de entorno en vez de robar 1 (con el reemplazo activado), o redibujar los 3 monstruos salvajes vistos. Colocar una carta en una ubicación de 1 sola conexión otorga +1 Suerte.</li>
                     <li><strong>Enseñar Ataques:</strong> Al encontrar un monstruo salvaje, puedes elegir capturarlo o que enseñe su técnica de ataque a cualquier criatura de tu equipo.</li>
                     <li><strong>Recuperación:</strong> Los monstruos recuperan toda su salud tras una pelea.</li>
                     <li><strong>Recompensa de Derrota:</strong> Al perder una pelea, obtienes dinero de todas maneras como si hubieras ganado.</li>
@@ -526,7 +526,7 @@ ${css}
                     <li><strong>Tienda River:</strong> 8 cartas de objetos sin duplicados. Al comprar se repone de inmediato. Solo accesible en Ciudades.</li>
                     <li><strong>Habilidades de Overworld:</strong> Los tipos otorgan habilidades especiales en el mapa en vez de la acción normal.</li>
                     <li><strong>Tabla de Debilidades:</strong> Golpe efectivo añade +2 de daño ("Weak +2" en cada carta). Sin resistencias ni inmunidades.</li>
-                    <li><strong>Combates:</strong> Duelos 1v1 entre criaturas activas con tirada de dados de ataque.</li>
+                    <li><strong>Combates:</strong> Duelos 1v1 secuenciales entre criaturas activas con tirada de dados de ataque. La iniciativa determina quién actúa primero. Si el rival sobrevive a la primera acción y no ha actuado en el turno, realiza su acción a continuación.</li>
                     <li><strong>Gimnasios Adaptativos:</strong> Los gimnasios escalan según cuántos hayas derrotado: 0 derrotados = 2 monstruos de Tier 1; 1 derrotado = 2 monstruos de Tier 2; 2 o más derrotados = 3 monstruos de Tier 3.</li>
                     <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, derrotar al 2do gimnasio añade Tier 3, y derrotar al 3ro despierta a los Legendarios de Tier 4.</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 10 rondas) activa el Gran Torneo Final!</li>

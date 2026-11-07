@@ -1593,32 +1593,54 @@ const UI = {
             p2WeakEl.innerHTML = `Weak +2: ${p2Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
         }
 
-        // Combat Actions & Luck Boost toggle (Requirement 3 & Requirement 1)
+        const fighterCards = document.querySelectorAll('.combat-fighter-card');
+        if (fighterCards && fighterCards.length >= 2) {
+            fighterCards[0].classList.toggle('active-attacker', combat.activeTurnActor === 1);
+            fighterCards[1].classList.toggle('active-attacker', combat.activeTurnActor === 2);
+        }
+
         const actionsContainer = document.getElementById('combat-actions-bar');
         if (actionsContainer) {
             const luckActive = combat.useLuckNextAttack;
-            const p1Player = combat.player1;
+            const isP1Turn = (combat.activeTurnActor === 1);
+            const isP2Turn = (combat.activeTurnActor === 2);
+
+            if (isP2Turn && !combat.player2) {
+                actionsContainer.innerHTML = `
+                    <div style="color: #fbbf24; font-weight: bold; padding: 10px 16px; background: rgba(0,0,0,0.4); border: 1px solid #d97706; border-radius: 8px; text-align: center; width: 100%;">
+                        ⏳ Turno de ${combat.getOpponentDisplayName()} (Iniciativa)... ejecutando acción.
+                    </div>
+                `;
+                return;
+            }
+
+            const currentActorNum = isP1Turn ? 1 : 2;
+            const currentActorPlayer = isP1Turn ? combat.player1 : combat.player2;
+            const currentActorMon = isP1Turn ? p1Mon : p2Mon;
 
             let actionsHtml = `
+                <div style="width: 100%; text-align: center; font-size: 0.85rem; color: #fbbf24; font-weight: bold; margin-bottom: 4px;">
+                    👉 Turno de ${currentActorPlayer.name} ${combat.actionsTakenThisRound === 0 ? '(Iniciativa más veloz)' : '(Segunda acción)'}
+                </div>
                 <button class="btn-combat-attack" style="background: ${luckActive ? '#10b981' : '#374151'}; border-color: #34d399;"
                         onclick="UI.game.combatEngine.toggleLuckBoost()" ${combat.isProcessing ? 'disabled' : ''}>
-                    🍀 Potenciar con Suerte (+1 al Dado): ${luckActive ? 'ACTIVADO' : 'INACTIVO'} (Tienes: ${p1Player.luck || 0}🍀)
+                    🍀 Relanzar dados con Suerte (Cuesta 1 🍀): ${luckActive ? 'ACTIVADO' : 'INACTIVO'} (Tienes: ${currentActorPlayer.luck || 0} 🍀)
                 </button>
             `;
 
-            p1Mon.attacks.forEach((atk, idx) => {
+            currentActorMon.attacks.forEach((atk, idx) => {
                 const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg}`;
                 actionsHtml += `
-                    <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx})" ${combat.isProcessing ? 'disabled' : ''}>
-                        <div style="font-weight: 800;">💥 ${atk.name} (${atk.type}): ${dmgDisplay} daño ${luckActive ? '(+1🍀)' : ''}</div>
+                    <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx}, ${currentActorNum})" ${combat.isProcessing ? 'disabled' : ''}>
+                        <div style="font-weight: 800;">💥 ${atk.name} (${atk.type}): ${dmgDisplay} daño ${luckActive ? '🎲 (Relanzará dados)' : ''}</div>
                         ${atk.desc ? `<div style="font-size: 0.72rem; color: #fde047; font-weight: normal; margin-top: 2px;">${atk.desc}</div>` : ''}
                     </button>
                 `;
             });
 
             actionsHtml += `
-                <button class="btn-combat-switch" onclick="UI.promptCombatSwitch()" ${combat.isProcessing ? 'disabled' : ''}>
-                    🔄 Cambiar Monstruo (⚠️ Recibe Daño)
+                <button class="btn-combat-switch" onclick="UI.promptCombatSwitch(${currentActorNum})" ${combat.isProcessing ? 'disabled' : ''}>
+                    🔄 Cambiar Monstruo (Consume Turno)
                 </button>
             `;
 
@@ -1626,18 +1648,20 @@ const UI = {
         }
     },
 
-    promptCombatSwitch() {
+    promptCombatSwitch(playerNum = 1) {
         const combat = this.game.combatEngine;
-        let msg = `Selecciona a qué monstruo deseas cambiar:\n(⚠️ Regla 2: El nuevo monstruo recibirá el ataque del oponente inmediatamente)\n`;
-        combat.p1Team.forEach((m, idx) => {
-            msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === combat.p1ActiveIndex ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
+        const team = (playerNum === 1) ? combat.p1Team : combat.p2Team;
+        const activeIdx = (playerNum === 1) ? combat.p1ActiveIndex : combat.p2ActiveIndex;
+        let msg = `Selecciona a qué monstruo deseas cambiar:\n(⏱️ Cambiar de monstruo consume tu turno)\n`;
+        team.forEach((m, idx) => {
+            msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === activeIdx ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
         });
 
         const choice = prompt(msg, '2');
         if (choice) {
             const idx = parseInt(choice, 10) - 1;
-            if (idx >= 0 && idx < combat.p1Team.length) {
-                combat.playerSwitchMonster(idx);
+            if (idx >= 0 && idx < team.length) {
+                combat.playerSwitchMonster(idx, playerNum);
             }
         }
     },
