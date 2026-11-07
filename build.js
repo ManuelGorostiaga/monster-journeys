@@ -43,7 +43,7 @@ ${css}
         <div class="header-right">
             <button id="btn-header-codex" class="btn-header btn-header-codex">📚 Códice</button>
             <button id="btn-sound-toggle" class="btn-header">🔊 Sonido</button>
-            <button id="btn-rules" class="btn-header">📖 Reglas (31)</button>
+            <button id="btn-rules" class="btn-header">📖 Reglas (32)</button>
             <button id="btn-header-reset" class="btn-header btn-header-reset">🔄 Reiniciar</button>
         </div>
     </header>
@@ -146,6 +146,11 @@ ${css}
                     <div class="resource-box">
                         <span class="resource-label">Medallas (3 para Clasificar!)</span>
                         <div id="board-badges-list" class="badges-row"></div>
+                    </div>
+
+                    <div class="resource-box">
+                        <span class="resource-label">Papeletas de Apuesta</span>
+                        <div id="board-ballots-list" class="ballots-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;"></div>
                     </div>
                 </div>
             </div>
@@ -399,6 +404,27 @@ ${css}
         </div>
     </div>
 
+    <!-- MODAL: COMBAT BETTING (Rule: Non-participating players predict winner) -->
+    <div id="modal-combat-betting" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>🗳️ ¡Fase de Apuestas de Combate!</h3>
+            </div>
+            <div class="modal-body">
+                <div id="betting-matchup-header" class="betting-matchup-header"></div>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 4px 0;">
+                    Los jugadores no participantes deben depositar su papeleta de voto. Predecir con éxito al vencedor otorga <strong>+1 Punto de Suerte 🍀</strong>.
+                </p>
+                <div id="betting-players-container" class="betting-players-container"></div>
+                <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                    <button id="btn-confirm-bets" class="btn-action btn-action-primary" style="padding: 10px 20px; font-weight: bold; width: 100%; justify-content: center;">
+                        ⚔️ ¡Confirmar Predicciones y Luchar!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: COMBAT ARENA -->
     <div id="modal-combat" class="modal-backdrop">
         <div class="modal-dialog" style="max-width: 860px;">
@@ -433,6 +459,8 @@ ${css}
                         </div>
                     </div>
                 </div>
+
+                <div id="combat-bets-bar" class="combat-bets-banner" style="display: none;"></div>
 
                 <div id="combat-actions-bar" class="combat-actions-bar"></div>
 
@@ -530,6 +558,7 @@ ${css}
                     <li><strong>Gimnasios Adaptativos:</strong> Los gimnasios escalan según cuántos hayas derrotado: 0 derrotados = 2 monstruos de Tier 1; 1 derrotado = 2 monstruos de Tier 2; 2 o más derrotados = 3 monstruos de Tier 3.</li>
                     <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, derrotar al 2do gimnasio añade Tier 3, y derrotar al 3ro despierta a los Legendarios de Tier 4.</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 10 rondas) activa el Gran Torneo Final!</li>
+                    <li><strong>Mecánica de Apuestas:</strong> En cada combate, los jugadores no participantes deben predecir quién ganará. Cada jugador posee papeletas del color de los otros jugadores y una gris para los NPCs. Predecir con éxito al vencedor otorga 1 Punto de Suerte 🍀.</li>
                 </ol>
             </div>
         </div>

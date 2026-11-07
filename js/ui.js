@@ -955,6 +955,17 @@ const UI = {
             }).join('');
         }
 
+        const ballotsContainer = document.getElementById('board-ballots-list');
+        if (ballotsContainer) {
+            const ballots = player.ballots || (this.game.createPlayerBallots ? this.game.createPlayerBallots(player) : []);
+            ballotsContainer.innerHTML = ballots.map(b => `
+                <div class="player-ballot-chip" style="border-color: ${b.color};" title="Papeleta de apuesta: ${b.targetPlayerName}">
+                    <span class="ballot-dot" style="background: ${b.color};"></span>
+                    <span>${b.type === 'npc' ? '🏛️ ' : '👤 '}${b.targetPlayerName}</span>
+                </div>
+            `).join('');
+        }
+
         // Location Hand Row (Requirement 1 & 6)
         const locationHandContainer = document.getElementById('location-hand-cards-list');
         if (locationHandContainer) {
@@ -1517,6 +1528,104 @@ const UI = {
         if (modal) modal.classList.remove('open');
     },
 
+    showCombatBettingModal({ nonParticipants, contenders, onComplete }) {
+        const modal = document.getElementById('modal-combat-betting');
+        if (!modal) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const headerEl = document.getElementById('betting-matchup-header');
+        if (headerEl) {
+            const c1 = contenders[0];
+            const c2 = contenders[1];
+            headerEl.innerHTML = `
+                <div class="betting-contender-card" style="border-color: ${c1.color};">
+                    <div style="font-size: 2.2rem; margin-bottom: 2px;">${c1.activeMonster ? c1.activeMonster.icon : '👾'}</div>
+                    <div style="font-weight: 800; color: ${c1.color}; font-size: 1.05rem;">${c1.name}</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">${c1.activeMonster ? `${c1.activeMonster.name} (${c1.activeMonster.hp}/${c1.activeMonster.maxHp} HP)` : ''}</div>
+                </div>
+                <div class="betting-vs">VS</div>
+                <div class="betting-contender-card" style="border-color: ${c2.color};">
+                    <div style="font-size: 2.2rem; margin-bottom: 2px;">${c2.activeMonster ? c2.activeMonster.icon : '👾'}</div>
+                    <div style="font-weight: 800; color: ${c2.color}; font-size: 1.05rem;">${c2.name}</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">${c2.activeMonster ? `${c2.activeMonster.name} (${c2.activeMonster.hp}/${c2.activeMonster.maxHp} HP)` : ''}</div>
+                </div>
+            `;
+        }
+
+        const container = document.getElementById('betting-players-container');
+        const selections = {};
+
+        const updateConfirmButtonState = () => {
+            const btnConfirm = document.getElementById('btn-confirm-bets');
+            if (!btnConfirm) return;
+            const allSelected = nonParticipants.every(p => selections[p.id]);
+            btnConfirm.disabled = !allSelected;
+            if (allSelected) {
+                btnConfirm.innerHTML = `⚔️ ¡Confirmar Predicciones y Luchar!`;
+            } else {
+                btnConfirm.innerHTML = `🗳️ Esperando votos (${Object.keys(selections).length}/${nonParticipants.length})`;
+            }
+        };
+
+        if (container) {
+            container.innerHTML = nonParticipants.map(bettor => {
+                return `
+                    <div class="betting-player-row" id="betting-row-${bettor.id}">
+                        <div class="bettor-info">
+                            <span class="bettor-name" style="color: ${bettor.color};">👤 ${bettor.name}</span>
+                            <span class="bettor-luck">🍀 ${bettor.luck || 0} Suerte</span>
+                        </div>
+                        <div class="ballots-selection-row">
+                            ${contenders.map(c => `
+                                <button type="button" class="btn-ballot" id="ballot-${bettor.id}-${c.id}"
+                                        style="--ballot-color: ${c.color};"
+                                        onclick="UI.selectBetBallot('${bettor.id}', '${c.id}')">
+                                    <span class="ballot-chip-icon" style="background: ${c.color};"></span>
+                                    <span class="ballot-label">Papeleta: <strong>${c.name}</strong></span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        this.selectBetBallot = (bettorId, contenderId) => {
+            selections[bettorId] = contenderId;
+            contenders.forEach(c => {
+                const btn = document.getElementById(`ballot-${bettorId}-${c.id}`);
+                if (btn) {
+                    btn.classList.toggle('selected', c.id === contenderId);
+                }
+            });
+            updateConfirmButtonState();
+        };
+
+        const btnConfirm = document.getElementById('btn-confirm-bets');
+        if (btnConfirm) {
+            btnConfirm.onclick = () => {
+                nonParticipants.forEach(bettor => {
+                    const chosenId = selections[bettor.id];
+                    if (chosenId) {
+                        this.game.combatEngine.placeBet(bettor.id, chosenId);
+                    }
+                });
+                modal.classList.remove('open');
+                if (onComplete) onComplete();
+            };
+        }
+
+        updateConfirmButtonState();
+        modal.classList.add('open');
+    },
+
+    hideCombatBettingModal() {
+        const modal = document.getElementById('modal-combat-betting');
+        if (modal) modal.classList.remove('open');
+    },
+
     showCombatModal() {
         const modal = document.getElementById('modal-combat');
         if (modal) modal.classList.add('open');
@@ -1597,6 +1706,25 @@ const UI = {
         if (fighterCards && fighterCards.length >= 2) {
             fighterCards[0].classList.toggle('active-attacker', combat.activeTurnActor === 1);
             fighterCards[1].classList.toggle('active-attacker', combat.activeTurnActor === 2);
+        }
+
+        const betsContainer = document.getElementById('combat-bets-bar');
+        if (betsContainer) {
+            if (combat.bets && combat.bets.length > 0) {
+                betsContainer.style.display = 'flex';
+                betsContainer.innerHTML = `
+                    <span style="font-weight: 800; color: #fbbf24; font-size: 0.8rem;">🗳️ Predicciones:</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                        ${combat.bets.map(b => `
+                            <span class="combat-bet-badge" style="border-left: 3px solid ${b.ballotColor};">
+                                <strong style="color: ${b.bettorColor};">${b.bettorName}</strong> ➡️ ${b.predictedWinnerName}
+                            </span>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                betsContainer.style.display = 'none';
+            }
         }
 
         const actionsContainer = document.getElementById('combat-actions-bar');
@@ -1693,7 +1821,7 @@ const UI = {
         }
     },
 
-    showCombatResultModal({ won, coins, badge, moveTeaching, onContinue }) {
+    showCombatResultModal({ won, coins, badge, moveTeaching, bets, onContinue }) {
         const resultModal = document.getElementById('modal-combat-result');
         if (!resultModal) return;
 
@@ -1706,6 +1834,28 @@ const UI = {
                 <p><strong>Recompensa en dinero:</strong> +${coins} monedas de oro ${!won ? '(¡Regla 14: otorgadas aun perdiendo!)' : ''}</p>
                 <p>🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud.</p>
             `;
+
+            if (bets && bets.length > 0) {
+                html += `
+                    <div class="result-bets-box" style="background: rgba(0,0,0,0.3); border: 1.5px solid #374151; border-radius: 8px; padding: 12px; margin-top: 10px; text-align: left;">
+                        <div style="font-weight: 800; color: #fbbf24; margin-bottom: 6px; font-size: 0.9rem;">
+                            🗳️ Resultado de las Apuestas de Espectadores:
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            ${bets.map(b => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: ${b.won ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)'}; border: 1px solid ${b.won ? '#10b981' : '#475569'}; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
+                                    <div>
+                                        <strong style="color: ${b.bettorColor};">${b.bettorName}</strong> predijo: <span style="color: ${b.ballotColor}; font-weight: bold;">${b.predictedWinnerName}</span>
+                                    </div>
+                                    <div>
+                                        ${b.won ? '<span style="color: #34d399; font-weight: 800;">✅ ¡Acertó! (+1 🍀)</span>' : '<span style="color: #94a3b8;">❌ No acertó (0 🍀)</span>'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
 
             if (badge) {
                 html += `

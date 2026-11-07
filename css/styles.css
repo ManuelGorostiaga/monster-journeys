@@ -2194,3 +2194,161 @@ main.main-workspace {
     flex-wrap: wrap;
     gap: 8px;
 }
+
+/* ========================================================
+   COMBAT BET MECHANIC & BALLOTS
+   ======================================================== */
+.player-ballot-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    color: #e2e8f0;
+}
+
+.player-ballot-chip .ballot-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.betting-matchup-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    background: radial-gradient(circle at center, #1e2633 0%, #0d1117 100%);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+}
+
+.betting-contender-card {
+    background: #181f2a;
+    border: 2px solid #475569;
+    border-radius: 10px;
+    padding: 12px 18px;
+    text-align: center;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.betting-vs {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.betting-players-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.betting-player-row {
+    background: #181f2a;
+    border: 1.5px solid #374151;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bettor-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bettor-name {
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.bettor-luck {
+    font-size: 0.82rem;
+    color: #34d399;
+    font-weight: bold;
+}
+
+.ballots-selection-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.btn-ballot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #1e2530;
+    border: 2px solid var(--ballot-color, #4b5563);
+    color: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.btn-ballot:hover {
+    background: #252f3d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.btn-ballot.selected {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: #fbbf24;
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+}
+
+.btn-ballot.selected .ballot-label::after {
+    content: " ✓ Voto";
+    color: #fbbf24;
+    font-weight: 900;
+    margin-left: 6px;
+}
+
+.ballot-chip-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.ballot-label {
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.combat-bets-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.combat-bet-badge {
+    background: #1e242d;
+    border: 1px solid #4b5563;
+    border-left-width: 4px;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    color: #e2e8f0;
+}

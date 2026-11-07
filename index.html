@@ -2202,6 +2202,164 @@ main.main-workspace {
     gap: 8px;
 }
 
+/* ========================================================
+   COMBAT BET MECHANIC & BALLOTS
+   ======================================================== */
+.player-ballot-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    color: #e2e8f0;
+}
+
+.player-ballot-chip .ballot-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.betting-matchup-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    background: radial-gradient(circle at center, #1e2633 0%, #0d1117 100%);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+}
+
+.betting-contender-card {
+    background: #181f2a;
+    border: 2px solid #475569;
+    border-radius: 10px;
+    padding: 12px 18px;
+    text-align: center;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.betting-vs {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.betting-players-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.betting-player-row {
+    background: #181f2a;
+    border: 1.5px solid #374151;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bettor-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bettor-name {
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.bettor-luck {
+    font-size: 0.82rem;
+    color: #34d399;
+    font-weight: bold;
+}
+
+.ballots-selection-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.btn-ballot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #1e2530;
+    border: 2px solid var(--ballot-color, #4b5563);
+    color: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.btn-ballot:hover {
+    background: #252f3d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.btn-ballot.selected {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: #fbbf24;
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+}
+
+.btn-ballot.selected .ballot-label::after {
+    content: " ✓ Voto";
+    color: #fbbf24;
+    font-weight: 900;
+    margin-left: 6px;
+}
+
+.ballot-chip-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.ballot-label {
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.combat-bets-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.combat-bet-badge {
+    background: #1e242d;
+    border: 1px solid #4b5563;
+    border-left-width: 4px;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    color: #e2e8f0;
+}
+
     </style>
 </head>
 <body>
@@ -2227,7 +2385,7 @@ main.main-workspace {
         <div class="header-right">
             <button id="btn-header-codex" class="btn-header btn-header-codex">📚 Códice</button>
             <button id="btn-sound-toggle" class="btn-header">🔊 Sonido</button>
-            <button id="btn-rules" class="btn-header">📖 Reglas (31)</button>
+            <button id="btn-rules" class="btn-header">📖 Reglas (32)</button>
             <button id="btn-header-reset" class="btn-header btn-header-reset">🔄 Reiniciar</button>
         </div>
     </header>
@@ -2330,6 +2488,11 @@ main.main-workspace {
                     <div class="resource-box">
                         <span class="resource-label">Medallas (3 para Clasificar!)</span>
                         <div id="board-badges-list" class="badges-row"></div>
+                    </div>
+
+                    <div class="resource-box">
+                        <span class="resource-label">Papeletas de Apuesta</span>
+                        <div id="board-ballots-list" class="ballots-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;"></div>
                     </div>
                 </div>
             </div>
@@ -2583,6 +2746,27 @@ main.main-workspace {
         </div>
     </div>
 
+    <!-- MODAL: COMBAT BETTING (Rule: Non-participating players predict winner) -->
+    <div id="modal-combat-betting" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>🗳️ ¡Fase de Apuestas de Combate!</h3>
+            </div>
+            <div class="modal-body">
+                <div id="betting-matchup-header" class="betting-matchup-header"></div>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 4px 0;">
+                    Los jugadores no participantes deben depositar su papeleta de voto. Predecir con éxito al vencedor otorga <strong>+1 Punto de Suerte 🍀</strong>.
+                </p>
+                <div id="betting-players-container" class="betting-players-container"></div>
+                <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                    <button id="btn-confirm-bets" class="btn-action btn-action-primary" style="padding: 10px 20px; font-weight: bold; width: 100%; justify-content: center;">
+                        ⚔️ ¡Confirmar Predicciones y Luchar!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: COMBAT ARENA -->
     <div id="modal-combat" class="modal-backdrop">
         <div class="modal-dialog" style="max-width: 860px;">
@@ -2617,6 +2801,8 @@ main.main-workspace {
                         </div>
                     </div>
                 </div>
+
+                <div id="combat-bets-bar" class="combat-bets-banner" style="display: none;"></div>
 
                 <div id="combat-actions-bar" class="combat-actions-bar"></div>
 
@@ -2714,6 +2900,7 @@ main.main-workspace {
                     <li><strong>Gimnasios Adaptativos:</strong> Los gimnasios escalan según cuántos hayas derrotado: 0 derrotados = 2 monstruos de Tier 1; 1 derrotado = 2 monstruos de Tier 2; 2 o más derrotados = 3 monstruos de Tier 3.</li>
                     <li><strong>Expansiones de Mazos:</strong> Al inicio el mazo solo contiene cartas de Tier 1. Derrotar al 1er gimnasio añade Tier 2 al mazo, derrotar al 2do gimnasio añade Tier 3, y derrotar al 3ro despierta a los Legendarios de Tier 4.</li>
                     <li><strong>Condición de Torneo:</strong> Derrotar 3 de los 4 gimnasios disponibles (o alcanzar 10 rondas) activa el Gran Torneo Final!</li>
+                    <li><strong>Mecánica de Apuestas:</strong> En cada combate, los jugadores no participantes deben predecir quién ganará. Cada jugador posee papeletas del color de los otros jugadores y una gris para los NPCs. Predecir con éxito al vencedor otorga 1 Punto de Suerte 🍀.</li>
                 </ol>
             </div>
         </div>
@@ -5020,6 +5207,7 @@ class CombatEngine {
         this.roundFirst = 1;
         this.activeTurnActor = 1;
         this.actionsTakenThisRound = 0;
+        this.bets = [];
     }
 
     startBattle({ type, player1, player2 = null, gym = null, npc = null, onEnd = null }) {
@@ -5038,6 +5226,7 @@ class CombatEngine {
         this.roundFirst = 1;
         this.activeTurnActor = 1;
         this.actionsTakenThisRound = 0;
+        this.bets = [];
 
         // Player 1 team (active top 3 monsters from board)
         this.p1Team = player1.monsters.slice(0, 3).map(m => this.cloneMonster(m));
@@ -5072,12 +5261,128 @@ class CombatEngine {
         this.log(`${player1.name} envía a ${p1Active.name} (HP: ${p1Active.hp}/${p1Active.maxHp}).`);
         this.log(`${this.getOpponentDisplayName()} envía a ${p2Active.name} (HP: ${p2Active.hp}/${p2Active.maxHp}).`);
 
-        if (window.UI) {
-            UI.showCombatModal();
-            UI.renderCombatArena();
+        const nonParticipants = this.getNonParticipatingPlayers();
+        if (nonParticipants.length > 0 && window.UI && typeof UI.showCombatBettingModal === 'function') {
+            UI.showCombatBettingModal({
+                nonParticipants,
+                contenders: this.getBattleContenders(),
+                onComplete: () => {
+                    if (window.UI) {
+                        UI.showCombatModal();
+                        UI.renderCombatArena();
+                    }
+                    this.startRound();
+                }
+            });
+        } else {
+            if (window.UI) {
+                UI.showCombatModal();
+                UI.renderCombatArena();
+            }
+            this.startRound();
+        }
+    }
+
+    getNonParticipatingPlayers() {
+        if (!this.game || !this.game.players) return [];
+        return this.game.players.filter(p => {
+            if (p.id === this.player1.id) return false;
+            if (this.player2 && p.id === this.player2.id) return false;
+            return true;
+        });
+    }
+
+    getBattleContenders() {
+        if (!this.player1) throw new Error('player1 is required to get battle contenders');
+        const contenders = [
+            {
+                id: this.player1.id,
+                name: this.player1.name,
+                color: this.player1.color,
+                type: 'player',
+                activeMonster: this.getP1Active()
+            }
+        ];
+        if (this.player2) {
+            contenders.push({
+                id: this.player2.id,
+                name: this.player2.name,
+                color: this.player2.color,
+                type: 'player',
+                activeMonster: this.getP2Active()
+            });
+        } else {
+            contenders.push({
+                id: 'npc',
+                name: this.getOpponentDisplayName(),
+                color: '#64748b',
+                type: 'npc',
+                activeMonster: this.getP2Active()
+            });
+        }
+        return contenders;
+    }
+
+    placeBet(bettorId, predictedWinnerId) {
+        if (!bettorId) throw new Error('bettorId is required to place a bet');
+        if (!predictedWinnerId) throw new Error('predictedWinnerId is required to place a bet');
+
+        const bettor = this.game.players.find(p => p.id === bettorId);
+        if (!bettor) throw new Error(`Bettor player ${bettorId} not found in game`);
+
+        const nonParticipants = this.getNonParticipatingPlayers();
+        if (!nonParticipants.some(p => p.id === bettorId)) {
+            throw new Error(`Player ${bettorId} (${bettor.name}) is a combat participant and cannot bet`);
         }
 
-        this.startRound();
+        const contenders = this.getBattleContenders();
+        const chosenContender = contenders.find(c => c.id === predictedWinnerId);
+        if (!chosenContender) {
+            throw new Error(`Invalid predictedWinnerId ${predictedWinnerId}. Must match one of the active combatants: ${contenders.map(c => c.id).join(', ')}`);
+        }
+
+        const betData = {
+            bettorId,
+            bettorName: bettor.name,
+            bettorColor: bettor.color,
+            predictedWinnerId: chosenContender.id,
+            predictedWinnerName: chosenContender.name,
+            ballotColor: chosenContender.color,
+            won: false
+        };
+
+        const existingIndex = this.bets.findIndex(b => b.bettorId === bettorId);
+        if (existingIndex >= 0) {
+            this.bets[existingIndex] = betData;
+        } else {
+            this.bets.push(betData);
+        }
+
+        return betData;
+    }
+
+    resolveBets(actualWinnerId, actualWinnerName) {
+        if (!this.bets || this.bets.length === 0) return;
+
+        this.bets.forEach(bet => {
+            const bettor = this.game.players.find(p => p.id === bet.bettorId);
+            if (!bettor) throw new Error(`Bettor ${bet.bettorId} not found during bet resolution`);
+
+            if (bet.predictedWinnerId === actualWinnerId) {
+                bet.won = true;
+                bettor.luck = (bettor.luck || 0) + 1;
+                this.log(`🍀 ¡${bettor.name} predijo con su papeleta la victoria de ${bet.predictedWinnerName} y gana +1 Suerte (Total: ${bettor.luck} 🍀)!`);
+                if (window.UI) {
+                    UI.logGame(`🗳️🍀 ¡${bettor.name} acertó su predicción en el combate y ganó +1 Punto de Suerte!`);
+                }
+            } else {
+                bet.won = false;
+                this.log(`❌ ${bettor.name} apostó por ${bet.predictedWinnerName}, pero el vencedor fue ${actualWinnerName}.`);
+                if (window.UI) {
+                    UI.logGame(`🗳️❌ ${bettor.name} falló su predicción en el combate.`);
+                }
+            }
+        });
     }
 
     cloneMonster(m) {
@@ -5989,6 +6294,15 @@ class CombatEngine {
         }
         this.log(`🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud y estados.`);
 
+        const actualWinnerId = playerWon
+            ? this.player1.id
+            : (this.player2 ? this.player2.id : 'npc');
+        const actualWinnerName = playerWon
+            ? this.player1.name
+            : (this.player2 ? this.player2.name : this.getOpponentDisplayName());
+
+        this.resolveBets(actualWinnerId, actualWinnerName);
+
         if (window.UI) {
             UI.renderCombatArena();
             UI.showCombatResultModal({
@@ -5996,6 +6310,7 @@ class CombatEngine {
                 coins: rewardCoins,
                 badge: playerWon && this.gymData ? this.gymData : null,
                 moveTeaching: this.pendingMoveTeaching,
+                bets: this.bets,
                 onContinue: () => {
                     this.inCombat = false;
                     this.isProcessing = false;
@@ -6392,7 +6707,30 @@ class MonsterJourneyGame {
             this.players.push(player);
         });
 
+        this.players.forEach(player => {
+            player.ballots = this.createPlayerBallots(player);
+        });
+
         this.startTurn();
+    }
+
+    createPlayerBallots(player) {
+        if (!player) throw new Error('Player is required to create ballots');
+        const otherPlayerBallots = this.players
+            .filter(p => p.id !== player.id)
+            .map(p => ({
+                type: 'player',
+                targetPlayerId: p.id,
+                targetPlayerName: p.name,
+                color: p.color
+            }));
+        const npcBallot = {
+            type: 'npc',
+            targetPlayerId: 'npc',
+            targetPlayerName: 'NPCs / Gimnasio',
+            color: '#64748b'
+        };
+        return [...otherPlayerBallots, npcBallot];
     }
 
     initEnvironmentDeck() {
@@ -8767,6 +9105,17 @@ const UI = {
             }).join('');
         }
 
+        const ballotsContainer = document.getElementById('board-ballots-list');
+        if (ballotsContainer) {
+            const ballots = player.ballots || (this.game.createPlayerBallots ? this.game.createPlayerBallots(player) : []);
+            ballotsContainer.innerHTML = ballots.map(b => `
+                <div class="player-ballot-chip" style="border-color: ${b.color};" title="Papeleta de apuesta: ${b.targetPlayerName}">
+                    <span class="ballot-dot" style="background: ${b.color};"></span>
+                    <span>${b.type === 'npc' ? '🏛️ ' : '👤 '}${b.targetPlayerName}</span>
+                </div>
+            `).join('');
+        }
+
         // Location Hand Row (Requirement 1 & 6)
         const locationHandContainer = document.getElementById('location-hand-cards-list');
         if (locationHandContainer) {
@@ -9329,6 +9678,104 @@ const UI = {
         if (modal) modal.classList.remove('open');
     },
 
+    showCombatBettingModal({ nonParticipants, contenders, onComplete }) {
+        const modal = document.getElementById('modal-combat-betting');
+        if (!modal) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const headerEl = document.getElementById('betting-matchup-header');
+        if (headerEl) {
+            const c1 = contenders[0];
+            const c2 = contenders[1];
+            headerEl.innerHTML = `
+                <div class="betting-contender-card" style="border-color: ${c1.color};">
+                    <div style="font-size: 2.2rem; margin-bottom: 2px;">${c1.activeMonster ? c1.activeMonster.icon : '👾'}</div>
+                    <div style="font-weight: 800; color: ${c1.color}; font-size: 1.05rem;">${c1.name}</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">${c1.activeMonster ? `${c1.activeMonster.name} (${c1.activeMonster.hp}/${c1.activeMonster.maxHp} HP)` : ''}</div>
+                </div>
+                <div class="betting-vs">VS</div>
+                <div class="betting-contender-card" style="border-color: ${c2.color};">
+                    <div style="font-size: 2.2rem; margin-bottom: 2px;">${c2.activeMonster ? c2.activeMonster.icon : '👾'}</div>
+                    <div style="font-weight: 800; color: ${c2.color}; font-size: 1.05rem;">${c2.name}</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">${c2.activeMonster ? `${c2.activeMonster.name} (${c2.activeMonster.hp}/${c2.activeMonster.maxHp} HP)` : ''}</div>
+                </div>
+            `;
+        }
+
+        const container = document.getElementById('betting-players-container');
+        const selections = {};
+
+        const updateConfirmButtonState = () => {
+            const btnConfirm = document.getElementById('btn-confirm-bets');
+            if (!btnConfirm) return;
+            const allSelected = nonParticipants.every(p => selections[p.id]);
+            btnConfirm.disabled = !allSelected;
+            if (allSelected) {
+                btnConfirm.innerHTML = `⚔️ ¡Confirmar Predicciones y Luchar!`;
+            } else {
+                btnConfirm.innerHTML = `🗳️ Esperando votos (${Object.keys(selections).length}/${nonParticipants.length})`;
+            }
+        };
+
+        if (container) {
+            container.innerHTML = nonParticipants.map(bettor => {
+                return `
+                    <div class="betting-player-row" id="betting-row-${bettor.id}">
+                        <div class="bettor-info">
+                            <span class="bettor-name" style="color: ${bettor.color};">👤 ${bettor.name}</span>
+                            <span class="bettor-luck">🍀 ${bettor.luck || 0} Suerte</span>
+                        </div>
+                        <div class="ballots-selection-row">
+                            ${contenders.map(c => `
+                                <button type="button" class="btn-ballot" id="ballot-${bettor.id}-${c.id}"
+                                        style="--ballot-color: ${c.color};"
+                                        onclick="UI.selectBetBallot('${bettor.id}', '${c.id}')">
+                                    <span class="ballot-chip-icon" style="background: ${c.color};"></span>
+                                    <span class="ballot-label">Papeleta: <strong>${c.name}</strong></span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        this.selectBetBallot = (bettorId, contenderId) => {
+            selections[bettorId] = contenderId;
+            contenders.forEach(c => {
+                const btn = document.getElementById(`ballot-${bettorId}-${c.id}`);
+                if (btn) {
+                    btn.classList.toggle('selected', c.id === contenderId);
+                }
+            });
+            updateConfirmButtonState();
+        };
+
+        const btnConfirm = document.getElementById('btn-confirm-bets');
+        if (btnConfirm) {
+            btnConfirm.onclick = () => {
+                nonParticipants.forEach(bettor => {
+                    const chosenId = selections[bettor.id];
+                    if (chosenId) {
+                        this.game.combatEngine.placeBet(bettor.id, chosenId);
+                    }
+                });
+                modal.classList.remove('open');
+                if (onComplete) onComplete();
+            };
+        }
+
+        updateConfirmButtonState();
+        modal.classList.add('open');
+    },
+
+    hideCombatBettingModal() {
+        const modal = document.getElementById('modal-combat-betting');
+        if (modal) modal.classList.remove('open');
+    },
+
     showCombatModal() {
         const modal = document.getElementById('modal-combat');
         if (modal) modal.classList.add('open');
@@ -9409,6 +9856,25 @@ const UI = {
         if (fighterCards && fighterCards.length >= 2) {
             fighterCards[0].classList.toggle('active-attacker', combat.activeTurnActor === 1);
             fighterCards[1].classList.toggle('active-attacker', combat.activeTurnActor === 2);
+        }
+
+        const betsContainer = document.getElementById('combat-bets-bar');
+        if (betsContainer) {
+            if (combat.bets && combat.bets.length > 0) {
+                betsContainer.style.display = 'flex';
+                betsContainer.innerHTML = `
+                    <span style="font-weight: 800; color: #fbbf24; font-size: 0.8rem;">🗳️ Predicciones:</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                        ${combat.bets.map(b => `
+                            <span class="combat-bet-badge" style="border-left: 3px solid ${b.ballotColor};">
+                                <strong style="color: ${b.bettorColor};">${b.bettorName}</strong> ➡️ ${b.predictedWinnerName}
+                            </span>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                betsContainer.style.display = 'none';
+            }
         }
 
         const actionsContainer = document.getElementById('combat-actions-bar');
@@ -9505,7 +9971,7 @@ const UI = {
         }
     },
 
-    showCombatResultModal({ won, coins, badge, moveTeaching, onContinue }) {
+    showCombatResultModal({ won, coins, badge, moveTeaching, bets, onContinue }) {
         const resultModal = document.getElementById('modal-combat-result');
         if (!resultModal) return;
 
@@ -9518,6 +9984,28 @@ const UI = {
                 <p><strong>Recompensa en dinero:</strong> +${coins} monedas de oro ${!won ? '(¡Regla 14: otorgadas aun perdiendo!)' : ''}</p>
                 <p>🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud.</p>
             `;
+
+            if (bets && bets.length > 0) {
+                html += `
+                    <div class="result-bets-box" style="background: rgba(0,0,0,0.3); border: 1.5px solid #374151; border-radius: 8px; padding: 12px; margin-top: 10px; text-align: left;">
+                        <div style="font-weight: 800; color: #fbbf24; margin-bottom: 6px; font-size: 0.9rem;">
+                            🗳️ Resultado de las Apuestas de Espectadores:
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            ${bets.map(b => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: ${b.won ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)'}; border: 1px solid ${b.won ? '#10b981' : '#475569'}; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
+                                    <div>
+                                        <strong style="color: ${b.bettorColor};">${b.bettorName}</strong> predijo: <span style="color: ${b.ballotColor}; font-weight: bold;">${b.predictedWinnerName}</span>
+                                    </div>
+                                    <div>
+                                        ${b.won ? '<span style="color: #34d399; font-weight: 800;">✅ ¡Acertó! (+1 🍀)</span>' : '<span style="color: #94a3b8;">❌ No acertó (0 🍀)</span>'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
 
             if (badge) {
                 html += `

@@ -19,7 +19,10 @@ global.UI = {
     showCombatModal: () => {},
     renderCombatArena: () => {},
     hideCombatModal: () => {},
-    showCombatResultModal: ({ won, coins, badge, moveTeaching, onContinue }) => {
+    showCombatBettingModal: ({ onComplete }) => {
+        if (onComplete) onComplete();
+    },
+    showCombatResultModal: ({ won, coins, badge, moveTeaching, bets, onContinue }) => {
         if (onContinue) onContinue();
     },
     showDraftLocationModal: ({ player, cards, onSelect }) => {
@@ -1278,6 +1281,119 @@ console.log('\n=== TEST 27: Monster Switching Consumes Turn (No Free Immediate D
     console.assert(pMon2.hp === pMon2HpBefore, 'Switching as second actor does not trigger extra damage');
     console.assert(switchCombat2.actionsTakenThisRound === 2, 'Both actors took actions this round');
     console.log('Test 27 Passed: Switching monster consumes turn cleanly without immediate penalty attack.');
+}
+
+console.log('\n=== TEST 28: Bet Mechanic & Non-Participating Player Predictions ===');
+{
+    const betGame = new MonsterJourneyGame();
+    betGame.initGame([
+        { name: 'Ash', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Gary', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' },
+        { name: 'Brock', characterId: 'char_brock', starterMonsterId: 'mon_mtn_1' }
+    ]);
+
+    const ash = betGame.players[0];
+    const gary = betGame.players[1];
+    const brock = betGame.players[2];
+
+    console.assert(ash.ballots.length === 3, 'Ash holds 3 ballots (2 for other players + 1 grey for NPCs)');
+    console.assert(ash.ballots.some(b => b.targetPlayerId === gary.id && b.color === gary.color), 'Ash has Gary ballot in Gary color');
+    console.assert(ash.ballots.some(b => b.targetPlayerId === brock.id && b.color === brock.color), 'Ash has Brock ballot in Brock color');
+    console.assert(ash.ballots.some(b => b.type === 'npc' && b.color === '#64748b'), 'Ash has grey NPC ballot');
+
+    console.assert(gary.ballots.some(b => b.targetPlayerId === ash.id && b.color === ash.color), 'Gary has Ash ballot in Ash color');
+    console.assert(brock.ballots.some(b => b.targetPlayerId === ash.id && b.color === ash.color), 'Brock has Ash ballot in Ash color');
+
+    // Scenario 1: Ash fights Gym (NPC)
+    const gymCombat = betGame.combatEngine;
+    const testGym = {
+        id: 'gym_test',
+        name: 'Gimnasio Test',
+        cityName: 'Ciudad Test',
+        tier: 1,
+        badgeName: 'Medalla Test',
+        leaderName: 'Líder Test',
+        rewardCoins: 3,
+        rewardLuck: 1,
+        teamMonsterIds: ['mon_for_1', 'mon_for_2']
+    };
+
+    gymCombat.startBattle({
+        type: 'gym',
+        player1: ash,
+        gym: testGym
+    });
+
+    const nonPart = gymCombat.getNonParticipatingPlayers();
+    console.assert(nonPart.length === 2, 'Gary and Brock are non-participating players in Gym battle');
+    console.assert(nonPart.some(p => p.id === gary.id) && nonPart.some(p => p.id === brock.id), 'Both Gary and Brock in list');
+
+    let errorThrownForParticipant = false;
+    try {
+        gymCombat.placeBet(ash.id, ash.id);
+    } catch (e) {
+        errorThrownForParticipant = true;
+    }
+    console.assert(errorThrownForParticipant, 'Combat participant (Ash) cannot place bet on own battle');
+
+    let errorThrownForInvalidWinner = false;
+    try {
+        gymCombat.placeBet(gary.id, 'non_existent_player');
+    } catch (e) {
+        errorThrownForInvalidWinner = true;
+    }
+    console.assert(errorThrownForInvalidWinner, 'Cannot bet on invalid combatant not in fight');
+
+    const garyLuckBefore = gary.luck;
+    const brockLuckBefore = brock.luck;
+
+    // Gary predicts Ash will win (Ash color ballot)
+    gymCombat.placeBet(gary.id, ash.id);
+    // Brock predicts NPC will win (Grey ballot)
+    gymCombat.placeBet(brock.id, 'npc');
+
+    console.assert(gymCombat.bets.length === 2, '2 bets registered for the fight');
+
+    // Ash wins the battle
+    gymCombat.endBattle(true);
+
+    console.assert(gary.luck === garyLuckBefore + 1, 'Gary correctly predicted Ash and received +1 Luck point');
+    console.assert(brock.luck === brockLuckBefore, 'Brock incorrectly predicted NPC and received 0 Luck points');
+
+    // Scenario 2: Tournament duel between Ash and Gary
+    const pvpCombat = betGame.combatEngine;
+    pvpCombat.startBattle({
+        type: 'tournament',
+        player1: ash,
+        player2: gary
+    });
+
+    const pvpNonPart = pvpCombat.getNonParticipatingPlayers();
+    console.assert(pvpNonPart.length === 1 && pvpNonPart[0].id === brock.id, 'Only Brock is non-participating in Ash vs Gary');
+
+    const contenders = pvpCombat.getBattleContenders();
+    console.assert(contenders.length === 2 && contenders[0].id === ash.id && contenders[1].id === gary.id, 'Contenders are Ash and Gary');
+
+    const brockLuckBefore2 = brock.luck;
+    // Brock bets on Gary (Gary blue ballot)
+    pvpCombat.placeBet(brock.id, gary.id);
+
+    // Gary wins duel (player1 Ash loses)
+    pvpCombat.endBattle(false);
+
+    console.assert(brock.luck === brockLuckBefore2 + 1, 'Brock correctly predicted Gary in PvP and received +1 Luck point');
+
+    // Scenario 3: 1-Player Solo game
+    const soloGame = new MonsterJourneyGame();
+    soloGame.initGame([{ name: 'Solo Trainer', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }]);
+    soloGame.combatEngine.startBattle({
+        type: 'gym',
+        player1: soloGame.players[0],
+        gym: testGym
+    });
+    console.assert(soloGame.combatEngine.getNonParticipatingPlayers().length === 0, 'No non-participating players in solo game');
+    soloGame.combatEngine.endBattle(true);
+    console.log('Test 28 Passed: Bet mechanic, ballot prediction, and Luck point rewards function accurately.');
 }
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

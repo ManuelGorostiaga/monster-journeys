@@ -142,7 +142,30 @@ class MonsterJourneyGame {
             this.players.push(player);
         });
 
+        this.players.forEach(player => {
+            player.ballots = this.createPlayerBallots(player);
+        });
+
         this.startTurn();
+    }
+
+    createPlayerBallots(player) {
+        if (!player) throw new Error('Player is required to create ballots');
+        const otherPlayerBallots = this.players
+            .filter(p => p.id !== player.id)
+            .map(p => ({
+                type: 'player',
+                targetPlayerId: p.id,
+                targetPlayerName: p.name,
+                color: p.color
+            }));
+        const npcBallot = {
+            type: 'npc',
+            targetPlayerId: 'npc',
+            targetPlayerName: 'NPCs / Gimnasio',
+            color: '#64748b'
+        };
+        return [...otherPlayerBallots, npcBallot];
     }
 
     initEnvironmentDeck() {

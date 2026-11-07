@@ -23,6 +23,7 @@ class CombatEngine {
         this.roundFirst = 1;
         this.activeTurnActor = 1;
         this.actionsTakenThisRound = 0;
+        this.bets = [];
     }
 
     startBattle({ type, player1, player2 = null, gym = null, npc = null, onEnd = null }) {
@@ -41,6 +42,7 @@ class CombatEngine {
         this.roundFirst = 1;
         this.activeTurnActor = 1;
         this.actionsTakenThisRound = 0;
+        this.bets = [];
 
         // Player 1 team (active top 3 monsters from board)
         this.p1Team = player1.monsters.slice(0, 3).map(m => this.cloneMonster(m));
@@ -75,12 +77,128 @@ class CombatEngine {
         this.log(`${player1.name} envía a ${p1Active.name} (HP: ${p1Active.hp}/${p1Active.maxHp}).`);
         this.log(`${this.getOpponentDisplayName()} envía a ${p2Active.name} (HP: ${p2Active.hp}/${p2Active.maxHp}).`);
 
-        if (window.UI) {
-            UI.showCombatModal();
-            UI.renderCombatArena();
+        const nonParticipants = this.getNonParticipatingPlayers();
+        if (nonParticipants.length > 0 && window.UI && typeof UI.showCombatBettingModal === 'function') {
+            UI.showCombatBettingModal({
+                nonParticipants,
+                contenders: this.getBattleContenders(),
+                onComplete: () => {
+                    if (window.UI) {
+                        UI.showCombatModal();
+                        UI.renderCombatArena();
+                    }
+                    this.startRound();
+                }
+            });
+        } else {
+            if (window.UI) {
+                UI.showCombatModal();
+                UI.renderCombatArena();
+            }
+            this.startRound();
+        }
+    }
+
+    getNonParticipatingPlayers() {
+        if (!this.game || !this.game.players) return [];
+        return this.game.players.filter(p => {
+            if (p.id === this.player1.id) return false;
+            if (this.player2 && p.id === this.player2.id) return false;
+            return true;
+        });
+    }
+
+    getBattleContenders() {
+        if (!this.player1) throw new Error('player1 is required to get battle contenders');
+        const contenders = [
+            {
+                id: this.player1.id,
+                name: this.player1.name,
+                color: this.player1.color,
+                type: 'player',
+                activeMonster: this.getP1Active()
+            }
+        ];
+        if (this.player2) {
+            contenders.push({
+                id: this.player2.id,
+                name: this.player2.name,
+                color: this.player2.color,
+                type: 'player',
+                activeMonster: this.getP2Active()
+            });
+        } else {
+            contenders.push({
+                id: 'npc',
+                name: this.getOpponentDisplayName(),
+                color: '#64748b',
+                type: 'npc',
+                activeMonster: this.getP2Active()
+            });
+        }
+        return contenders;
+    }
+
+    placeBet(bettorId, predictedWinnerId) {
+        if (!bettorId) throw new Error('bettorId is required to place a bet');
+        if (!predictedWinnerId) throw new Error('predictedWinnerId is required to place a bet');
+
+        const bettor = this.game.players.find(p => p.id === bettorId);
+        if (!bettor) throw new Error(`Bettor player ${bettorId} not found in game`);
+
+        const nonParticipants = this.getNonParticipatingPlayers();
+        if (!nonParticipants.some(p => p.id === bettorId)) {
+            throw new Error(`Player ${bettorId} (${bettor.name}) is a combat participant and cannot bet`);
         }
 
-        this.startRound();
+        const contenders = this.getBattleContenders();
+        const chosenContender = contenders.find(c => c.id === predictedWinnerId);
+        if (!chosenContender) {
+            throw new Error(`Invalid predictedWinnerId ${predictedWinnerId}. Must match one of the active combatants: ${contenders.map(c => c.id).join(', ')}`);
+        }
+
+        const betData = {
+            bettorId,
+            bettorName: bettor.name,
+            bettorColor: bettor.color,
+            predictedWinnerId: chosenContender.id,
+            predictedWinnerName: chosenContender.name,
+            ballotColor: chosenContender.color,
+            won: false
+        };
+
+        const existingIndex = this.bets.findIndex(b => b.bettorId === bettorId);
+        if (existingIndex >= 0) {
+            this.bets[existingIndex] = betData;
+        } else {
+            this.bets.push(betData);
+        }
+
+        return betData;
+    }
+
+    resolveBets(actualWinnerId, actualWinnerName) {
+        if (!this.bets || this.bets.length === 0) return;
+
+        this.bets.forEach(bet => {
+            const bettor = this.game.players.find(p => p.id === bet.bettorId);
+            if (!bettor) throw new Error(`Bettor ${bet.bettorId} not found during bet resolution`);
+
+            if (bet.predictedWinnerId === actualWinnerId) {
+                bet.won = true;
+                bettor.luck = (bettor.luck || 0) + 1;
+                this.log(`🍀 ¡${bettor.name} predijo con su papeleta la victoria de ${bet.predictedWinnerName} y gana +1 Suerte (Total: ${bettor.luck} 🍀)!`);
+                if (window.UI) {
+                    UI.logGame(`🗳️🍀 ¡${bettor.name} acertó su predicción en el combate y ganó +1 Punto de Suerte!`);
+                }
+            } else {
+                bet.won = false;
+                this.log(`❌ ${bettor.name} apostó por ${bet.predictedWinnerName}, pero el vencedor fue ${actualWinnerName}.`);
+                if (window.UI) {
+                    UI.logGame(`🗳️❌ ${bettor.name} falló su predicción en el combate.`);
+                }
+            }
+        });
     }
 
     cloneMonster(m) {
@@ -992,6 +1110,15 @@ class CombatEngine {
         }
         this.log(`🌿 Todos tus monstruos han descansado y recuperado el 100% de su salud y estados.`);
 
+        const actualWinnerId = playerWon
+            ? this.player1.id
+            : (this.player2 ? this.player2.id : 'npc');
+        const actualWinnerName = playerWon
+            ? this.player1.name
+            : (this.player2 ? this.player2.name : this.getOpponentDisplayName());
+
+        this.resolveBets(actualWinnerId, actualWinnerName);
+
         if (window.UI) {
             UI.renderCombatArena();
             UI.showCombatResultModal({
@@ -999,6 +1126,7 @@ class CombatEngine {
                 coins: rewardCoins,
                 badge: playerWon && this.gymData ? this.gymData : null,
                 moveTeaching: this.pendingMoveTeaching,
+                bets: this.bets,
                 onContinue: () => {
                     this.inCombat = false;
                     this.isProcessing = false;
