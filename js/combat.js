@@ -989,6 +989,7 @@ class CombatEngine {
         if (p1Active && p1Active.hp <= 0) {
             this.handleFaint(p1Active, this.player1);
         }
+        if (!this.inCombat) return;
         if (p2Active && p2Active.hp <= 0) {
             this.handleFaint(p2Active, this.player2);
         }
@@ -998,14 +999,20 @@ class CombatEngine {
         this.log(`💀 ¡${monster.name} ha caído debilitado!`);
         SoundFX.faint();
 
-        // Check if this was a defeated opponent monster that teaches an attack!
-        // Rule 29: "Cuando derrotamos a un monstruo en combate le podemos esnseniar ese ataque a uno de nuestros monstruos."
         const isOpponentMonster = (ownerPlayer === this.player2 || !ownerPlayer);
         if (isOpponentMonster && this.player1) {
             this.pendingMoveTeaching = {
                 monsterName: monster.name,
                 attack: monster.attacks[0],
-                sourceMonster: monster
+                sourceMonster: monster,
+                recipientPlayer: this.player1
+            };
+        } else if (ownerPlayer === this.player1 && this.player2) {
+            this.pendingMoveTeaching = {
+                monsterName: monster.name,
+                attack: monster.attacks[0],
+                sourceMonster: monster,
+                recipientPlayer: this.player2
             };
         }
 
@@ -1134,7 +1141,7 @@ class CombatEngine {
         this.resolveBets(actualWinnerId, actualWinnerName);
 
         if (window.UI) {
-            UI.renderCombatArena();
+            UI.hideCombatModal();
             UI.showCombatResultModal({
                 won: playerWon,
                 coins: rewardCoins,
@@ -1144,7 +1151,10 @@ class CombatEngine {
                 onContinue: () => {
                     this.inCombat = false;
                     this.isProcessing = false;
-                    if (window.UI) UI.hideCombatModal();
+                    if (window.UI) {
+                        UI.hideCombatModal();
+                        UI.hideTeachAttackModal();
+                    }
                     if (this.onCombatEndCallback) {
                         this.onCombatEndCallback(playerWon);
                     }

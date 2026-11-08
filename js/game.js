@@ -1395,6 +1395,14 @@ class MonsterJourneyGame {
             gym: adaptiveGym,
             onEnd: (won) => {
                 if (window.UI) UI.renderAll();
+                const badgeCount = player.defeatedGymIds && player.defeatedGymIds.length > player.badges.length
+                    ? player.defeatedGymIds.length
+                    : player.badges.length;
+                if (badgeCount >= 3 || this.pendingTournamentTrigger || this.tournamentEngine.active) {
+                    this.pendingTournamentTrigger = false;
+                    this.triggerTournament();
+                    return;
+                }
                 this.endTurn();
             }
         });
@@ -1485,7 +1493,11 @@ class MonsterJourneyGame {
             if (window.UI) {
                 UI.logGame(`👑 **¡${player.name} HA OBTENIDO 3 MEDALLAS DE GIMNASIO!** ¡Se activa el Gran Torneo Final!`);
             }
-            this.triggerTournament();
+            if (this.combatEngine && this.combatEngine.inCombat) {
+                this.pendingTournamentTrigger = true;
+            } else {
+                this.triggerTournament();
+            }
         }
     }
 

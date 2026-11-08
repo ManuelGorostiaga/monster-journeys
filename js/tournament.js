@@ -120,6 +120,10 @@ class TournamentEngine {
         const match = this.getCurrentMatch();
         if (!match || match.winner) return;
 
+        if (window.UI) {
+            UI.hideTournamentModal();
+        }
+
         if (match.isNpc) {
             this.game.combatEngine.startBattle({
                 type: 'tournament',
@@ -172,7 +176,10 @@ class TournamentEngine {
             if (this.currentMatchIndex === 0) {
                 // SF1 finished
                 this.currentMatchIndex = 1;
-                UI.renderTournamentBracket();
+                if (window.UI) {
+                    UI.showTournamentModal();
+                    UI.renderTournamentBracket();
+                }
                 return;
             } else if (this.currentMatchIndex === 1) {
                 // SF2 finished, setup Bronze and Final
@@ -190,12 +197,18 @@ class TournamentEngine {
                 this.matches[3].p2 = sf2Winner;
 
                 this.currentMatchIndex = 2; // Bronze match
-                UI.renderTournamentBracket();
+                if (window.UI) {
+                    UI.showTournamentModal();
+                    UI.renderTournamentBracket();
+                }
                 return;
             } else if (this.currentMatchIndex === 2) {
                 // Bronze finished, move to Grand Final
                 this.currentMatchIndex = 3;
-                UI.renderTournamentBracket();
+                if (window.UI) {
+                    UI.showTournamentModal();
+                    UI.renderTournamentBracket();
+                }
                 return;
             } else if (this.currentMatchIndex === 3) {
                 // Final finished
@@ -220,13 +233,17 @@ class TournamentEngine {
             this.winner = bestPlayer;
             this.concludeTournament();
         } else {
-            if (window.UI) UI.renderTournamentBracket();
+            if (window.UI) {
+                UI.showTournamentModal();
+                UI.renderTournamentBracket();
+            }
         }
     }
 
     concludeTournament() {
         SoundFX.victory();
         if (window.UI) {
+            UI.hideTournamentModal();
             UI.renderTournamentBracket();
             UI.showVictoryModal(this.winner);
         }

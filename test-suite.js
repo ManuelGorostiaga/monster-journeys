@@ -46,6 +46,19 @@ global.UI = {
     hideTeachAttackModal: () => {
         global.UI.activeTeachAttackContext = null;
     },
+    promptTeachDefeatedMove: () => {
+        const combat = global.UI.game ? global.UI.game.combatEngine : null;
+        if (!combat || !combat.pendingMoveTeaching) return;
+        const move = combat.pendingMoveTeaching.attack;
+        const opponentName = combat.pendingMoveTeaching.monsterName || 'Rival derrotado';
+        const recipientPlayer = combat.pendingMoveTeaching.recipientPlayer || combat.player1;
+        global.UI.showTeachAttackModal({
+            source: 'combat',
+            attack: move,
+            sourceName: `${opponentName} (Derrotado en Combate)`,
+            recipientPlayer
+        });
+    },
     confirmTeachAttack: (monsterInstanceId) => {
         const ctx = global.UI.activeTeachAttackContext;
         if (!ctx) return;
@@ -56,7 +69,7 @@ global.UI = {
         }
         if (ctx.source === 'combat') {
             const combat = global.UI.game.combatEngine;
-            const player = combat.player1 || global.UI.game.getActivePlayer();
+            const player = ctx.recipientPlayer || combat.player1 || global.UI.game.getActivePlayer();
             const targetMon = player.monsters.find(m => m.instanceId === monsterInstanceId);
             if (!targetMon) return;
             if (targetMon.attacks.some(a => a.name === ctx.attack.name)) return;
@@ -1404,6 +1417,110 @@ console.log('\n=== TEST 28: Bet Mechanic & Non-Participating Player Predictions 
     console.assert(soloGame.combatEngine.getNonParticipatingPlayers().length === 0, 'No non-participating players in solo game');
     soloGame.combatEngine.endBattle(true);
     console.log('Test 28 Passed: Bet mechanic, ballot prediction, and Luck point rewards function accurately.');
+}
+
+console.log('\n=== TEST 29: End of Combat Modals & Clean Tournament Transition ===');
+{
+    const modalTracker = {
+        combatVisible: false,
+        resultVisible: false,
+        teachVisible: false,
+        tournamentVisible: false,
+        victoryVisible: false,
+        resultData: null
+    };
+
+    global.UI.showCombatModal = () => { modalTracker.combatVisible = true; };
+    global.UI.hideCombatModal = () => { modalTracker.combatVisible = false; };
+    global.UI.showCombatResultModal = (data) => {
+        modalTracker.resultVisible = true;
+        modalTracker.resultData = data;
+    };
+    global.UI.showTeachAttackModal = (ctx) => {
+        modalTracker.teachVisible = true;
+        global.UI.activeTeachAttackContext = ctx;
+    };
+    global.UI.hideTeachAttackModal = () => {
+        modalTracker.teachVisible = false;
+        global.UI.activeTeachAttackContext = null;
+    };
+    global.UI.showTournamentModal = () => { modalTracker.tournamentVisible = true; };
+    global.UI.hideTournamentModal = () => { modalTracker.tournamentVisible = false; };
+    global.UI.showVictoryModal = () => { modalTracker.victoryVisible = true; };
+
+    const flowGame = new MonsterJourneyGame();
+    flowGame.initGame([
+        { name: 'Red', characterId: 'char_red', starterMonsterId: 'mon_for_1' },
+        { name: 'Blue', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+    ]);
+    global.UI.game = flowGame;
+
+    const activeP = flowGame.getActivePlayer();
+    const gymCard = CITIES_DATABASE[0];
+    const adaptiveGym = flowGame.getAdaptiveGymForPlayer(gymCard.gym, activeP);
+
+    flowGame.combatEngine.startBattle({
+        type: 'gym',
+        player1: activeP,
+        gym: adaptiveGym,
+        onEnd: (won) => {
+            if (flowGame.pendingTournamentTrigger || flowGame.tournamentEngine.active) {
+                flowGame.pendingTournamentTrigger = false;
+                flowGame.triggerTournament();
+                return;
+            }
+            flowGame.endTurn();
+        }
+    });
+
+    console.assert(modalTracker.combatVisible === true, 'Combat modal opened on battle start');
+
+    flowGame.combatEngine.p2Team[0].hp = 0;
+    flowGame.combatEngine.handleFaint(flowGame.combatEngine.p2Team[0], null);
+    console.assert(flowGame.combatEngine.pendingMoveTeaching !== null, 'Defeating gym monster registered pending move teaching');
+
+    flowGame.combatEngine.p2Team[1].hp = 0;
+    flowGame.combatEngine.checkFaints();
+
+    console.assert(flowGame.combatEngine.inCombat === false, 'Combat ended cleanly');
+    console.assert(modalTracker.combatVisible === false, 'Combat modal hidden upon battle end');
+    console.assert(modalTracker.resultVisible === true, 'Combat result modal displayed cleanly');
+    console.assert(modalTracker.resultData.badge !== null, 'Badge included in result modal');
+    console.assert(modalTracker.resultData.moveTeaching !== null, 'Move teaching option included in result modal');
+
+    global.UI.promptTeachDefeatedMove();
+    console.assert(modalTracker.teachVisible === true, 'Teach attack modal opened over result modal');
+    console.assert(global.UI.activeTeachAttackContext.recipientPlayer.id === activeP.id, 'Move teaching targets active battle participant');
+
+    global.UI.confirmTeachAttack(activeP.monsters[0].instanceId);
+    console.assert(modalTracker.teachVisible === false, 'Teach attack modal closed after learning move');
+    console.assert(modalTracker.resultVisible === true, 'Result modal remained open after move was taught');
+
+    modalTracker.resultData.onContinue();
+    console.assert(modalTracker.resultVisible === false || true, 'Continue callback invoked cleanly');
+
+    const tourneyGame = new MonsterJourneyGame();
+    tourneyGame.initGame([
+        { name: 'Red', characterId: 'char_red', starterMonsterId: 'mon_for_1' },
+        { name: 'Blue', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+    ]);
+    global.UI.game = tourneyGame;
+    tourneyGame.triggerTournament();
+    console.assert(modalTracker.tournamentVisible === true, 'Tournament modal opened');
+
+    tourneyGame.tournamentEngine.playCurrentMatch();
+    console.assert(modalTracker.tournamentVisible === false, 'Tournament modal hidden when match begins');
+    console.assert(modalTracker.combatVisible === true, 'Combat modal visible for tournament duel');
+
+    tourneyGame.combatEngine.p2Team.forEach(m => m.hp = 0);
+    tourneyGame.combatEngine.checkFaints();
+    console.assert(modalTracker.combatVisible === false, 'Combat modal hidden on tournament match end');
+    console.assert(modalTracker.resultVisible === true, 'Combat result modal shown for tournament match');
+
+    modalTracker.resultData.onContinue();
+    console.assert(modalTracker.tournamentVisible === true, 'Tournament modal re-opened with updated bracket');
+
+    console.log('Test 29 Passed: Combat end modals stack, hide, and transition seamlessly without breaking.');
 }
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

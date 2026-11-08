@@ -1568,6 +1568,63 @@ main.main-workspace {
     padding: 20px;
 }
 
+#modal-tournament {
+    z-index: 105;
+}
+
+#modal-combat {
+    z-index: 110;
+}
+
+#modal-combat-betting {
+    z-index: 120;
+}
+
+#modal-combat-result {
+    z-index: 130;
+}
+
+#modal-teach-attack {
+    z-index: 140;
+}
+
+#modal-victory {
+    z-index: 150;
+}
+
+#modal-codex, #modal-rules {
+    z-index: 200;
+}
+
+.btn-primary {
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+    border: 1px solid #60a5fa;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(180deg, #60a5fa, #3b82f6);
+}
+
+.result-badge-highlight h3 {
+    font-size: 1.05rem;
+    color: #fbbf24;
+    margin-bottom: 6px;
+}
+
+.result-move-teaching h4 {
+    font-size: 1rem;
+    color: #38bdf8;
+    margin-bottom: 4px;
+}
+
 .modal-backdrop.open {
     display: flex;
 }
@@ -2816,6 +2873,7 @@ main.main-workspace {
         <div class="modal-dialog" style="max-width: 520px; text-align: center;">
             <div class="modal-header">
                 <h3 id="result-title">🎉 ¡Fin del Combate!</h3>
+                <button class="modal-close-btn" id="btn-result-close" onclick="document.getElementById('btn-result-continue')?.click()">✕</button>
             </div>
             <div class="modal-body">
                 <div id="result-body"></div>
@@ -6163,6 +6221,7 @@ class CombatEngine {
         if (p1Active && p1Active.hp <= 0) {
             this.handleFaint(p1Active, this.player1);
         }
+        if (!this.inCombat) return;
         if (p2Active && p2Active.hp <= 0) {
             this.handleFaint(p2Active, this.player2);
         }
@@ -6172,14 +6231,20 @@ class CombatEngine {
         this.log(`💀 ¡${monster.name} ha caído debilitado!`);
         SoundFX.faint();
 
-        // Check if this was a defeated opponent monster that teaches an attack!
-        // Rule 29: "Cuando derrotamos a un monstruo en combate le podemos esnseniar ese ataque a uno de nuestros monstruos."
         const isOpponentMonster = (ownerPlayer === this.player2 || !ownerPlayer);
         if (isOpponentMonster && this.player1) {
             this.pendingMoveTeaching = {
                 monsterName: monster.name,
                 attack: monster.attacks[0],
-                sourceMonster: monster
+                sourceMonster: monster,
+                recipientPlayer: this.player1
+            };
+        } else if (ownerPlayer === this.player1 && this.player2) {
+            this.pendingMoveTeaching = {
+                monsterName: monster.name,
+                attack: monster.attacks[0],
+                sourceMonster: monster,
+                recipientPlayer: this.player2
             };
         }
 
@@ -6308,7 +6373,7 @@ class CombatEngine {
         this.resolveBets(actualWinnerId, actualWinnerName);
 
         if (window.UI) {
-            UI.renderCombatArena();
+            UI.hideCombatModal();
             UI.showCombatResultModal({
                 won: playerWon,
                 coins: rewardCoins,
@@ -6318,7 +6383,10 @@ class CombatEngine {
                 onContinue: () => {
                     this.inCombat = false;
                     this.isProcessing = false;
-                    if (window.UI) UI.hideCombatModal();
+                    if (window.UI) {
+                        UI.hideCombatModal();
+                        UI.hideTeachAttackModal();
+                    }
                     if (this.onCombatEndCallback) {
                         this.onCombatEndCallback(playerWon);
                     }
@@ -6452,6 +6520,10 @@ class TournamentEngine {
         const match = this.getCurrentMatch();
         if (!match || match.winner) return;
 
+        if (window.UI) {
+            UI.hideTournamentModal();
+        }
+
         if (match.isNpc) {
             this.game.combatEngine.startBattle({
                 type: 'tournament',
@@ -6504,7 +6576,10 @@ class TournamentEngine {
             if (this.currentMatchIndex === 0) {
                 // SF1 finished
                 this.currentMatchIndex = 1;
-                UI.renderTournamentBracket();
+                if (window.UI) {
+                    UI.showTournamentModal();
+                    UI.renderTournamentBracket();
+                }
                 return;
             } else if (this.currentMatchIndex === 1) {
                 // SF2 finished, setup Bronze and Final
@@ -6522,12 +6597,18 @@ class TournamentEngine {
                 this.matches[3].p2 = sf2Winner;
 
                 this.currentMatchIndex = 2; // Bronze match
-                UI.renderTournamentBracket();
+                if (window.UI) {
+                    UI.showTournamentModal();
+                    UI.renderTournamentBracket();
+                }
                 return;
             } else if (this.currentMatchIndex === 2) {
                 // Bronze finished, move to Grand Final
                 this.currentMatchIndex = 3;
-                UI.renderTournamentBracket();
+                if (window.UI) {
+                    UI.showTournamentModal();
+                    UI.renderTournamentBracket();
+                }
                 return;
             } else if (this.currentMatchIndex === 3) {
                 // Final finished
@@ -6552,13 +6633,17 @@ class TournamentEngine {
             this.winner = bestPlayer;
             this.concludeTournament();
         } else {
-            if (window.UI) UI.renderTournamentBracket();
+            if (window.UI) {
+                UI.showTournamentModal();
+                UI.renderTournamentBracket();
+            }
         }
     }
 
     concludeTournament() {
         SoundFX.victory();
         if (window.UI) {
+            UI.hideTournamentModal();
             UI.renderTournamentBracket();
             UI.showVictoryModal(this.winner);
         }
@@ -7964,6 +8049,14 @@ class MonsterJourneyGame {
             gym: adaptiveGym,
             onEnd: (won) => {
                 if (window.UI) UI.renderAll();
+                const badgeCount = player.defeatedGymIds && player.defeatedGymIds.length > player.badges.length
+                    ? player.defeatedGymIds.length
+                    : player.badges.length;
+                if (badgeCount >= 3 || this.pendingTournamentTrigger || this.tournamentEngine.active) {
+                    this.pendingTournamentTrigger = false;
+                    this.triggerTournament();
+                    return;
+                }
                 this.endTurn();
             }
         });
@@ -8054,7 +8147,11 @@ class MonsterJourneyGame {
             if (window.UI) {
                 UI.logGame(`👑 **¡${player.name} HA OBTENIDO 3 MEDALLAS DE GIMNASIO!** ¡Se activa el Gran Torneo Final!`);
             }
-            this.triggerTournament();
+            if (this.combatEngine && this.combatEngine.inCombat) {
+                this.pendingTournamentTrigger = true;
+            } else {
+                this.triggerTournament();
+            }
         }
     }
 
@@ -9435,11 +9532,11 @@ const UI = {
         });
     },
 
-    showTeachAttackModal({ source, attack, wildMonsterIndex = null, sourceName = '' }) {
-        this.activeTeachAttackContext = { source, attack, wildMonsterIndex, sourceName };
+    showTeachAttackModal({ source, attack, wildMonsterIndex = null, sourceName = '', recipientPlayer = null }) {
+        this.activeTeachAttackContext = { source, attack, wildMonsterIndex, sourceName, recipientPlayer };
         const modal = document.getElementById('modal-teach-attack');
         if (!modal) {
-            const player = this.game.getActivePlayer();
+            const player = recipientPlayer || this.game.getActivePlayer();
             if (player && player.monsters.length > 0) {
                 if (source === 'wild' && wildMonsterIndex !== null) {
                     this.game.teachAttackFromWild(wildMonsterIndex, player.monsters[0].instanceId);
@@ -9451,7 +9548,7 @@ const UI = {
         }
 
         const typeColor = TYPE_COLORS[attack.type] || '#3b82f6';
-        const dmgDisplay = attack.effect === 'speed_damage' ? 'Velocidad' : attack.effect === 'fixed_damage' ? `${attack.fixedDmg} Fijo` : `${attack.baseDmg} daño`;
+        const dmgDisplay = attack.effect === 'speed_damage' ? 'Velocidad' : attack.effect === 'fixed_damage' ? `${attack.fixedDmg} Fijo` : attack.effect === 'multi_hit' ? `${attack.hits || 3}x (${attack.baseDmg || 1} daño)` : `${attack.baseDmg || 1} daño`;
 
         const bannerEl = document.getElementById('teach-attack-move-info');
         if (bannerEl) {
@@ -9471,7 +9568,7 @@ const UI = {
         }
 
         const partyGrid = document.getElementById('teach-attack-party-grid');
-        const activePlayer = (this.game.combatEngine && this.game.combatEngine.player1) || this.game.getActivePlayer();
+        const activePlayer = recipientPlayer || (this.game.combatEngine && this.game.combatEngine.player1) || this.game.getActivePlayer();
         if (partyGrid) {
             partyGrid.innerHTML = activePlayer.monsters.map((monster, i) => {
                 const monTypeColor = TYPE_COLORS[monster.type] || '#4caf50';
@@ -9973,37 +10070,41 @@ const UI = {
                             🗳️ Resultado de las Apuestas de Espectadores:
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 6px;">
-                            ${bets.map(b => `
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: ${b.won ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)'}; border: 1px solid ${b.won ? '#10b981' : '#475569'}; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
-                                    <div>
-                                        <strong style="color: ${b.bettorColor};">${b.bettorName}</strong> predijo: <span style="color: ${b.ballotColor}; font-weight: bold;">${b.predictedWinnerName}</span>
+                            ${bets.map(b => {
+                                const bColor = b.bettorColor || '#38bdf8';
+                                const ballotColor = b.ballotColor || '#fbbf24';
+                                return `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: ${b.won ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)'}; border: 1px solid ${b.won ? '#10b981' : '#475569'}; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
+                                        <div>
+                                            <strong style="color: ${bColor};">${b.bettorName}</strong> predijo: <span style="color: ${ballotColor}; font-weight: bold;">${b.predictedWinnerName}</span>
+                                        </div>
+                                        <div>
+                                            ${b.won ? '<span style="color: #34d399; font-weight: 800;">✅ ¡Acertó! (+1 🍀)</span>' : '<span style="color: #94a3b8;">❌ No acertó (0 🍀)</span>'}
+                                        </div>
                                     </div>
-                                    <div>
-                                        ${b.won ? '<span style="color: #34d399; font-weight: 800;">✅ ¡Acertó! (+1 🍀)</span>' : '<span style="color: #94a3b8;">❌ No acertó (0 🍀)</span>'}
-                                    </div>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
             }
 
-            if (badge) {
+            if (badge && badge.badgeName) {
                 html += `
                     <div class="result-badge-highlight" style="background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; padding: 12px; border-radius: 8px; margin-top: 10px;">
-                        <h3>🏅 ¡Nueva Medalla Obtenida: ${badge.badgeName}!</h3>
-                        <p>${badge.badgeIcon} Has superado el ${badge.name} (Tier ${badge.tier}).</p>
+                        <h3 style="color: #fbbf24; margin-bottom: 4px; font-size: 1.05rem;">🏅 ¡Nueva Medalla Obtenida: ${badge.badgeName}!</h3>
+                        <p>${badge.badgeIcon || '🏅'} Has superado el ${badge.name || 'Gimnasio'} (Tier ${badge.tier || 1}).</p>
                         <p>🍀 Recompensa adicional: +${badge.rewardLuck || 1} Suerte.</p>
                     </div>
                 `;
             }
 
-            if (moveTeaching) {
+            if (moveTeaching && moveTeaching.attack && moveTeaching.attack.name) {
                 html += `
                     <div class="result-move-teaching" style="margin-top: 10px;">
-                        <h4>📖 ¡Enseñanza de Ataque Desbloqueada!</h4>
+                        <h4 style="color: #38bdf8; font-size: 1rem; margin-bottom: 4px;">📖 ¡Enseñanza de Ataque Desbloqueada!</h4>
                         <p>Has derrotado a <strong>${moveTeaching.monsterName}</strong>. Puedes enseñarle su técnica <strong>${moveTeaching.attack.name}</strong> a una de tus criaturas:</p>
-                        <button class="btn-primary" onclick="UI.promptTeachDefeatedMove()">Enseñar Ataque Ahora</button>
+                        <button class="btn-action btn-action-primary" style="margin: 8px auto 0 auto; width: 100%; justify-content: center;" onclick="UI.promptTeachDefeatedMove()">📖 Enseñar Ataque Ahora</button>
                     </div>
                 `;
             }
@@ -10015,6 +10116,7 @@ const UI = {
         if (btnContinue) {
             btnContinue.onclick = () => {
                 resultModal.classList.remove('open');
+                this.hideTeachAttackModal();
                 if (onContinue) onContinue();
             };
         }
@@ -10027,11 +10129,13 @@ const UI = {
         if (!combat.pendingMoveTeaching) return;
         const move = combat.pendingMoveTeaching.attack;
         const opponentName = combat.pendingMoveTeaching.monsterName || 'Rival derrotado';
+        const recipientPlayer = combat.pendingMoveTeaching.recipientPlayer || combat.player1;
 
         this.showTeachAttackModal({
             source: 'combat',
             attack: move,
-            sourceName: `${opponentName} (Derrotado en Combate)`
+            sourceName: `${opponentName} (Derrotado en Combate)`,
+            recipientPlayer
         });
     },
 

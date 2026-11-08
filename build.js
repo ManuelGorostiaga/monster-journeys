@@ -474,6 +474,7 @@ ${css}
         <div class="modal-dialog" style="max-width: 520px; text-align: center;">
             <div class="modal-header">
                 <h3 id="result-title">🎉 ¡Fin del Combate!</h3>
+                <button class="modal-close-btn" id="btn-result-close" onclick="document.getElementById('btn-result-continue')?.click()">✕</button>
             </div>
             <div class="modal-body">
                 <div id="result-body"></div>

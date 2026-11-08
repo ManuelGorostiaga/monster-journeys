@@ -1292,11 +1292,11 @@ const UI = {
         });
     },
 
-    showTeachAttackModal({ source, attack, wildMonsterIndex = null, sourceName = '' }) {
-        this.activeTeachAttackContext = { source, attack, wildMonsterIndex, sourceName };
+    showTeachAttackModal({ source, attack, wildMonsterIndex = null, sourceName = '', recipientPlayer = null }) {
+        this.activeTeachAttackContext = { source, attack, wildMonsterIndex, sourceName, recipientPlayer };
         const modal = document.getElementById('modal-teach-attack');
         if (!modal) {
-            const player = this.game.getActivePlayer();
+            const player = recipientPlayer || this.game.getActivePlayer();
             if (player && player.monsters.length > 0) {
                 if (source === 'wild' && wildMonsterIndex !== null) {
                     this.game.teachAttackFromWild(wildMonsterIndex, player.monsters[0].instanceId);
@@ -1308,7 +1308,7 @@ const UI = {
         }
 
         const typeColor = TYPE_COLORS[attack.type] || '#3b82f6';
-        const dmgDisplay = attack.effect === 'speed_damage' ? 'Velocidad' : attack.effect === 'fixed_damage' ? `${attack.fixedDmg} Fijo` : `${attack.baseDmg} daño`;
+        const dmgDisplay = attack.effect === 'speed_damage' ? 'Velocidad' : attack.effect === 'fixed_damage' ? `${attack.fixedDmg} Fijo` : attack.effect === 'multi_hit' ? `${attack.hits || 3}x (${attack.baseDmg || 1} daño)` : `${attack.baseDmg || 1} daño`;
 
         const bannerEl = document.getElementById('teach-attack-move-info');
         if (bannerEl) {
@@ -1328,7 +1328,7 @@ const UI = {
         }
 
         const partyGrid = document.getElementById('teach-attack-party-grid');
-        const activePlayer = (this.game.combatEngine && this.game.combatEngine.player1) || this.game.getActivePlayer();
+        const activePlayer = recipientPlayer || (this.game.combatEngine && this.game.combatEngine.player1) || this.game.getActivePlayer();
         if (partyGrid) {
             partyGrid.innerHTML = activePlayer.monsters.map((monster, i) => {
                 const monTypeColor = TYPE_COLORS[monster.type] || '#4caf50';
@@ -1830,37 +1830,41 @@ const UI = {
                             🗳️ Resultado de las Apuestas de Espectadores:
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 6px;">
-                            ${bets.map(b => `
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: ${b.won ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)'}; border: 1px solid ${b.won ? '#10b981' : '#475569'}; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
-                                    <div>
-                                        <strong style="color: ${b.bettorColor};">${b.bettorName}</strong> predijo: <span style="color: ${b.ballotColor}; font-weight: bold;">${b.predictedWinnerName}</span>
+                            ${bets.map(b => {
+                                const bColor = b.bettorColor || '#38bdf8';
+                                const ballotColor = b.ballotColor || '#fbbf24';
+                                return `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: ${b.won ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)'}; border: 1px solid ${b.won ? '#10b981' : '#475569'}; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem;">
+                                        <div>
+                                            <strong style="color: ${bColor};">${b.bettorName}</strong> predijo: <span style="color: ${ballotColor}; font-weight: bold;">${b.predictedWinnerName}</span>
+                                        </div>
+                                        <div>
+                                            ${b.won ? '<span style="color: #34d399; font-weight: 800;">✅ ¡Acertó! (+1 🍀)</span>' : '<span style="color: #94a3b8;">❌ No acertó (0 🍀)</span>'}
+                                        </div>
                                     </div>
-                                    <div>
-                                        ${b.won ? '<span style="color: #34d399; font-weight: 800;">✅ ¡Acertó! (+1 🍀)</span>' : '<span style="color: #94a3b8;">❌ No acertó (0 🍀)</span>'}
-                                    </div>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
             }
 
-            if (badge) {
+            if (badge && badge.badgeName) {
                 html += `
                     <div class="result-badge-highlight" style="background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; padding: 12px; border-radius: 8px; margin-top: 10px;">
-                        <h3>🏅 ¡Nueva Medalla Obtenida: ${badge.badgeName}!</h3>
-                        <p>${badge.badgeIcon} Has superado el ${badge.name} (Tier ${badge.tier}).</p>
+                        <h3 style="color: #fbbf24; margin-bottom: 4px; font-size: 1.05rem;">🏅 ¡Nueva Medalla Obtenida: ${badge.badgeName}!</h3>
+                        <p>${badge.badgeIcon || '🏅'} Has superado el ${badge.name || 'Gimnasio'} (Tier ${badge.tier || 1}).</p>
                         <p>🍀 Recompensa adicional: +${badge.rewardLuck || 1} Suerte.</p>
                     </div>
                 `;
             }
 
-            if (moveTeaching) {
+            if (moveTeaching && moveTeaching.attack && moveTeaching.attack.name) {
                 html += `
                     <div class="result-move-teaching" style="margin-top: 10px;">
-                        <h4>📖 ¡Enseñanza de Ataque Desbloqueada!</h4>
+                        <h4 style="color: #38bdf8; font-size: 1rem; margin-bottom: 4px;">📖 ¡Enseñanza de Ataque Desbloqueada!</h4>
                         <p>Has derrotado a <strong>${moveTeaching.monsterName}</strong>. Puedes enseñarle su técnica <strong>${moveTeaching.attack.name}</strong> a una de tus criaturas:</p>
-                        <button class="btn-primary" onclick="UI.promptTeachDefeatedMove()">Enseñar Ataque Ahora</button>
+                        <button class="btn-action btn-action-primary" style="margin: 8px auto 0 auto; width: 100%; justify-content: center;" onclick="UI.promptTeachDefeatedMove()">📖 Enseñar Ataque Ahora</button>
                     </div>
                 `;
             }
@@ -1872,6 +1876,7 @@ const UI = {
         if (btnContinue) {
             btnContinue.onclick = () => {
                 resultModal.classList.remove('open');
+                this.hideTeachAttackModal();
                 if (onContinue) onContinue();
             };
         }
@@ -1884,11 +1889,13 @@ const UI = {
         if (!combat.pendingMoveTeaching) return;
         const move = combat.pendingMoveTeaching.attack;
         const opponentName = combat.pendingMoveTeaching.monsterName || 'Rival derrotado';
+        const recipientPlayer = combat.pendingMoveTeaching.recipientPlayer || combat.player1;
 
         this.showTeachAttackModal({
             source: 'combat',
             attack: move,
-            sourceName: `${opponentName} (Derrotado en Combate)`
+            sourceName: `${opponentName} (Derrotado en Combate)`,
+            recipientPlayer
         });
     },
 
