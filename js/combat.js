@@ -726,6 +726,12 @@ class CombatEngine {
             this.log(`🦷 Colmillo Afilado inflige +2 daño por atacar primero.`);
         }
 
+        // Check Cinto Experto (+1 daño en golpe supereficaz)
+        if (weaknessBonus > 0 && attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_10') {
+            damage += 1;
+            this.log(`🥋 Cinto Experto añade +1 daño por golpe supereficaz.`);
+        }
+
         // Red character ability: Determinación (+1 dmg if attacker HP < 50%)
         if (attackerPlayer && attackerPlayer.characterId === 'char_red' && attacker.hp <= (attacker.maxHp / 2)) {
             damage += 1;
@@ -886,10 +892,14 @@ class CombatEngine {
 
         // 1. Paralizar (0 speed)
         if (attack.effect === 'paralyze' && defender.hp > 0) {
-            defender.status = 'paralysis';
-            defender.speed = 0;
-            this.log(`⚡ ¡${defender.name} ha sido PARALIZADO! Su Velocidad queda reducida a 0.`);
-            SoundFX.weaknessHit();
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_11') {
+                this.log(`🍈 ¡Baya Caqui protege a ${defender.name} e impide la parálisis!`);
+            } else {
+                defender.status = 'paralysis';
+                defender.speed = 0;
+                this.log(`⚡ ¡${defender.name} ha sido PARALIZADO! Su Velocidad queda reducida a 0.`);
+                SoundFX.weaknessHit();
+            }
         }
 
         // 2. Envenenar (-1 hp por turno)
@@ -900,8 +910,12 @@ class CombatEngine {
 
         // 3. Somnoliento (recibe +1 dmg)
         if (attack.effect === 'drowsy' && defender.hp > 0) {
-            defender.status = 'drowsy';
-            this.log(`💤 ¡${defender.name} ha caído en SOMNOLENCIA! Recibirá +1 de daño de todos los ataques.`);
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_11') {
+                this.log(`🍈 ¡Baya Caqui protege a ${defender.name} e impide la somnolencia!`);
+            } else {
+                defender.status = 'drowsy';
+                this.log(`💤 ¡${defender.name} ha caído en SOMNOLENCIA! Recibirá +1 de daño de todos los ataques.`);
+            }
         }
 
         // 4. Escudo próximo turno (-2 daño recibido)

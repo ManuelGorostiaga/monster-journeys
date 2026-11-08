@@ -2529,7 +2529,7 @@ main.main-workspace {
             <div class="items-hand-section">
                 <div class="section-header-row">
                     <div class="section-title-tag">
-                        <span>🎒 Mano de Cartas de Objetos (Herramientas, Combate y Utilidad):</span>
+                        <span>🎒 Mano de Cartas de Objetos (Combate y Utilidad):</span>
                     </div>
                     <span style="font-size: 0.72rem; color: #94a3b8;">
                         Regla 10: Máximo 1 objeto equipado por criatura.
@@ -2883,7 +2883,7 @@ main.main-workspace {
                     <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate + 1 en reserva (4 en tablero personal).</li>
                     <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
                     <li><strong>Mazos de Biomas:</strong> Salen de biomas temáticos (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada).</li>
-                    <li><strong>Herramientas de Captura:</strong> Cada criatura tiene un tier de captura (1 a 3). Sin la herramienta no puede ser capturada.</li>
+                    <li><strong>Captura Libre:</strong> Los monstruos encontrados en encuentros salvajes se capturan directamente sin necesidad de pokeballs ni herramientas de captura.</li>
                     <li><strong>Mazo de Encuentro:</strong> Al buscar miras las primeras 3 cartas del mazo del bioma y eliges una.</li>
                     <li><strong>Mapa de Región Estilo Pokémon:</strong> Mapa con nodos y rutas interconectadas. Los jugadores inician en diferentes esquinas del mapa (SO, NE, NO, SE). La mayoría de nodos alojan 1 carta de entorno, mientras que los grandes cruces (hubs) alojan hasta 2 cartas.</li>
                     <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador en cualquier nodo conectado. La tienda solo es accesible desde Ciudades.</li>
@@ -3180,8 +3180,8 @@ const OVERWORLD_ABILITIES = {
     bug: {
         id: 'bug',
         name: 'Red de Seda',
-        desc: '🕸️ Próxima captura: +1 Tier.',
-        captureTierBonus: 1
+        desc: '🕸️ Trampa de seda: +1 🍀.',
+        luckBonus: 1
     }
 };
 
@@ -4060,44 +4060,6 @@ const MONSTERS_DATABASE = [
 ];
 
 const ITEMS_DATABASE = [
-    // --- HERRAMIENTAS DE CAPTURA ---
-    {
-        id: 'item_cap_1',
-        name: 'Pokeball Básica',
-        category: 'capture',
-        tier: 1,
-        cost: 4,
-        icon: '🔴',
-        desc: '🔴 Captura: Tier 1.'
-    },
-    {
-        id: 'item_cap_2',
-        name: 'Superball Reforzada',
-        category: 'capture',
-        tier: 2,
-        cost: 8,
-        icon: '🔵',
-        desc: '🔵 Captura: Tier ≤ 2.'
-    },
-    {
-        id: 'item_cap_3',
-        name: 'Ultraball Avanzada',
-        category: 'capture',
-        tier: 3,
-        cost: 14,
-        icon: '🟡',
-        desc: '🟡 Captura: Tier ≤ 3.'
-    },
-    {
-        id: 'item_cap_4',
-        name: 'Masterball Suprema',
-        category: 'capture',
-        tier: 4,
-        cost: 22,
-        icon: '🟣',
-        desc: '🟣 Captura: Cualquier Tier (incluye T4).'
-    },
-
     // --- OBJETOS DE COMBATE ---
     {
         id: 'item_cmb_1',
@@ -4171,6 +4133,22 @@ const ITEMS_DATABASE = [
         icon: '🏋️',
         desc: '🏋️ +3 Max HP.'
     },
+    {
+        id: 'item_cmb_10',
+        name: 'Cinto Experto',
+        category: 'combat',
+        cost: 6,
+        icon: '🥋',
+        desc: '🥋 Golpe supereficaz ➔ +1 daño extra.'
+    },
+    {
+        id: 'item_cmb_11',
+        name: 'Baya Caqui',
+        category: 'combat',
+        cost: 5,
+        icon: '🍈',
+        desc: '🍈 Inmune a Parálisis y Somnolencia.'
+    },
 
     // --- OBJETOS DE UTILIDAD ---
     {
@@ -4214,6 +4192,14 @@ const ITEMS_DATABASE = [
         desc: '🪙 Fin de combate ➔ +1 🪙.'
     },
     {
+        id: 'item_utl_6',
+        name: 'Trébol Dorado',
+        category: 'utility',
+        cost: 6,
+        icon: '🍀',
+        desc: '🍀 Al equipar o poseer ➔ +1 🍀.'
+    },
+    {
         id: 'item_utl_7',
         name: 'Telescopio Explorador',
         category: 'utility',
@@ -4228,6 +4214,14 @@ const ITEMS_DATABASE = [
         cost: 7,
         icon: '🧲',
         desc: '🧲 Inicio de turno ➔ +1 🪙.'
+    },
+    {
+        id: 'item_utl_9',
+        name: 'Cantimplora de Viaje',
+        category: 'utility',
+        cost: 5,
+        icon: '🍶',
+        desc: '🍶 Moverse por Agua Dulce o Salada ➔ +1 🍀.'
     }
 ];
 
@@ -4240,8 +4234,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#d32f2f',
         startingCoins: 2,
         startingLuck: 3,
-        startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_cmb_7'],
+        startingItemIds: ['item_cmb_7', 'item_cmb_6'],
         starterMonsterId: 'mon_pln_2', // Candilín (Fuego)
         abilityName: 'Determinación Ardiente',
         abilityDesc: 'HP < 50% ➔ +1 daño.'
@@ -4254,8 +4247,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#1976d2',
         startingCoins: 2,
         startingLuck: 4,
-        startingToolTier: 2,
-        startingItemIds: ['item_cap_2', 'item_cmb_1'],
+        startingItemIds: ['item_cmb_1', 'item_utl_5'],
         starterMonsterId: 'mon_frw_1', // Renacuajito (Agua)
         abilityName: 'Primer Golpe & Fortuna',
         abilityDesc: 'Turno 1: +2 Vel. +1 🍀 inicial.'
@@ -4268,8 +4260,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#00838f',
         startingCoins: 4,
         startingLuck: 3,
-        startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_utl_1'],
+        startingItemIds: ['item_utl_1', 'item_cmb_3'],
         starterMonsterId: 'mon_frw_2', // Patiloto (Agua)
         abilityName: 'Navegante Experta',
         abilityDesc: 'Agua: Movimiento normal. Visitar agua ➔ +1 🍀.'
@@ -4282,8 +4273,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#6d4c41',
         startingCoins: 3,
         startingLuck: 3,
-        startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_cmb_2'],
+        startingItemIds: ['item_cmb_2', 'item_cmb_8'],
         starterMonsterId: 'mon_for_1', // Hojarín (Planta)
         abilityName: 'Resistencia Rocosa',
         abilityDesc: 'Equipo: +2 Max HP.'
@@ -5910,6 +5900,12 @@ class CombatEngine {
             this.log(`🦷 Colmillo Afilado inflige +2 daño por atacar primero.`);
         }
 
+        // Check Cinto Experto (+1 daño en golpe supereficaz)
+        if (weaknessBonus > 0 && attacker.equippedItem && attacker.equippedItem.id === 'item_cmb_10') {
+            damage += 1;
+            this.log(`🥋 Cinto Experto añade +1 daño por golpe supereficaz.`);
+        }
+
         // Red character ability: Determinación (+1 dmg if attacker HP < 50%)
         if (attackerPlayer && attackerPlayer.characterId === 'char_red' && attacker.hp <= (attacker.maxHp / 2)) {
             damage += 1;
@@ -6070,10 +6066,14 @@ class CombatEngine {
 
         // 1. Paralizar (0 speed)
         if (attack.effect === 'paralyze' && defender.hp > 0) {
-            defender.status = 'paralysis';
-            defender.speed = 0;
-            this.log(`⚡ ¡${defender.name} ha sido PARALIZADO! Su Velocidad queda reducida a 0.`);
-            SoundFX.weaknessHit();
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_11') {
+                this.log(`🍈 ¡Baya Caqui protege a ${defender.name} e impide la parálisis!`);
+            } else {
+                defender.status = 'paralysis';
+                defender.speed = 0;
+                this.log(`⚡ ¡${defender.name} ha sido PARALIZADO! Su Velocidad queda reducida a 0.`);
+                SoundFX.weaknessHit();
+            }
         }
 
         // 2. Envenenar (-1 hp por turno)
@@ -6084,8 +6084,12 @@ class CombatEngine {
 
         // 3. Somnoliento (recibe +1 dmg)
         if (attack.effect === 'drowsy' && defender.hp > 0) {
-            defender.status = 'drowsy';
-            this.log(`💤 ¡${defender.name} ha caído en SOMNOLENCIA! Recibirá +1 de daño de todos los ataques.`);
+            if (defender.equippedItem && defender.equippedItem.id === 'item_cmb_11') {
+                this.log(`🍈 ¡Baya Caqui protege a ${defender.name} e impide la somnolencia!`);
+            } else {
+                defender.status = 'drowsy';
+                this.log(`💤 ¡${defender.name} ha caído en SOMNOLENCIA! Recibirá +1 de daño de todos los ataques.`);
+            }
         }
 
         // 4. Escudo próximo turno (-2 daño recibido)
@@ -7685,20 +7689,6 @@ class MonsterJourneyGame {
         const monster = this.activeSearchCards[monsterIndex];
         if (!monster) return;
 
-        let highestToolTier = 0;
-        player.inventory.forEach(item => {
-            if (item.category === 'capture' && item.tier) {
-                if (item.tier > highestToolTier) highestToolTier = item.tier;
-            }
-        });
-
-        highestToolTier += (player.temporaryModifiers.captureTierBonus || 0);
-
-        if (highestToolTier < monster.captureTier) {
-            alert(`⚠️ No puedes capturar a ${monster.name}!\nRequiere una Herramienta de Captura de Tier ${monster.captureTier}, pero tu herramienta máxima actual es Tier ${highestToolTier}.`);
-            return;
-        }
-
         SoundFX.captureSuccess();
 
         if (player.characterId === 'char_brock') {
@@ -7803,6 +7793,9 @@ class MonsterJourneyGame {
 
         player.coins -= cost;
         player.inventory.push(JSON.parse(JSON.stringify(item)));
+        if (item.id === 'item_utl_6') {
+            player.luck = (player.luck || 0) + 1;
+        }
         SoundFX.coin();
 
         if (window.UI) UI.logGame(`🛒 ${player.name} compró **${item.name}** por ${cost} monedas.`);
@@ -8114,9 +8107,9 @@ class MonsterJourneyGame {
             if (window.UI) UI.logGame(`🦡 ${monster.name} activa **Excavación**: Ganaste +1 movimiento subterráneo en este turno.`);
             SoundFX.step();
         } else if (ability.id === 'bug') {
-            player.temporaryModifiers.captureTierBonus = 1;
+            player.luck += 1;
             this.hasActed = true;
-            if (window.UI) UI.logGame(`🕸️ ${monster.name} activa **Red de Seda**: Tu próxima captura será de +1 Tier superior.`);
+            if (window.UI) UI.logGame(`🕸️ ${monster.name} activa **Red de Seda**: Halló fortuna en su tela (+1 Suerte 🍀).`);
             SoundFX.step();
         }
 
@@ -9302,7 +9295,7 @@ const UI = {
                     <div class="inventory-card">
                         <div class="inv-top">
                             <span class="inv-icon">${item.icon}</span>
-                            <span class="inv-cat tag-${item.category}">${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}</span>
+                            <span class="inv-cat tag-${item.category}">${item.category === 'combat' ? 'Combate' : 'Utilidad'}</span>
                         </div>
                         <div class="inv-name">${item.name}</div>
                         <div class="inv-desc">${item.desc}</div>
@@ -9356,21 +9349,9 @@ const UI = {
         const modal = document.getElementById('modal-search');
         if (!modal) return;
 
-        const maxGymBadge = player.badges.length > 0 ? Math.max(...player.badges) : 0;
-        let highestToolTier = 0;
-        player.inventory.forEach(item => {
-            if (item.category === 'capture' && item.tier) {
-                if (item.tier > highestToolTier) highestToolTier = item.tier;
-            }
-        });
-        highestToolTier += (player.temporaryModifiers.captureTierBonus || 0);
-
         const container = document.getElementById('search-cards-grid');
         if (container) {
             container.innerHTML = cards.map((monster, idx) => {
-                const canCapture = highestToolTier >= monster.captureTier;
-                const canTeach = player.monsters.length > 0;
-
                 return `
                     <div class="wild-card-container">
                         <div class="wild-card-front" style="border-top: 5px solid ${biome.color || '#3b82f6'};">
@@ -9399,9 +9380,9 @@ const UI = {
                             </div>
 
                             <div class="wild-actions">
-                                <button class="btn-wild-capture ${canCapture ? 'btn-can-capture' : 'btn-cannot'}" 
+                                <button class="btn-wild-capture btn-can-capture" 
                                         onclick="UI.game.captureMonster(${idx})">
-                                    🪤 Capturar (Req: T${monster.captureTier} - Tienes: T${highestToolTier})
+                                    🐾 Capturar a ${monster.name}
                                 </button>
                                 
                                 <button class="btn-wild-teach btn-can-teach" 
@@ -9627,7 +9608,7 @@ const UI = {
                 return `
                     <div class="shop-card-item">
                         <div class="shop-card-badge tag-${item.category}">
-                            ${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}
+                            ${item.category === 'combat' ? 'Combate' : 'Utilidad'}
                         </div>
                         <div class="shop-card-icon">${item.icon}</div>
                         <div class="shop-card-name">${item.name}</div>
@@ -10312,9 +10293,8 @@ const UI = {
             if (filterContainer) {
                 filterContainer.innerHTML = `
                     <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (20)</button>
-                    <button class="codex-chip ${this.codexFilter === 'capture' ? 'active' : ''}" onclick="UI.setCodexFilter('capture')">🪤 Captura</button>
-                    <button class="codex-chip ${this.codexFilter === 'combat' ? 'active' : ''}" onclick="UI.setCodexFilter('combat')">⚔️ Combate</button>
-                    <button class="codex-chip ${this.codexFilter === 'utility' ? 'active' : ''}" onclick="UI.setCodexFilter('utility')">🎒 Utilidad</button>
+                    <button class="codex-chip ${this.codexFilter === 'combat' ? 'active' : ''}" onclick="UI.setCodexFilter('combat')">⚔️ Combate (11)</button>
+                    <button class="codex-chip ${this.codexFilter === 'utility' ? 'active' : ''}" onclick="UI.setCodexFilter('utility')">🎒 Utilidad (9)</button>
                 `;
             }
 
@@ -10331,7 +10311,7 @@ const UI = {
                     <div class="inv-top">
                         <span class="inv-icon">${item.icon}</span>
                         <span class="inv-cat tag-${item.category}">
-                            ${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}
+                            ${item.category === 'combat' ? 'Combate' : 'Utilidad'}
                         </span>
                     </div>
                     <div class="inv-name">${item.name}</div>

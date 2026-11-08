@@ -187,7 +187,7 @@ ${css}
             <div class="items-hand-section">
                 <div class="section-header-row">
                     <div class="section-title-tag">
-                        <span>🎒 Mano de Cartas de Objetos (Herramientas, Combate y Utilidad):</span>
+                        <span>🎒 Mano de Cartas de Objetos (Combate y Utilidad):</span>
                     </div>
                     <span style="font-size: 0.72rem; color: #94a3b8;">
                         Regla 10: Máximo 1 objeto equipado por criatura.
@@ -541,7 +541,7 @@ ${css}
                     <li><strong>Límite de Equipo:</strong> Máximo 3 monstruos activos en combate + 1 en reserva (4 en tablero personal).</li>
                     <li><strong>Evolución:</strong> Los monstruos no evolucionan.</li>
                     <li><strong>Mazos de Biomas:</strong> Salen de biomas temáticos (Bosque, Montaña, Pradera, Agua Dulce, Agua Salada).</li>
-                    <li><strong>Herramientas de Captura:</strong> Cada criatura tiene un tier de captura (1 a 3). Sin la herramienta no puede ser capturada.</li>
+                    <li><strong>Captura Libre:</strong> Los monstruos encontrados en encuentros salvajes se capturan directamente sin necesidad de pokeballs ni herramientas de captura.</li>
                     <li><strong>Mazo de Encuentro:</strong> Al buscar miras las primeras 3 cartas del mazo del bioma y eliges una.</li>
                     <li><strong>Mapa de Región Estilo Pokémon:</strong> Mapa con nodos y rutas interconectadas. Los jugadores inician en diferentes esquinas del mapa (SO, NE, NO, SE). La mayoría de nodos alojan 1 carta de entorno, mientras que los grandes cruces (hubs) alojan hasta 2 cartas.</li>
                     <li><strong>Mazo de Ciudades:</strong> Las Ciudades están en un mazo aparte, siempre plantables para cualquier jugador en cualquier nodo conectado. La tienda solo es accesible desde Ciudades.</li>

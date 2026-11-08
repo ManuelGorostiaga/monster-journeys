@@ -157,8 +157,8 @@ const OVERWORLD_ABILITIES = {
     bug: {
         id: 'bug',
         name: 'Red de Seda',
-        desc: '🕸️ Próxima captura: +1 Tier.',
-        captureTierBonus: 1
+        desc: '🕸️ Trampa de seda: +1 🍀.',
+        luckBonus: 1
     }
 };
 
@@ -1037,44 +1037,6 @@ const MONSTERS_DATABASE = [
 ];
 
 const ITEMS_DATABASE = [
-    // --- HERRAMIENTAS DE CAPTURA ---
-    {
-        id: 'item_cap_1',
-        name: 'Pokeball Básica',
-        category: 'capture',
-        tier: 1,
-        cost: 4,
-        icon: '🔴',
-        desc: '🔴 Captura: Tier 1.'
-    },
-    {
-        id: 'item_cap_2',
-        name: 'Superball Reforzada',
-        category: 'capture',
-        tier: 2,
-        cost: 8,
-        icon: '🔵',
-        desc: '🔵 Captura: Tier ≤ 2.'
-    },
-    {
-        id: 'item_cap_3',
-        name: 'Ultraball Avanzada',
-        category: 'capture',
-        tier: 3,
-        cost: 14,
-        icon: '🟡',
-        desc: '🟡 Captura: Tier ≤ 3.'
-    },
-    {
-        id: 'item_cap_4',
-        name: 'Masterball Suprema',
-        category: 'capture',
-        tier: 4,
-        cost: 22,
-        icon: '🟣',
-        desc: '🟣 Captura: Cualquier Tier (incluye T4).'
-    },
-
     // --- OBJETOS DE COMBATE ---
     {
         id: 'item_cmb_1',
@@ -1148,6 +1110,22 @@ const ITEMS_DATABASE = [
         icon: '🏋️',
         desc: '🏋️ +3 Max HP.'
     },
+    {
+        id: 'item_cmb_10',
+        name: 'Cinto Experto',
+        category: 'combat',
+        cost: 6,
+        icon: '🥋',
+        desc: '🥋 Golpe supereficaz ➔ +1 daño extra.'
+    },
+    {
+        id: 'item_cmb_11',
+        name: 'Baya Caqui',
+        category: 'combat',
+        cost: 5,
+        icon: '🍈',
+        desc: '🍈 Inmune a Parálisis y Somnolencia.'
+    },
 
     // --- OBJETOS DE UTILIDAD ---
     {
@@ -1191,6 +1169,14 @@ const ITEMS_DATABASE = [
         desc: '🪙 Fin de combate ➔ +1 🪙.'
     },
     {
+        id: 'item_utl_6',
+        name: 'Trébol Dorado',
+        category: 'utility',
+        cost: 6,
+        icon: '🍀',
+        desc: '🍀 Al equipar o poseer ➔ +1 🍀.'
+    },
+    {
         id: 'item_utl_7',
         name: 'Telescopio Explorador',
         category: 'utility',
@@ -1205,6 +1191,14 @@ const ITEMS_DATABASE = [
         cost: 7,
         icon: '🧲',
         desc: '🧲 Inicio de turno ➔ +1 🪙.'
+    },
+    {
+        id: 'item_utl_9',
+        name: 'Cantimplora de Viaje',
+        category: 'utility',
+        cost: 5,
+        icon: '🍶',
+        desc: '🍶 Moverse por Agua Dulce o Salada ➔ +1 🍀.'
     }
 ];
 
@@ -1217,8 +1211,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#d32f2f',
         startingCoins: 2,
         startingLuck: 3,
-        startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_cmb_7'],
+        startingItemIds: ['item_cmb_7', 'item_cmb_6'],
         starterMonsterId: 'mon_pln_2', // Candilín (Fuego)
         abilityName: 'Determinación Ardiente',
         abilityDesc: 'HP < 50% ➔ +1 daño.'
@@ -1231,8 +1224,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#1976d2',
         startingCoins: 2,
         startingLuck: 4,
-        startingToolTier: 2,
-        startingItemIds: ['item_cap_2', 'item_cmb_1'],
+        startingItemIds: ['item_cmb_1', 'item_utl_5'],
         starterMonsterId: 'mon_frw_1', // Renacuajito (Agua)
         abilityName: 'Primer Golpe & Fortuna',
         abilityDesc: 'Turno 1: +2 Vel. +1 🍀 inicial.'
@@ -1245,8 +1237,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#00838f',
         startingCoins: 4,
         startingLuck: 3,
-        startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_utl_1'],
+        startingItemIds: ['item_utl_1', 'item_cmb_3'],
         starterMonsterId: 'mon_frw_2', // Patiloto (Agua)
         abilityName: 'Navegante Experta',
         abilityDesc: 'Agua: Movimiento normal. Visitar agua ➔ +1 🍀.'
@@ -1259,8 +1250,7 @@ const CHARACTERS_DATABASE = [
         avatarColor: '#6d4c41',
         startingCoins: 3,
         startingLuck: 3,
-        startingToolTier: 1,
-        startingItemIds: ['item_cap_1', 'item_cmb_2'],
+        startingItemIds: ['item_cmb_2', 'item_cmb_8'],
         starterMonsterId: 'mon_for_1', // Hojarín (Planta)
         abilityName: 'Resistencia Rocosa',
         abilityDesc: 'Equipo: +2 Max HP.'

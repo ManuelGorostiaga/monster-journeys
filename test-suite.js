@@ -612,6 +612,30 @@ combatTester.executeAttack({
 console.assert(sashMon.hp === 1, `Cinta Focus should allow surviving lethal damage with 1 HP, got ${sashMon.hp}`);
 console.assert(sashMon.focusSashUsed === true, 'Cinta Focus should be marked as used');
 
+// 5. Cinto Experto (item_cmb_10: +1 damage on super effective hit)
+const expertMon = combatTester.cloneMonster(MONSTERS_DATABASE[0]);
+expertMon.equippedItem = ITEMS_DATABASE.find(i => i.id === 'item_cmb_10');
+const weakDefMon = combatTester.cloneMonster(MONSTERS_DATABASE.find(m => m.weakness === 'Planta'));
+weakDefMon.hp = 30; weakDefMon.maxHp = 30;
+const hpBeforeExpert = weakDefMon.hp;
+combatTester.executeAttack({
+    attacker: expertMon,
+    defender: weakDefMon,
+    attack: { name: 'Fijación Sísmica', type: 'Planta', baseDmg: 5, fixedDmg: 5, effect: 'fixed_damage' }
+});
+console.assert(weakDefMon.hp <= hpBeforeExpert - 5, 'Cinto Experto functioned on attack');
+
+// 6. Baya Caqui (item_cmb_11: immunity to paralysis)
+const caquiMon = combatTester.cloneMonster(MONSTERS_DATABASE[0]);
+caquiMon.equippedItem = ITEMS_DATABASE.find(i => i.id === 'item_cmb_11');
+caquiMon.status = null;
+combatTester.executeAttack({
+    attacker: fastMon,
+    defender: caquiMon,
+    attack: { name: 'Chispa Paralizante', type: 'Eléctrico', baseDmg: 2, effect: 'paralyze' }
+});
+console.assert(caquiMon.status === null, 'Baya Caqui prevented paralysis status');
+
 console.log('Test 17 Passed: All 20 items and running shoes (Zapatillas / Botas Ligeras) verified and functioning correctly.');
 
 console.log('\n=== TEST 18: Double Area Multi-Action Execution & Forest Sanctuary / Ancestral Teaching ===');
@@ -758,7 +782,7 @@ console.assert(owGame.hasMoved === true, 'Flight marked player as moved');
 
 console.log('Test 19 Passed: Overworld abilities (Excavación + Vuelo Rápido) function properly across map.');
 
-console.log('\n=== TEST 20: Tier 4 Legendary Monsters (1 per Type) & Masterball Suprema ===');
+console.log('\n=== TEST 20: Tier 4 Legendary Monsters (1 per Type) & Free Capture Without Pokeballs ===');
 const t4Monsters = MONSTERS_DATABASE.filter(m => m.captureTier === 4);
 console.assert(t4Monsters.length === 10, `There must be exactly 10 Tier 4 Legendaries, got ${t4Monsters.length}`);
 
@@ -771,13 +795,12 @@ requiredTypes.forEach(type => {
     console.assert(matching[0].attacks[0].baseDmg >= 8, `${matching[0].name} attack has high base damage (8+), got ${matching[0].attacks[0].baseDmg}`);
 });
 
-const masterball = ITEMS_DATABASE.find(i => i.id === 'item_cap_4');
-console.assert(masterball !== null && masterball.tier === 4, `Masterball Suprema must be Tier 4 tool, got tier: ${masterball?.tier}`);
+console.assert(!ITEMS_DATABASE.some(i => i.category === 'capture' || i.name.toLowerCase().includes('ball')), 'No pokeballs or capture tools in ITEMS_DATABASE');
 
 console.assert(EXPANSION_DECKS.tier4 !== undefined, 'EXPANSION_DECKS contains tier4');
 console.assert(EXPANSION_DECKS.tier4.monsters.length === 10, `EXPANSION_DECKS.tier4 holds 10 legendary monsters, got ${EXPANSION_DECKS.tier4.monsters.length}`);
 
-// Test capturing a Tier 4 Legendary
+// Test capturing a Tier 4 Legendary directly without pokeballs
 const capGame = new MonsterJourneyGame();
 capGame.initGame([
     { name: 'Red Hunter', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
@@ -786,21 +809,9 @@ const capPlayer = capGame.players[0];
 const targetLegendary = capGame.instantiateMonster(t4Monsters[0]);
 capGame.activeSearchCards = [targetLegendary];
 
-// Attempt with Tier 1 Pokeball should fail
-let alertTriggered = false;
-global.alert = () => { alertTriggered = true; };
 capGame.captureMonster(0);
-console.assert(alertTriggered === true, 'Capturing T4 legendary with Pokeball Tier 1 was rejected');
-console.assert(capPlayer.monsters.length === 1, 'Player did not capture legendary without proper tool');
-
-// Give player Masterball Suprema (Tier 4) and capture
-capPlayer.inventory.push(JSON.parse(JSON.stringify(masterball)));
-alertTriggered = false;
-capGame.hasActed = false;
-capGame.activeSearchCards = [targetLegendary];
-capGame.captureMonster(0);
-console.assert(capPlayer.monsters.some(m => m.id === targetLegendary.id), 'Successfully captured T4 legendary with Masterball Suprema');
-console.log('Test 20 Passed: Tier 4 Legendaries (10 types), Masterball Suprema, and capture mechanics verified.');
+console.assert(capPlayer.monsters.some(m => m.id === targetLegendary.id), 'Successfully captured T4 legendary directly without pokeball requirement');
+console.log('Test 20 Passed: Tier 4 Legendaries (10 types) and free capture without pokeballs verified.');
 
 console.log('\n=== TEST 21: Location Travel (Travesía en Barca) & Connection-Based Placement Luck ===');
 const travelGame = new MonsterJourneyGame();
@@ -884,7 +895,6 @@ turnGame.searchMonsters();
 console.assert(turnGame.activeSearchCards !== null && turnGame.activeSearchCards.length >= 3, 'Wild search allowed after taking location action');
 
 // 4. Concluding the search action ends the turn
-p1Turn.inventory.push(ITEMS_DATABASE.find(i => i.id === 'item_cap_4')); // Masterball to guarantee capture
 turnGame.captureMonster(0);
 console.assert(turnGame.activePlayerIndex === 1, 'Capturing wild monster ended turn and advanced to Player 2');
 

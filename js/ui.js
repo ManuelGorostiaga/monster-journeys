@@ -1152,7 +1152,7 @@ const UI = {
                     <div class="inventory-card">
                         <div class="inv-top">
                             <span class="inv-icon">${item.icon}</span>
-                            <span class="inv-cat tag-${item.category}">${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}</span>
+                            <span class="inv-cat tag-${item.category}">${item.category === 'combat' ? 'Combate' : 'Utilidad'}</span>
                         </div>
                         <div class="inv-name">${item.name}</div>
                         <div class="inv-desc">${item.desc}</div>
@@ -1206,21 +1206,9 @@ const UI = {
         const modal = document.getElementById('modal-search');
         if (!modal) return;
 
-        const maxGymBadge = player.badges.length > 0 ? Math.max(...player.badges) : 0;
-        let highestToolTier = 0;
-        player.inventory.forEach(item => {
-            if (item.category === 'capture' && item.tier) {
-                if (item.tier > highestToolTier) highestToolTier = item.tier;
-            }
-        });
-        highestToolTier += (player.temporaryModifiers.captureTierBonus || 0);
-
         const container = document.getElementById('search-cards-grid');
         if (container) {
             container.innerHTML = cards.map((monster, idx) => {
-                const canCapture = highestToolTier >= monster.captureTier;
-                const canTeach = player.monsters.length > 0;
-
                 return `
                     <div class="wild-card-container">
                         <div class="wild-card-front" style="border-top: 5px solid ${biome.color || '#3b82f6'};">
@@ -1249,9 +1237,9 @@ const UI = {
                             </div>
 
                             <div class="wild-actions">
-                                <button class="btn-wild-capture ${canCapture ? 'btn-can-capture' : 'btn-cannot'}" 
+                                <button class="btn-wild-capture btn-can-capture" 
                                         onclick="UI.game.captureMonster(${idx})">
-                                    🪤 Capturar (Req: T${monster.captureTier} - Tienes: T${highestToolTier})
+                                    🐾 Capturar a ${monster.name}
                                 </button>
                                 
                                 <button class="btn-wild-teach btn-can-teach" 
@@ -1477,7 +1465,7 @@ const UI = {
                 return `
                     <div class="shop-card-item">
                         <div class="shop-card-badge tag-${item.category}">
-                            ${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}
+                            ${item.category === 'combat' ? 'Combate' : 'Utilidad'}
                         </div>
                         <div class="shop-card-icon">${item.icon}</div>
                         <div class="shop-card-name">${item.name}</div>
@@ -2162,9 +2150,8 @@ const UI = {
             if (filterContainer) {
                 filterContainer.innerHTML = `
                     <button class="codex-chip ${this.codexFilter === 'all' ? 'active' : ''}" onclick="UI.setCodexFilter('all')">Todos (20)</button>
-                    <button class="codex-chip ${this.codexFilter === 'capture' ? 'active' : ''}" onclick="UI.setCodexFilter('capture')">🪤 Captura</button>
-                    <button class="codex-chip ${this.codexFilter === 'combat' ? 'active' : ''}" onclick="UI.setCodexFilter('combat')">⚔️ Combate</button>
-                    <button class="codex-chip ${this.codexFilter === 'utility' ? 'active' : ''}" onclick="UI.setCodexFilter('utility')">🎒 Utilidad</button>
+                    <button class="codex-chip ${this.codexFilter === 'combat' ? 'active' : ''}" onclick="UI.setCodexFilter('combat')">⚔️ Combate (11)</button>
+                    <button class="codex-chip ${this.codexFilter === 'utility' ? 'active' : ''}" onclick="UI.setCodexFilter('utility')">🎒 Utilidad (9)</button>
                 `;
             }
 
@@ -2181,7 +2168,7 @@ const UI = {
                     <div class="inv-top">
                         <span class="inv-icon">${item.icon}</span>
                         <span class="inv-cat tag-${item.category}">
-                            ${item.category === 'capture' ? `Herramienta T${item.tier}` : item.category === 'combat' ? 'Combate' : 'Utilidad'}
+                            ${item.category === 'combat' ? 'Combate' : 'Utilidad'}
                         </span>
                     </div>
                     <div class="inv-name">${item.name}</div>

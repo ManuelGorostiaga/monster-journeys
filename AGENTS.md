@@ -19,7 +19,7 @@ The project uses a clean modular source structure compiled into a single product
 - `c:\Dev\monster-journeys\build.js`: Node.js build bundler. Inlines CSS and all JS modules into `index.html`.
 - `c:\Dev\monster-journeys\test-suite.js`: Node.js automated test suite (12 test suites covering all core game logic). Run with `node c:\Dev\monster-journeys\test-suite.js`.
 - `c:\Dev\monster-journeys\css\styles.css`: Styles for the board game UI, playing card proportions (5:7 ratio), layout, and modals.
-- `c:\Dev\monster-journeys\js\data.js`: Database for characters, 40 monsters, attacks, 20 items, 23 locations (18 environment cards + 4 gym cities + 1 starting town), and weakness rules.
+- `c:\Dev\monster-journeys\js\data.js`: Database for characters, 50 monsters, attacks, 20 items (combat & utility, no pokeballs), 22 locations/cities, and weakness rules.
 - `c:\Dev\monster-journeys\js\cardmap.js`: Interconnected Card Node system. Manages grid coordinates, adjacent slots, discovering new zones, and city placement.
 - `c:\Dev\monster-journeys\js\combat.js`: 1v1 combat engine, attack dice rolling, weakness checks, monster switching penalty, item effects (e.g., Oran Berry at 0 HP), and post-combat healing/rewards.
 - `c:\Dev\monster-journeys\js\tournament.js`: Grand Tournament brackets and final PvP tournament resolution when 3 of 4 gyms are beaten or at round 20.
@@ -31,7 +31,7 @@ The project uses a clean modular source structure compiled into a single product
 
 ## Core Game Rules & Mechanics
 
-1. **Card Monsters**: Each monster card has HP, Speed, an element type, Weakness tag (`Weak +2`), capture tier requirement (1 to 4), and attack moves with base damage + dice rolls. Monsters do not evolve.
+1. **Card Monsters & Free Capture**: Each monster card has HP, Speed, an element type, Weakness tag (`Weak +2`), power tier (1 to 4), and attack moves with base damage + dice rolls. Monsters do not evolve. Pokeballs are not in the game and are not required to capture monsters; wild monsters revealed in searches can be captured directly.
 2. **Combat 1v1 & Initiative**: At the start of each combat round, initiative (Speed) is checked first. The monster with higher initiative acts first (can choose an attack or switch monster). Switching consumes that player's turn (there is no special incoming damage penalty on switch). Actions/attacks are not chosen simultaneously; whoever acts first chooses their attack first. If the defender survives, it then takes its turn to attack or switch. Post-combat fully restores all monsters. Losing a combat still awards full prize money.
 3. **Attack Rolls & Luck Reroll**: Attack dice are rolled in the background. Luck points in combat can be spent to reroll combat attack dice, not to add flat additional damage.
 4. **Baya Aranja (Oran Berry)**: Activates strictly when HP drops to 0 or below, preventing the faint and healing to 3 HP.

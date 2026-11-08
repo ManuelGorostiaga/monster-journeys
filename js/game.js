@@ -1120,20 +1120,6 @@ class MonsterJourneyGame {
         const monster = this.activeSearchCards[monsterIndex];
         if (!monster) return;
 
-        let highestToolTier = 0;
-        player.inventory.forEach(item => {
-            if (item.category === 'capture' && item.tier) {
-                if (item.tier > highestToolTier) highestToolTier = item.tier;
-            }
-        });
-
-        highestToolTier += (player.temporaryModifiers.captureTierBonus || 0);
-
-        if (highestToolTier < monster.captureTier) {
-            alert(`⚠️ No puedes capturar a ${monster.name}!\nRequiere una Herramienta de Captura de Tier ${monster.captureTier}, pero tu herramienta máxima actual es Tier ${highestToolTier}.`);
-            return;
-        }
-
         SoundFX.captureSuccess();
 
         if (player.characterId === 'char_brock') {
@@ -1238,6 +1224,9 @@ class MonsterJourneyGame {
 
         player.coins -= cost;
         player.inventory.push(JSON.parse(JSON.stringify(item)));
+        if (item.id === 'item_utl_6') {
+            player.luck = (player.luck || 0) + 1;
+        }
         SoundFX.coin();
 
         if (window.UI) UI.logGame(`🛒 ${player.name} compró **${item.name}** por ${cost} monedas.`);
@@ -1549,9 +1538,9 @@ class MonsterJourneyGame {
             if (window.UI) UI.logGame(`🦡 ${monster.name} activa **Excavación**: Ganaste +1 movimiento subterráneo en este turno.`);
             SoundFX.step();
         } else if (ability.id === 'bug') {
-            player.temporaryModifiers.captureTierBonus = 1;
+            player.luck += 1;
             this.hasActed = true;
-            if (window.UI) UI.logGame(`🕸️ ${monster.name} activa **Red de Seda**: Tu próxima captura será de +1 Tier superior.`);
+            if (window.UI) UI.logGame(`🕸️ ${monster.name} activa **Red de Seda**: Halló fortuna en su tela (+1 Suerte 🍀).`);
             SoundFX.step();
         }
 
