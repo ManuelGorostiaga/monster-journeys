@@ -98,9 +98,6 @@ ${css}
                     <button id="btn-act-loc-action" class="btn-action btn-action-action">
                         🔄 Acción de Lugar
                     </button>
-                    <button id="btn-act-travel" class="btn-action">
-                        ✈️ Viajar a otra Ciudad
-                    </button>
                 </div>
 
                 <div>
@@ -318,6 +315,72 @@ ${css}
                     El barquero del Muelle te transportará por las corrientes navegables a cualquier nodo descubierto del mapa:
                 </p>
                 <div id="map-travel-nodes-list" class="travel-cities-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PORT TRAVEL (Between Port Cards on Board) -->
+    <div id="modal-port-travel" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>⛵ Viaje Portuario: Elige tu puerto de destino</h3>
+                <button class="modal-close-btn" onclick="UI.hidePortTravelModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">
+                    Te encuentras en un Puerto marítimo o fluvial. Las corrientes te conectan con cualquier otro puerto colocado en el mapa:
+                </p>
+                <div id="port-travel-nodes-list" class="travel-cities-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RECOVER MONSTER FROM DISCARD -->
+    <div id="modal-recover-monster" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 780px;">
+            <div class="modal-header">
+                <h3>🕊️ Rescate del Santuario: Monstruos en el Descarte</h3>
+                <button class="modal-close-btn" onclick="UI.hideRecoverMonsterModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">
+                    Selecciona una criatura del montón de descarte para rescatarla y unirla a tu equipo:
+                </p>
+                <div id="recover-monsters-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; max-height: 420px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHARACTER DRAFT (Variable Player Powers) -->
+    <div id="modal-character-draft" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 860px;">
+            <div class="modal-header">
+                <h3>👑 Drafteo de Poderes Asimétricos de Entrenador</h3>
+            </div>
+            <div class="modal-body">
+                <div id="draft-turn-banner" style="background: rgba(251, 191, 36, 0.15); border: 1.5px solid #fbbf24; border-radius: 8px; padding: 10px 16px; margin-bottom: 14px; text-align: center;">
+                    <span style="font-size: 1rem; color: #fbbf24; font-weight: bold;">Turno de drafteo:</span>
+                    <strong id="draft-active-player-name" style="font-size: 1.15rem; color: #fff; margin-left: 6px;">Jugador 1</strong>
+                </div>
+                <div id="character-draft-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHARACTER ABILITIES INTRO -->
+    <div id="modal-character-welcome" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 820px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <h2 style="color: #fbbf24; font-size: 1.4rem;">🎉 ¡Poderes Asimétricos Asignados!</h2>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 14px;">
+                    Cada entrenador cuenta con habilidades pasivas y recursos únicos para la partida:
+                </p>
+                <div id="character-welcome-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;"></div>
+                <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1.05rem;" onclick="UI.closeCharacterWelcomeModal()">
+                    🚀 ¡Comenzar la Aventura!
+                </button>
             </div>
         </div>
     </div>
@@ -583,7 +646,7 @@ ${css}
                 </div>
                 <div id="player-setup-rows"></div>
                 <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="startGameFromSetup()">
-                    🚀 Comenzar Partida de Testeo
+                    👑 Pasar al Drafteo de Poderes de Entrenador
                 </button>
             </div>
         </div>
@@ -617,31 +680,14 @@ ${uiJs}
         if (!container) return;
         let html = '';
         for (let i = 0; i < selectedCount; i++) {
-            const charPreset = CHARACTERS_DATABASE[i % CHARACTERS_DATABASE.length];
             html += \`
-                <div class="player-config-row" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: grid; grid-template-columns: 140px 1fr 1fr; gap: 10px; align-items: center;">
-                    <div>
-                        <strong style="color: \${['#ef4444', '#3b82f6', '#10b981', '#8b5cf6'][i]};">Jugador \${i + 1}</strong>
-                        <input type="text" id="setup-p\${i}-name" class="setup-input" value="Jugador \${i + 1}" style="background: #1e242d; border: 1px solid #4b5563; color: #fff; padding: 6px; border-radius: 4px; width: 100%; margin-top: 4px;">
+                <div class="player-config-row" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <div style="flex: 1;">
+                        <strong style="color: \${['#ef4444', '#3b82f6', '#10b981', '#8b5cf6'][i]}; font-size: 0.95rem;">Jugador \${i + 1}</strong>
+                        <input type="text" id="setup-p\${i}-name" class="setup-input" value="Jugador \${i + 1}" style="background: #1e242d; border: 1px solid #4b5563; color: #fff; padding: 8px; border-radius: 4px; width: 100%; margin-top: 4px;">
                     </div>
-                    <div>
-                        <label style="font-size: 0.72rem; color: #9ca3af;">Personaje:</label>
-                        <select id="setup-p\${i}-char" class="setup-select" style="background: #1e242d; border: 1px solid #4b5563; color: #fff; padding: 6px; border-radius: 4px; width: 100%;">
-                            \${CHARACTERS_DATABASE.map(c => \`
-                                <option value="\${c.id}" \${c.id === charPreset.id ? 'selected' : ''}>
-                                    \${c.icon} \${c.name} (\${c.title})
-                                </option>
-                            \`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.72rem; color: #9ca3af;">Monstruo Inicial:</label>
-                        <select id="setup-p\${i}-starter" class="setup-select" style="background: #1e242d; border: 1px solid #4b5563; color: #fff; padding: 6px; border-radius: 4px; width: 100%;">
-                            <option value="mon_for_1">🌱 Hojarín (Planta)</option>
-                            <option value="mon_pln_2">🔥 Candilín (Fuego)</option>
-                            <option value="mon_frw_1">💧 Renacuajito (Agua)</option>
-                            <option value="mon_mtn_1">🪨 Guijarrón (Roca)</option>
-                        </select>
+                    <div style="color: #94a3b8; font-size: 0.8rem; text-align: right; max-width: 220px;">
+                        <span>Drafteará su Personaje y Habilidad en la siguiente fase.</span>
                     </div>
                 </div>
             \`;
@@ -650,18 +696,16 @@ ${uiJs}
     }
 
     function startGameFromSetup() {
-        const configs = [];
+        const rawConfigs = [];
         for (let i = 0; i < selectedCount; i++) {
-            const name = document.getElementById(\`setup-p\${i}-name\`).value || \`Jugador \${i + 1}\`;
-            const charId = document.getElementById(\`setup-p\${i}-char\`).value;
-            const starterId = document.getElementById(\`setup-p\${i}-starter\`).value;
-            configs.push({ name, characterId: charId, starterMonsterId: starterId });
+            const name = document.getElementById(\`setup-p\${i}-name\`)?.value || \`Jugador \${i + 1}\`;
+            rawConfigs.push({ name });
         }
         document.getElementById('modal-setup').classList.remove('open');
         const game = new MonsterJourneyGame();
         window.gameInstance = game;
         UI.init(game);
-        game.initGame(configs);
+        UI.startCharacterDraft(rawConfigs);
     }
 
     window.addEventListener('DOMContentLoaded', () => {

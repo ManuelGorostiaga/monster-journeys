@@ -170,6 +170,9 @@ if (locCard.locationAction) {
 console.log('Test 6 Passed: Location actions execute smoothly.');
 
 console.log('\n=== TEST 7: Luck Drafting & Search Redraw ===');
+p1.currentNodeId = 'node_w_cross';
+p1.x = 1;
+p1.y = 0;
 p1.luck = 3;
 game.draftLocationCard(p1);
 console.assert(p1.luck === 2, 'Spent 1 luck to draft location card');
@@ -289,7 +292,7 @@ console.log('Monsters count:', MONSTERS_DATABASE.length, 'Items count:', ITEMS_D
 console.assert(MONSTERS_DATABASE.length === 50, `Codex has 50 monsters (including 10 T4 Legendaries), got ${MONSTERS_DATABASE.length}`);
 console.assert(ITEMS_DATABASE.length === 20, 'Codex has 20 items');
 const allAreasCount = CITIES_DATABASE.length + LOCATION_CARDS_DATABASE.length;
-console.assert(allAreasCount === 22, `Codex has 22 areas/cities (4 gym cities + 18 locations), got ${allAreasCount}`);
+console.assert(allAreasCount === 23, `Codex has 23 areas/cities (4 gym cities + 19 locations), got ${allAreasCount}`);
 console.log('Test 12 Passed: Codex contains all monsters, attacks, items, and areas.');
 
 console.log('\n=== TEST 13: Teach Attack from Wild Monster ===');
@@ -884,6 +887,7 @@ console.assert(turnGame.activePlayerIndex === 0, 'Starts with Player 1 active');
 
 // 1. Place a location card with an action connected to starting node
 const berryForest = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_for_1');
+berryForest.usedByPlayerIds = [];
 turnGame.cardMap.placeCardOnNode('node_w_cross', berryForest);
 turnGame.movePlayerToNode('node_w_cross');
 console.assert(p1Turn.currentNodeId === 'node_w_cross', 'Player 1 moved to Bosque de las Bayas');
@@ -1522,5 +1526,140 @@ console.log('\n=== TEST 29: End of Combat Modals & Clean Tournament Transition =
 
     console.log('Test 29 Passed: Combat end modals stack, hide, and transition seamlessly without breaking.');
 }
+
+console.log('\n=== TEST 30: All 4 Character Abilities Functioning ===');
+const charTestGame = new MonsterJourneyGame();
+charTestGame.initGame([
+    { name: 'Red', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+    { name: 'Blue', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' },
+    { name: 'Marina', characterId: 'char_misty', starterMonsterId: 'mon_frw_2' },
+    { name: 'Flint', characterId: 'char_brock', starterMonsterId: 'mon_for_1' }
+]);
+const pRed = charTestGame.players[0];
+const pBlue = charTestGame.players[1];
+const pMarina = charTestGame.players[2];
+const pFlint = charTestGame.players[3];
+
+// 1. Flint (+2 Max HP)
+console.assert(pFlint.monsters[0].maxHp === 10 + 2, 'Flint starter received +2 Max HP');
+const flintCapMon = charTestGame.instantiateMonster(MONSTERS_DATABASE[0]);
+charTestGame.activePlayerIndex = 3;
+charTestGame.activeSearchCards = [flintCapMon];
+charTestGame.captureMonster(0);
+console.assert(pFlint.monsters[1].maxHp === 10 + 2, 'Flint captured monster received +2 Max HP');
+
+// 2. Marina (+1 Luck on water visit)
+const marinaStartLuck = pMarina.luck;
+const waterNode = charTestGame.cardMap.getNode('node_nw_bay'); // water bay
+waterNode.cards = [{ biome: 'freshwater', name: 'Río Cristalino' }];
+charTestGame.activePlayerIndex = 2;
+charTestGame.hasMoved = false;
+charTestGame.movementPoints = 2;
+charTestGame.movePlayerToNode('node_nw_bay');
+console.assert(pMarina.luck === marinaStartLuck + 1, 'Marina gained +1 Luck upon visiting water node');
+
+// 3. Blue (+2 Speed Turn 1 & Utility discount)
+console.assert(pBlue.luck === 4, 'Blue starts with 4 Luck');
+const blueCombatMon = pBlue.monsters[0];
+const blueBaseSpeed = blueCombatMon.speed;
+charTestGame.combatEngine.turnNumber = 1;
+const blueT1Speed = charTestGame.combatEngine.getEffectiveSpeed(blueCombatMon, pBlue);
+console.assert(blueT1Speed === blueBaseSpeed + 2, 'Blue receives +2 Speed on combat Turn 1');
+charTestGame.combatEngine.turnNumber = 2;
+const blueT2Speed = charTestGame.combatEngine.getEffectiveSpeed(blueCombatMon, pBlue);
+console.assert(blueT2Speed === blueBaseSpeed, 'Blue speed is normal on Turn 2+');
+
+// 4. Red (+1 Damage when HP <= 50%)
+const redMon = pRed.monsters[0];
+redMon.hp = Math.floor(redMon.maxHp / 2);
+const dummyOpp = charTestGame.instantiateMonster(MONSTERS_DATABASE[0]);
+dummyOpp.hp = 20;
+charTestGame.combatEngine.startBattle({
+    type: 'npc',
+    player1: pRed,
+    npc: { name: 'Dummy', monsters: [dummyOpp] }
+});
+charTestGame.combatEngine.executeAttack({
+    attacker: redMon,
+    defender: dummyOpp,
+    attack: { name: 'Golpe', type: 'Normal', baseDmg: 3, diceCount: 0 },
+    attackerPlayer: pRed,
+    defenderPlayer: null
+});
+console.assert(dummyOpp.hp === 20 - (3 + 1), 'Red dealt +1 damage with HP <= 50%');
+charTestGame.combatEngine.endBattle(true);
+
+console.log('Test 30 Passed: All 4 character abilities verified and operating.');
+
+console.log('\n=== TEST 31: Ports System & Removal of Free City-to-City Travel ===');
+const portGame = new MonsterJourneyGame();
+portGame.initGame([
+    { name: 'Sailor Red', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+]);
+const sailor = portGame.players[0];
+
+// Normal city travel must be rejected
+let alertedCityTravel = false;
+global.alert = () => { alertedCityTravel = true; };
+const cityTravelResult = portGame.fastTravelToCity('node_ne', false);
+console.assert(cityTravelResult === false, 'Free travel between cities is blocked');
+console.assert(alertedCityTravel === true, 'Alert emitted notifying city travel is disabled');
+
+// Port Cards exist
+const puertoCard = CITIES_DATABASE.find(c => c.id === 'city_puerto');
+console.assert(puertoCard.isPort === true, 'Ciudad Puerto is designated as a Port');
+const dockCardEnv = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_frw_2');
+console.assert(dockCardEnv.isPort === true, 'Muelle del Pescador is designated as a Port');
+const oceanPortEnv = LOCATION_CARDS_DATABASE.find(c => c.id === 'loc_ocn_port');
+console.assert(oceanPortEnv && oceanPortEnv.isPort === true, 'Puerto Ultramar is designated as a Port');
+
+// Place Muelle del Pescador at node_w_cross and sail to Ciudad Puerto (node_ne)
+const clonedDockCard = JSON.parse(JSON.stringify(dockCardEnv));
+clonedDockCard.usedByPlayerIds = [];
+portGame.cardMap.placeCardOnNode('node_w_cross', clonedDockCard);
+portGame.movePlayerToNode('node_w_cross');
+console.assert(sailor.currentNodeId === 'node_w_cross', 'Player stationed at Muelle del Pescador port');
+
+portGame.hasLocationActed = false;
+portGame.hasMoved = false;
+const portTravelRes = portGame.executePortTravel('node_ne'); // Ciudad Puerto has isPort === true
+console.assert(portTravelRes === true, 'Port travel between two ports succeeded');
+console.assert(sailor.currentNodeId === 'node_ne', 'Player arrived at Ciudad Puerto via port travel');
+console.assert(portGame.hasLocationActed === true, 'Port travel consumed location action');
+console.log('Test 31 Passed: Port system allows travel between placed ports; arbitrary city travel removed.');
+
+console.log('\n=== TEST 32: Recover Monster from Discard Pile & Character Draft ===');
+const discardGame = new MonsterJourneyGame();
+discardGame.initGame([
+    { name: 'Rescuer Flint', characterId: 'char_brock', starterMonsterId: 'mon_for_1' }
+]);
+const rescuer = discardGame.players[0];
+
+// Discard pile initialized and populated
+console.assert(discardGame.monsterDiscard.length >= 3, 'Monster discard pile seeded with monsters at start');
+const initialDiscardCount = discardGame.monsterDiscard.length;
+const targetDiscardMon = discardGame.monsterDiscard[0];
+const targetOriginalMaxHp = targetDiscardMon.maxHp;
+
+// Rescuing creature joins party
+const prevPartyCount = rescuer.monsters.length;
+discardGame.recoverMonsterFromDiscard(0);
+console.assert(rescuer.monsters.length === prevPartyCount + 1, 'Rescued monster added to party');
+console.assert(rescuer.monsters[rescuer.monsters.length - 1].name === targetDiscardMon.name, 'Correct monster rescued');
+console.assert(rescuer.monsters[rescuer.monsters.length - 1].maxHp === targetOriginalMaxHp + 2, 'Flint passive applied +2 Max HP to rescued monster');
+console.assert(discardGame.monsterDiscard.length === initialDiscardCount - 1, 'Rescued monster removed from discard pile');
+
+// Test Character Draft workflow
+global.UI.startCharacterDraft([
+    { name: 'Player A' },
+    { name: 'Player B' }
+]);
+console.assert(global.UI.draftConfigs.length === 2, 'Character draft initialized with 2 players');
+global.UI.selectDraftCharacter('char_misty');
+console.assert(global.UI.finalPlayerConfigs[0].characterId === 'char_misty', 'Player A drafted Marina');
+console.assert(global.UI.claimedCharacterIds.has('char_misty'), 'Marina marked as claimed');
+global.UI.selectDraftCharacter('char_brock');
+console.assert(global.UI.finalPlayerConfigs[1].characterId === 'char_brock', 'Player B drafted Flint');
+console.log('Test 32 Passed: Recovering monster from discard pile and Character Draft flow verified.');
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

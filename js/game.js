@@ -22,6 +22,7 @@ class MonsterJourneyGame {
 
         // Encounter decks per biome
         this.biomeDecks = {};
+        this.monsterDiscard = [];
 
         // Environment Deck & Cities Deck
         this.environmentDeck = [];
@@ -80,6 +81,12 @@ class MonsterJourneyGame {
 
         // Initialize biome monster decks
         this.initBiomeDecks();
+        this.monsterDiscard = [];
+        const discardSeedIds = ['mon_for_2', 'mon_mtn_1', 'mon_frw_1'];
+        discardSeedIds.forEach(id => {
+            const base = MONSTERS_DATABASE.find(m => m.id === id);
+            if (base) this.monsterDiscard.push(this.instantiateMonster(base));
+        });
 
         // Initialize River Shop (8 unique items)
         this.initShopRiver();
@@ -171,7 +178,11 @@ class MonsterJourneyGame {
     initEnvironmentDeck() {
         const isTier3Unlocked = Boolean(this.expansionsUnlocked && this.expansionsUnlocked.tier3);
         const available = LOCATION_CARDS_DATABASE.filter(c => (c.tier || 1) <= (isTier3Unlocked ? 3 : 1));
-        this.environmentDeck = [...available].sort(() => Math.random() - 0.5);
+        this.environmentDeck = available.map(c => {
+            const copy = JSON.parse(JSON.stringify(c));
+            copy.usedByPlayerIds = [];
+            return copy;
+        }).sort(() => Math.random() - 0.5);
         this.environmentDiscard = [];
     }
 
@@ -201,7 +212,11 @@ class MonsterJourneyGame {
             if (this.environmentDiscard.length === 0) {
                 const isTier3Unlocked = Boolean(this.expansionsUnlocked && this.expansionsUnlocked.tier3);
                 const available = LOCATION_CARDS_DATABASE.filter(c => (c.tier || 1) <= (isTier3Unlocked ? 3 : 1));
-                this.environmentDeck = [...available].sort(() => Math.random() - 0.5);
+                this.environmentDeck = available.map(c => {
+                    const copy = JSON.parse(JSON.stringify(c));
+                    copy.usedByPlayerIds = [];
+                    return copy;
+                }).sort(() => Math.random() - 0.5);
             } else {
                 this.environmentDeck = [...this.environmentDiscard].sort(() => Math.random() - 0.5);
                 this.environmentDiscard = [];
@@ -411,6 +426,18 @@ class MonsterJourneyGame {
         }
     }
 
+    triggerMarinaWaterCheck(player, targetNode) {
+        if (!player || player.characterId !== 'char_misty' || !targetNode) return;
+        const isWater = targetNode.cards && targetNode.cards.some(c => c.biome === 'freshwater' || c.biome === 'saltwater');
+        if (isWater) {
+            player.luck = (player.luck || 0) + 1;
+            SoundFX.coin();
+            if (window.UI) {
+                UI.logGame(`🌊 **Habilidad Navegante Experta**: ${player.name} navegó por aguas en **${targetNode.name}** y ganó **+1 Suerte 🍀** (Total: ${player.luck} 🍀).`);
+            }
+        }
+    }
+
     // Movement on connected graph route
     movePlayerToNode(targetXOrId, maybeY) {
         const player = this.getActivePlayer();
@@ -463,6 +490,7 @@ class MonsterJourneyGame {
             this.hasMoved = true;
         }
         SoundFX.step();
+        this.triggerMarinaWaterCheck(player, targetNode);
 
         if (window.UI) {
             const remainingNotice = this.movementPoints > 0 ? ` (${this.movementPoints} paso restante)` : '';
@@ -522,6 +550,7 @@ class MonsterJourneyGame {
             this.hasMoved = true;
         }
         SoundFX.step();
+        this.triggerMarinaWaterCheck(player, targetNode);
 
         if (player.inventory.some(i => i.id === 'item_utl_3')) {
             player.coins += 1;
@@ -610,11 +639,11 @@ class MonsterJourneyGame {
     // Rule 15: Fast Travel between Cities
     fastTravelToCity(targetCityNodeId, isFlight = false) {
         const player = this.getActivePlayer();
-        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
-        if (!isFlight && (!currentNode || !currentNode.cards.some(c => c.biome === 'city'))) {
-            alert('Debes estar en una Ciudad para viajar rápidamente a otra.');
+        if (!isFlight) {
+            alert('El viaje rápido libre entre ciudades ha sido desactivado. Utiliza las rutas marítimas entre Puertos para navegar.');
             return false;
         }
+        const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
 
         const targetNode = this.cardMap.getNode(targetCityNodeId);
         if (!targetNode || !targetNode.cards.some(c => c.biome === 'city')) {
@@ -678,6 +707,24 @@ class MonsterJourneyGame {
         }
 
         const action = cardWithAction.locationAction;
+
+        if (action.type === 'port_travel' || cardWithAction.isPort) {
+            const currentN = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+            const portNodes = Object.values(this.cardMap.nodes).filter(n =>
+                n.id !== (currentN ? currentN.id : '') &&
+                n.cards && n.cards.some(c => c.isPort === true)
+            );
+            if (portNodes.length === 0) {
+                alert('⚠️ No hay otros Puertos colocados en el tablero todavía. Coloca otra carta de Puerto (como Muelle del Pescador, Puerto Ultramar o Ciudad Puerto) para habilitar la ruta de navegación.');
+                return;
+            }
+            if (window.UI && typeof window.UI.showPortTravelModal === 'function') {
+                window.UI.showPortTravelModal(portNodes);
+                return;
+            }
+            this.executePortTravel(portNodes[0].id);
+            return;
+        }
 
         if (action.type === 'trade') {
             const costCoins = action.costCoins || 0;
@@ -803,32 +850,33 @@ class MonsterJourneyGame {
                 this.hasActed = true;
                 SoundFX.victory();
                 if (window.UI) UI.logGame(`🏞️ ${player.name} recibió el Bautismo Fluvial en Cascada Cristalina: +1 Suerte 🍀.`);
-            } else if (cardWithAction.id === 'loc_frw_2') {
-                if (window.UI && typeof window.UI.showMapTravelModal === 'function') {
-                    window.UI.showMapTravelModal();
-                    return;
-                }
+            } else if (cardWithAction.id === 'loc_frw_2' || cardWithAction.isPort || action.type === 'port_travel') {
                 const currentN = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
-                const available = Object.values(this.cardMap.nodes).filter(n => n.cards.length > 0 && n.id !== (currentN ? currentN.id : ''));
-                if (available.length > 0) {
-                    this.executeMapTravel(available[0].id);
-                }
-                return;
-            } else if (cardWithAction.id === 'loc_frw_3') {
-                if (player.luck < 1) {
-                    alert('Requiere 1 Suerte 🍀.');
+                const portNodes = Object.values(this.cardMap.nodes).filter(n =>
+                    n.id !== (currentN ? currentN.id : '') &&
+                    n.cards && n.cards.some(c => c.isPort === true)
+                );
+                if (portNodes.length === 0) {
+                    alert('⚠️ No hay otros Puertos colocados en el tablero todavía.');
                     return;
                 }
-                player.luck -= 1;
-                const c1 = this.drawEnvironmentCard();
-                const c2 = this.drawEnvironmentCard();
-                if (c1) player.locationHand.push(c1);
-                if (c2) player.locationHand.push(c2);
-                cardWithAction.usedByPlayerIds.push(player.id);
-                this.hasLocationActed = true;
-                this.hasActed = true;
-                SoundFX.step();
-                if (window.UI) UI.logGame(`🪷 ${player.name} halló Paz Interior en Laguna de los Lotos y robó 2 cartas de localización.`);
+                if (window.UI && typeof window.UI.showPortTravelModal === 'function') {
+                    window.UI.showPortTravelModal(portNodes);
+                    return;
+                }
+                this.executePortTravel(portNodes[0].id);
+                return;
+            } else if (cardWithAction.id === 'loc_frw_3' || action.name === 'Rescate de Criatura') {
+                if (!this.monsterDiscard || this.monsterDiscard.length === 0) {
+                    alert('El montón de descarte está vacío actualmente.');
+                    return;
+                }
+                if (window.UI && typeof window.UI.showRecoverMonsterModal === 'function') {
+                    window.UI.showRecoverMonsterModal(this.monsterDiscard);
+                    return;
+                }
+                this.recoverMonsterFromDiscard(0);
+                return;
             } else if (cardWithAction.id === 'loc_ocn_2') {
                 player.coins += 2;
                 const berry = ITEMS_DATABASE.find(i => i.id === 'item_cmb_7');
@@ -953,7 +1001,7 @@ class MonsterJourneyGame {
         }
     }
 
-    executeMapTravel(targetNodeId) {
+    executePortTravel(targetNodeId) {
         const player = this.getActivePlayer();
         if (this.hasLocationActed) {
             alert('Ya has tomado la acción de localización en este turno.');
@@ -962,21 +1010,21 @@ class MonsterJourneyGame {
 
         const targetNode = this.cardMap.getNode(targetNodeId);
         if (!targetNode || targetNode.cards.length === 0) {
-            alert('Solo puedes viajar a nodos descubiertos con cartas.');
+            alert('Nodo de puerto no encontrado en el mapa.');
             return false;
         }
 
         const currentNode = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
         if (currentNode && currentNode.id === targetNode.id) {
-            alert('Ya te encuentras en este nodo.');
+            alert('Ya te encuentras en este puerto.');
             return false;
         }
 
-        const card = currentNode && currentNode.cards ? currentNode.cards.find(c => c.id === 'loc_frw_2') : null;
+        const card = currentNode && currentNode.cards ? currentNode.cards.find(c => c.isPort || (c.locationAction && c.locationAction.type === 'port_travel') || c.id === 'loc_frw_2') : null;
         if (card) {
             if (!card.usedByPlayerIds) card.usedByPlayerIds = [];
             if (card.usedByPlayerIds.includes(player.id)) {
-                alert(`Ya has utilizado esta localización (${card.name}).`);
+                alert(`Ya has utilizado este puerto (${card.name}) en este turno.`);
                 return false;
             }
             card.usedByPlayerIds.push(player.id);
@@ -990,9 +1038,61 @@ class MonsterJourneyGame {
         this.hasActed = true;
         SoundFX.victory();
 
+        this.triggerMarinaWaterCheck(player, targetNode);
+
         if (window.UI) {
+            if (typeof UI.hidePortTravelModal === 'function') UI.hidePortTravelModal();
             if (typeof UI.hideMapTravelModal === 'function') UI.hideMapTravelModal();
-            UI.logGame(`⛵ ${player.name} usó **Travesía en Barca** desde ${currentNode ? currentNode.name : 'su posición'} hasta **${targetNode.name}**.`);
+            UI.logGame(`⛵ ${player.name} usó **Viaje Portuario** desde ${currentNode ? currentNode.name : 'su posición'} hasta **${targetNode.name}**.`);
+            UI.renderAll();
+        }
+        return true;
+    }
+
+    executeMapTravel(targetNodeId) {
+        return this.executePortTravel(targetNodeId);
+    }
+
+    recoverMonsterFromDiscard(monsterIndex) {
+        const player = this.getActivePlayer();
+        if (!this.monsterDiscard || this.monsterDiscard.length === 0) {
+            alert('El montón de descarte está vacío.');
+            return false;
+        }
+        if (monsterIndex < 0 || monsterIndex >= this.monsterDiscard.length) {
+            return false;
+        }
+
+        const monster = this.monsterDiscard.splice(monsterIndex, 1)[0];
+        monster.hp = monster.maxHp;
+        if (player.characterId === 'char_brock') {
+            monster.maxHp += 2;
+            monster.hp = monster.maxHp;
+        }
+
+        if (player.monsters.length < 4) {
+            player.monsters.push(monster);
+            if (window.UI) UI.logGame(`🕊️ ¡${player.name} rescató a **${monster.name}** (Tier ${monster.captureTier}) del montón de descarte y lo unió a su equipo!`);
+        } else {
+            player.storageMonsters.push(monster);
+            if (window.UI) UI.logGame(`🕊️ ¡${player.name} rescató a **${monster.name}** (Tier ${monster.captureTier}) del montón de descarte! Tablero lleno, enviado a Reserva.`);
+        }
+
+        const node = this.cardMap.getNode(player.currentNodeId || `${player.x},${player.y}`);
+        const card = node && node.cards ? node.cards.find(c => c.id === 'loc_frw_3' || (c.locationAction && c.locationAction.name === 'Rescate de Criatura')) : null;
+        if (card) {
+            if (!card.usedByPlayerIds) card.usedByPlayerIds = [];
+            if (!card.usedByPlayerIds.includes(player.id)) {
+                card.usedByPlayerIds.push(player.id);
+            }
+        }
+
+        this.hasLocationActed = true;
+        this.hasActed = true;
+        SoundFX.victory();
+
+        if (window.UI) {
+            if (typeof UI.hideRecoverMonsterModal === 'function') UI.hideRecoverMonsterModal();
             UI.renderAll();
         }
         return true;
@@ -1094,6 +1194,10 @@ class MonsterJourneyGame {
         player.luck -= 1;
         SoundFX.diceRoll();
 
+        if (this.activeSearchCards) {
+            this.activeSearchCards.forEach(m => this.monsterDiscard.push(m));
+        }
+
         let drawCount = 3 + (player.temporaryModifiers.searchBonus || 0);
         if (player.inventory.some(i => i.id === 'item_utl_2')) drawCount += 1;
         if (player.inventory.some(i => i.id === 'item_utl_7')) drawCount += 1;
@@ -1135,6 +1239,14 @@ class MonsterJourneyGame {
             if (window.UI) UI.logGame(`🎉 ¡${player.name} capturó a **${monster.name}** (Tier ${monster.captureTier})! Tu tablero personal ya tiene 4 criaturas, enviada a tu Reserva.`);
         }
 
+        if (this.activeSearchCards) {
+            this.activeSearchCards.forEach((m, idx) => {
+                if (idx !== monsterIndex) {
+                    this.monsterDiscard.push(m);
+                }
+            });
+        }
+
         this.hasActed = true;
         this.hasEncounterActed = true;
         this.activeSearchCards = null;
@@ -1172,6 +1284,10 @@ class MonsterJourneyGame {
         SoundFX.victory();
         if (window.UI) UI.logGame(`📖 ¡${targetMon.name} aprendió el ataque **${attackToTeach.name}** de ${wildMon.name}!`);
 
+        if (this.activeSearchCards) {
+            this.activeSearchCards.forEach(m => this.monsterDiscard.push(m));
+        }
+
         this.hasActed = true;
         this.hasEncounterActed = true;
         this.activeSearchCards = null;
@@ -1188,6 +1304,9 @@ class MonsterJourneyGame {
     dismissSearchEncounter() {
         if (!this.activeSearchCards) return;
         const player = this.getActivePlayer();
+        if (this.activeSearchCards) {
+            this.activeSearchCards.forEach(m => this.monsterDiscard.push(m));
+        }
         this.activeSearchCards = null;
         this.hasActed = true;
         this.hasEncounterActed = true;

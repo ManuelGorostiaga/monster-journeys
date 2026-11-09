@@ -831,7 +831,6 @@ const UI = {
         const btnShop = document.getElementById('btn-act-shop');
         const btnLocAction = document.getElementById('btn-act-loc-action');
         const btnPoi = document.getElementById('btn-act-poi');
-        const btnTravel = document.getElementById('btn-act-travel');
 
         const currentCard = currentNode ? currentNode.card : null;
         const isCity = currentCard ? (currentCard.biome === 'city' || currentNode.cards.some(c => c.biome === 'city')) : false;
@@ -885,11 +884,6 @@ const UI = {
 
         if (btnPoi) {
             btnPoi.disabled = this.game.hasActed || !hasUnclaimedPoi;
-        }
-
-        if (btnTravel) {
-            const cityNodesCount = Object.values(this.game.cardMap.nodes).filter(n => n.cards.some(c => c.biome === 'city')).length;
-            btnTravel.disabled = this.game.hasActed || !isCity || cityNodesCount < 2;
         }
     },
 
@@ -1484,6 +1478,81 @@ const UI = {
         }
     },
 
+    showPortTravelModal(portNodes) {
+        const modal = document.getElementById('modal-port-travel');
+        if (!modal) return;
+
+        const container = document.getElementById('port-travel-nodes-list');
+        if (container) {
+            container.innerHTML = portNodes.map(node => {
+                const portCard = node.cards.find(c => c.isPort) || node.card;
+                const biome = portCard ? (BIOMES[portCard.biome] || BIOMES.city) : BIOMES.city;
+                return `
+                    <div class="travel-city-card" style="border-left: 4px solid ${biome.color}; cursor: pointer;"
+                         onclick="UI.game.executePortTravel('${node.id}')">
+                        <div class="travel-city-icon" style="font-size: 1.8rem;">${portCard.icon || '⚓'}</div>
+                        <div style="flex: 1;">
+                            <strong style="color: #fff; font-size: 0.95rem;">${node.name}</strong>
+                            <div style="font-size: 0.75rem; color: #38bdf8;">
+                                ⚓ ${portCard.name} (${biome.name})
+                            </div>
+                        </div>
+                        <button class="btn-action-small" style="width: auto; background: #0284c7; border-color: #38bdf8;">
+                            ⛵ Zarpar Aquí
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    hidePortTravelModal() {
+        const modal = document.getElementById('modal-port-travel');
+        if (modal) modal.classList.remove('open');
+    },
+
+    showRecoverMonsterModal(monsters) {
+        const modal = document.getElementById('modal-recover-monster');
+        if (!modal) return;
+
+        const container = document.getElementById('recover-monsters-grid');
+        if (container) {
+            container.innerHTML = monsters.map((m, idx) => {
+                const typeColor = TYPE_COLORS[m.type] || '#4caf50';
+                return `
+                    <div class="codex-mon-card" style="border-top: 4px solid ${typeColor}; background: #1a222d; padding: 10px; border-radius: 8px;">
+                        <div class="monster-header">
+                            <div class="monster-avatar" style="border-color: ${typeColor};">${m.icon}</div>
+                            <div class="monster-titles">
+                                <div class="monster-name" style="font-size: 0.95rem;">${m.name}</div>
+                                <span class="type-pill" style="background: ${typeColor}; font-size: 0.7rem;">${m.type}</span>
+                            </div>
+                            <span class="tier-pill">Tier ${m.captureTier}</span>
+                        </div>
+                        <div class="stats-row" style="margin: 6px 0; font-size: 0.8rem;">
+                            <div>❤️ HP: <strong>${m.maxHp}</strong></div>
+                            <div>⚡ Vel: <strong>${m.speed}</strong></div>
+                            <div class="weakness-tag">Weak +2: ${m.weakness}</div>
+                        </div>
+                        <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center; font-size: 0.82rem; margin-top: 6px;"
+                                onclick="UI.game.recoverMonsterFromDiscard(${idx})">
+                            🕊️ Rescatar al Equipo
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    hideRecoverMonsterModal() {
+        const modal = document.getElementById('modal-recover-monster');
+        if (modal) modal.classList.remove('open');
+    },
+
     showCityTravelModal(isFlyingAbility = false) {
         const modal = document.getElementById('modal-travel');
         if (!modal) return;
@@ -1496,13 +1565,12 @@ const UI = {
                 const cityCard = node.cards.find(c => c.biome === 'city') || node.card;
                 return `
                     <div class="travel-city-card" onclick="UI.game.fastTravelToCity('${node.id}', ${isFlyingAbility})">
-                        <div class="travel-city-icon">🏛️</div>
+                        <div class="travel-city-icon">✈️</div>
                         <div>
                             <strong>${cityCard ? cityCard.name : node.name}</strong>
                             <div>${cityCard && cityCard.gym ? `Gimnasio de ${cityCard.gym.leaderName}` : 'Pueblo de Inicio'}</div>
-                            <small>Coords: (${node.gridX}, ${node.gridY})</small>
                         </div>
-                        <button class="btn-action-small">Viajar Aquí</button>
+                        <button class="btn-action-small">Volar Aquí</button>
                     </div>
                 `;
             }).join('');
@@ -1514,6 +1582,134 @@ const UI = {
     hideCityTravelModal() {
         const modal = document.getElementById('modal-travel');
         if (modal) modal.classList.remove('open');
+    },
+
+    startCharacterDraft(rawPlayerConfigs) {
+        this.draftConfigs = rawPlayerConfigs;
+        this.draftIndex = 0;
+        this.claimedCharacterIds = new Set();
+        this.finalPlayerConfigs = [];
+        this.renderCharacterDraftModal();
+    },
+
+    renderCharacterDraftModal() {
+        const modal = document.getElementById('modal-character-draft');
+        if (!modal) return;
+
+        const currentP = this.draftConfigs[this.draftIndex];
+        const nameEl = document.getElementById('draft-active-player-name');
+        if (nameEl) {
+            nameEl.textContent = currentP.name;
+            nameEl.style.color = ['#ef4444', '#3b82f6', '#10b981', '#8b5cf6'][this.draftIndex % 4];
+        }
+
+        const grid = document.getElementById('character-draft-grid');
+        if (grid) {
+            grid.innerHTML = CHARACTERS_DATABASE.map(char => {
+                const isClaimed = this.claimedCharacterIds.has(char.id);
+                const claimedByPlayer = isClaimed ? this.finalPlayerConfigs.find(c => c.characterId === char.id) : null;
+                const starterMon = MONSTERS_DATABASE.find(m => m.id === char.starterMonsterId);
+                const startingItems = char.startingItemIds.map(id => ITEMS_DATABASE.find(i => i.id === id)?.name || id).join(', ');
+
+                return `
+                    <div class="character-draft-card ${isClaimed ? 'claimed' : ''}" 
+                         style="border-top: 5px solid ${char.avatarColor};">
+                        <div style="font-size: 2.2rem; text-align: center; margin-bottom: 2px;">${char.icon}</div>
+                        <div style="font-weight: 800; font-size: 1.05rem; text-align: center; color: #fff;">${char.name}</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 8px;">${char.title}</div>
+
+                        <div class="draft-ability-box">
+                            <div style="color: #fbbf24; font-weight: bold; font-size: 0.8rem;">✨ ${char.abilityName}</div>
+                            <div style="font-size: 0.74rem; color: #e2e8f0; line-height: 1.35; margin-top: 2px;">${char.abilityDesc}</div>
+                        </div>
+
+                        <div style="font-size: 0.75rem; margin: 8px 0; color: #cbd5e1; display: flex; flex-direction: column; gap: 3px;">
+                            <div>🪙 <strong>${char.startingCoins} Monedas</strong> | 🍀 <strong>${char.startingLuck} Suerte</strong></div>
+                            <div>👾 <strong>Inicial:</strong> ${starterMon ? starterMon.name : 'Inicial'} (${starterMon ? starterMon.type : ''})</div>
+                            <div style="color: #94a3b8; font-size: 0.7rem;">🎒 <strong>Objetos:</strong> ${startingItems}</div>
+                        </div>
+
+                        ${isClaimed ? `
+                            <button class="btn-action" style="width: 100%; justify-content: center; background: #334155; border-color: #475569; opacity: 0.6; cursor: not-allowed;" disabled>
+                                🔒 Elegido por ${claimedByPlayer ? claimedByPlayer.name : 'otro jugador'}
+                            </button>
+                        ` : `
+                            <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center; font-weight: bold;"
+                                    onclick="UI.selectDraftCharacter('${char.id}')">
+                                👑 Elegir este Personaje
+                            </button>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    selectDraftCharacter(characterId) {
+        if (this.claimedCharacterIds.has(characterId)) return;
+
+        const currentP = this.draftConfigs[this.draftIndex];
+        const charData = CHARACTERS_DATABASE.find(c => c.id === characterId);
+        this.claimedCharacterIds.add(characterId);
+
+        this.finalPlayerConfigs.push({
+            name: currentP.name,
+            characterId: characterId,
+            starterMonsterId: charData.starterMonsterId
+        });
+
+        this.draftIndex++;
+        if (this.draftIndex < this.draftConfigs.length) {
+            this.renderCharacterDraftModal();
+        } else {
+            document.getElementById('modal-character-draft')?.classList.remove('open');
+            this.finishCharacterDraft();
+        }
+    },
+
+    finishCharacterDraft() {
+        const game = this.game || window.gameInstance;
+        game.initGame(this.finalPlayerConfigs);
+        this.showCharacterWelcomeModal(game.players);
+    },
+
+    showCharacterWelcomeModal(players) {
+        const modal = document.getElementById('modal-character-welcome');
+        if (!modal) return;
+
+        const container = document.getElementById('character-welcome-cards');
+        if (container) {
+            container.innerHTML = players.map(p => {
+                const char = p.character;
+                return `
+                    <div class="character-draft-card" style="border-top: 5px solid ${char.avatarColor}; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <span style="font-size: 1.8rem;">${char.icon}</span>
+                            <div>
+                                <strong style="color: ${p.color}; font-size: 0.95rem;">${p.name}</strong>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">${char.name}</div>
+                            </div>
+                        </div>
+                        <div class="draft-ability-box" style="margin-bottom: 6px;">
+                            <div style="color: #fbbf24; font-weight: bold; font-size: 0.8rem;">✨ ${char.abilityName}</div>
+                            <div style="font-size: 0.74rem; color: #e2e8f0; line-height: 1.35; margin-top: 2px;">${char.abilityDesc}</div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">
+                            🪙 ${p.coins} monedas | 🍀 ${p.luck} suerte
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('open');
+    },
+
+    closeCharacterWelcomeModal() {
+        document.getElementById('modal-character-welcome')?.classList.remove('open');
+        this.renderAll();
     },
 
     showCombatBettingModal({ nonParticipants, contenders, onComplete }) {

@@ -1240,7 +1240,7 @@ const CHARACTERS_DATABASE = [
         startingItemIds: ['item_utl_1', 'item_cmb_3'],
         starterMonsterId: 'mon_frw_2', // Patiloto (Agua)
         abilityName: 'Navegante Experta',
-        abilityDesc: 'Agua: Movimiento normal. Visitar agua ➔ +1 🍀.'
+        abilityDesc: 'Visitar aguas ➔ +1 🍀. Empieza con 4 🪙 y Botas Ligeras.'
     },
     {
         id: 'char_brock',
@@ -1371,7 +1371,8 @@ const CITIES_DATABASE = [
             3: ['mon_frw_5', 'mon_ocn_5', 'mon_frw_7']
         },
         icon: '🏛️',
-        desc: '🏛️ Tienda River y Gimnasio Adaptativo.',
+        desc: '🏛️ Tienda River, Gimnasio y Puerto Marítimo.',
+        isPort: true,
         gym: {
             id: 'gym_3',
             name: 'Gimnasio Marejada',
@@ -1390,11 +1391,9 @@ const CITIES_DATABASE = [
             }
         },
         locationAction: {
-            name: 'Aduana Portuaria',
-            type: 'trade',
-            costCoins: 3,
-            gainLuck: 1,
-            desc: '3 🪙 ➔ +1 🍀'
+            name: 'Embarcadero de Ciudad Puerto',
+            type: 'port_travel',
+            desc: '⛵ Viaje Portuario: Navega a cualquier otro Puerto en el tablero.'
         }
     },
     {
@@ -1626,26 +1625,40 @@ const LOCATION_CARDS_DATABASE = [
         name: 'Muelle del Pescador',
         biome: 'freshwater',
         icon: '🎣',
+        isPort: true,
         locationAction: {
-            name: 'Travesía en Barca',
-            type: 'special',
-            desc: '⛵ Viaja a cualquier nodo descubierto'
+            name: 'Muelle Fluvial',
+            type: 'port_travel',
+            desc: '⛵ Viaje Portuario: Navega a cualquier otro Puerto en el tablero.'
         }
     },
     {
         id: 'loc_frw_3',
         cardType: 'environment',
-        name: 'Laguna de los Lotos',
+        name: 'Santuario del Renacer',
         biome: 'freshwater',
         icon: '🪷',
         locationAction: {
-            name: 'Paz Interior',
+            name: 'Rescate de Criatura',
             type: 'special',
-            desc: '1 🍀 ➔ Roba 2 cartas de entorno'
+            desc: '🕊️ Rescata 1 monstruo del descarte y añádelo a tu equipo.'
         }
     },
 
     // --- AGUA SALADA (Saltwater) ---
+    {
+        id: 'loc_ocn_port',
+        cardType: 'environment',
+        name: 'Puerto Ultramar',
+        biome: 'saltwater',
+        icon: '⚓',
+        isPort: true,
+        locationAction: {
+            name: 'Embarcadero de Ultramar',
+            type: 'port_travel',
+            desc: '⛵ Viaje Portuario: Navega a cualquier otro Puerto en el tablero.'
+        }
+    },
     {
         id: 'loc_ocn_1',
         cardType: 'environment',

@@ -305,6 +305,7 @@ class CardMap {
             const cardName = node.card ? node.card.name : 'carta';
             throw new Error(`El casillero (${x}, ${y}) ya contiene el máximo de cartas (${node.maxCards}): ${cardName}`);
         }
+        if (!cardData.usedByPlayerIds) cardData.usedByPlayerIds = [];
         node.cards.push(cardData);
         return node;
     }
@@ -317,6 +318,7 @@ class CardMap {
         if (node.cards.length >= node.maxCards) {
             throw new Error(`El nodo ${node.name} ya alcanzó su capacidad máxima de ${node.maxCards} cartas.`);
         }
+        if (!cardData.usedByPlayerIds) cardData.usedByPlayerIds = [];
         node.cards.push(cardData);
         return node;
     }
