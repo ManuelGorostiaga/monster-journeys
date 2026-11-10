@@ -1931,6 +1931,123 @@ main.main-workspace {
     cursor: pointer;
 }
 
+/* Combat Tactical Action Cards */
+.combat-hand-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.combat-hand-status-banner {
+    width: 100%;
+    padding: 8px 14px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1.5px solid #3b82f6;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.combat-hand-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+@media (max-width: 680px) {
+    .combat-hand-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.combat-action-card {
+    background: linear-gradient(180deg, #1e293b, #0f172a);
+    border: 2px solid #475569;
+    border-radius: 10px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    position: relative;
+    min-height: 125px;
+}
+
+.combat-action-card:hover:not(.discarded):not(.disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.combat-action-card.card-attack-1, .combat-action-card.card-attack-2 {
+    border-color: #ef4444;
+}
+.combat-action-card.card-attack-1:hover:not(.discarded):not(.disabled),
+.combat-action-card.card-attack-2:hover:not(.discarded):not(.disabled) {
+    border-color: #f87171;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.combat-action-card.card-switch {
+    border-color: #3b82f6;
+}
+.combat-action-card.card-switch:hover:not(.discarded):not(.disabled) {
+    border-color: #60a5fa;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
+
+.combat-action-card.card-block {
+    border-color: #10b981;
+}
+.combat-action-card.card-block:hover:not(.discarded):not(.disabled) {
+    border-color: #34d399;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.combat-action-card.discarded {
+    opacity: 0.45;
+    background: #111827;
+    border-color: #374151;
+    cursor: not-allowed;
+    filter: grayscale(80%);
+}
+
+.combat-action-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.combat-card-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.combat-card-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #f8fafc;
+    margin-bottom: 2px;
+}
+
+.combat-card-detail {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.25;
+    margin-top: 4px;
+}
+
 .combat-log-stream {
     background: #0d1117;
     border: 1px solid #28303d;

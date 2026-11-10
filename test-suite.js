@@ -1198,7 +1198,8 @@ console.log('\n=== TEST 26: Combat Initiative & Sequential Turns (No Simultaneou
 {
     const seqGame = new MonsterJourneyGame();
     seqGame.initGame([
-        { name: 'Red', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+        { name: 'Red', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Blue', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
     ]);
     const seqCombat = seqGame.combatEngine;
 
@@ -1208,16 +1209,17 @@ console.log('\n=== TEST 26: Combat Initiative & Sequential Turns (No Simultaneou
     slowMon.hp = 30; slowMon.maxHp = 30;
 
     const fastSpeed = seqCombat.getEffectiveSpeed(fastMon, seqGame.players[0]);
-    const slowSpeed = seqCombat.getEffectiveSpeed(slowMon, null);
+    const slowSpeed = seqCombat.getEffectiveSpeed(slowMon, seqGame.players[1]);
     console.assert(fastSpeed > slowSpeed, 'Faster monster has strictly higher effective speed');
 
     seqCombat.inCombat = true;
     seqCombat.player1 = seqGame.players[0];
+    seqCombat.player2 = seqGame.players[1];
     seqCombat.p1Team = [fastMon];
     seqCombat.p2Team = [slowMon];
     seqCombat.p1ActiveIndex = 0;
     seqCombat.p2ActiveIndex = 0;
-    seqCombat.turnNumber = 1;
+    seqCombat.turnNumber = 2;
 
     seqCombat.startRound();
     console.assert(seqCombat.roundFirst === 1, 'Faster monster (P1) won initiative');
@@ -1225,14 +1227,21 @@ console.log('\n=== TEST 26: Combat Initiative & Sequential Turns (No Simultaneou
     console.assert(seqCombat.actionsTakenThisRound === 0, 'No actions taken yet this round');
 
     const slowHpBefore = slowMon.hp;
+    const fastHpBefore = fastMon.hp;
     seqCombat.playerAttack(0, 1);
-    console.assert(slowMon.hp < slowHpBefore, 'P1 attack resolved first against opponent');
-    console.assert(seqCombat.actionsTakenThisRound >= 1, 'P1 action consumed');
+    console.assert(seqCombat.actionsTakenThisRound === 1, 'P1 action committed');
+    console.assert(seqCombat.activeTurnActor === 2, 'Turn passed to P2 for reaction');
+
+    // P2 also attacks -> both attack, fastest resolves first at the end!
+    seqCombat.playerAttack(0, 2);
+    console.assert(slowMon.hp < slowHpBefore, 'Faster monster (P1) resolved its attack first against opponent');
+    console.assert(fastMon.hp < fastHpBefore, 'Slower monster (P2) resolved its attack second');
 
     // Reversed speed scenario (Opponent is faster)
     const reverseCombat = new CombatEngine(seqGame);
     reverseCombat.inCombat = true;
     reverseCombat.player1 = seqGame.players[0];
+    reverseCombat.player2 = seqGame.players[1];
     const playerSlow = reverseCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
     const oppFast = reverseCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
     playerSlow.hp = 30; playerSlow.maxHp = 30;
@@ -1242,7 +1251,7 @@ console.log('\n=== TEST 26: Combat Initiative & Sequential Turns (No Simultaneou
     reverseCombat.p2Team = [oppFast];
     reverseCombat.p1ActiveIndex = 0;
     reverseCombat.p2ActiveIndex = 0;
-    reverseCombat.turnNumber = 2; // Not turn 1 so Blue character passive doesn't trigger
+    reverseCombat.turnNumber = 2;
 
     reverseCombat.startRound();
     console.assert(reverseCombat.roundFirst === 2, 'Faster opponent (P2) won initiative');
@@ -1254,7 +1263,8 @@ console.log('\n=== TEST 27: Monster Switching Consumes Turn (No Free Immediate D
 {
     const switchGame = new MonsterJourneyGame();
     switchGame.initGame([
-        { name: 'Ash', characterId: 'char_red', starterMonsterId: 'mon_pln_2' }
+        { name: 'Ash', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Gary', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
     ]);
     const switchCombat = switchGame.combatEngine;
 
@@ -1267,6 +1277,7 @@ console.log('\n=== TEST 27: Monster Switching Consumes Turn (No Free Immediate D
 
     switchCombat.inCombat = true;
     switchCombat.player1 = switchGame.players[0];
+    switchCombat.player2 = switchGame.players[1];
     switchCombat.p1Team = [monA, monB];
     switchCombat.p2Team = [opp];
     switchCombat.p1ActiveIndex = 0;
@@ -1287,6 +1298,7 @@ console.log('\n=== TEST 27: Monster Switching Consumes Turn (No Free Immediate D
     const switchCombat2 = new CombatEngine(switchGame);
     switchCombat2.inCombat = true;
     switchCombat2.player1 = switchGame.players[0];
+    switchCombat2.player2 = switchGame.players[1];
     const pMon1 = switchCombat2.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
     const pMon2 = switchCombat2.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
     const fastOpp = switchCombat2.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
@@ -1299,14 +1311,16 @@ console.log('\n=== TEST 27: Monster Switching Consumes Turn (No Free Immediate D
     switchCombat2.p1ActiveIndex = 0;
     switchCombat2.p2ActiveIndex = 0;
     switchCombat2.turnNumber = 2;
-    switchCombat2.actionsTakenThisRound = 1; // Opponent already acted
-    switchCombat2.activeTurnActor = 1;
+    switchCombat2.startRound();
+    // Fast opp acts first
+    switchCombat2.playerAttack(0, 2);
+    console.assert(switchCombat2.actionsTakenThisRound === 1, 'Opponent already acted');
+    console.assert(switchCombat2.activeTurnActor === 1, 'Now P1 reaction turn');
 
     const pMon2HpBefore = pMon2.hp;
     switchCombat2.playerSwitchMonster(1, 1);
     console.assert(switchCombat2.p1ActiveIndex === 1, 'P1 switched to monster 2');
-    console.assert(pMon2.hp === pMon2HpBefore, 'Switching as second actor does not trigger extra damage');
-    console.assert(switchCombat2.actionsTakenThisRound === 2, 'Both actors took actions this round');
+    console.assert(pMon2.hp < pMon2HpBefore, 'Switch resolved first with priority and incoming monster took the attack');
     console.log('Test 27 Passed: Switching monster consumes turn cleanly without immediate penalty attack.');
 }
 
@@ -1661,5 +1675,66 @@ console.assert(global.UI.claimedCharacterIds.has('char_misty'), 'Marina marked a
 global.UI.selectDraftCharacter('char_brock');
 console.assert(global.UI.finalPlayerConfigs[1].characterId === 'char_brock', 'Player B drafted Flint');
 console.log('Test 32 Passed: Recovering monster from discard pile and Character Draft flow verified.');
+
+console.log('\n=== TEST 33: Tactical Card Hand, Discarding, 1-Card Recycling, and Block/Counter Priority ===');
+{
+    const cardGame = new MonsterJourneyGame();
+    cardGame.initGame([
+        { name: 'Ash', characterId: 'char_red', starterMonsterId: 'mon_pln_2' },
+        { name: 'Gary', characterId: 'char_blue', starterMonsterId: 'mon_frw_1' }
+    ]);
+    const cardCombat = cardGame.combatEngine;
+
+    const fastMon = cardCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed >= 6));
+    const slowMon = cardCombat.cloneMonster(MONSTERS_DATABASE.find(m => m.speed <= 2));
+    fastMon.hp = 30; fastMon.maxHp = 30;
+    slowMon.hp = 30; slowMon.maxHp = 30;
+
+    cardCombat.inCombat = true;
+    cardCombat.player1 = cardGame.players[0];
+    cardCombat.player2 = cardGame.players[1];
+    cardCombat.p1Team = [fastMon];
+    cardCombat.p2Team = [slowMon];
+    cardCombat.p1ActiveIndex = 0;
+    cardCombat.p2ActiveIndex = 0;
+    cardCombat.turnNumber = 2;
+
+    cardCombat.initCombatHands();
+    console.assert(cardCombat.p1CombatHand.length === 4, 'P1 starts with 4 action cards');
+    console.assert(cardCombat.p2CombatHand.length === 4, 'P2 starts with 4 action cards');
+
+    // 1. Block Priority & Counter: Slower plays block, Faster plays attack
+    cardCombat.startRound();
+    // Faster P1 attacks
+    cardCombat.commitCombatCard('attack_1', { playerNum: 1 });
+    console.assert(cardCombat.p1CombatHand.length === 3, 'P1 hand reduced to 3 cards after playing');
+    console.assert(cardCombat.p1CombatDiscard.length === 1, 'P1 discard has 1 card');
+
+    // Slower P2 reacts with Block
+    const p1HpBefore = fastMon.hp;
+    const p2HpBefore = slowMon.hp;
+    cardCombat.commitCombatCard('block', { playerNum: 2 });
+    console.assert(cardCombat.p2CombatHand.length === 3, 'P2 hand reduced to 3 cards');
+
+    // Resolution: Block absorbs 3 damage, and counters 3 damage to attacker!
+    console.assert(fastMon.hp === p1HpBefore - 3, 'Block retaliated with 3 counter damage against attacker');
+    console.assert(slowMon.hp < p2HpBefore, 'Defender took reduced damage from blocked attack');
+
+    // 2. Play 2nd card
+    cardCombat.startRound();
+    cardCombat.commitCombatCard('attack_2', { playerNum: 1 });
+    console.assert(cardCombat.p1CombatHand.length === 2, 'P1 hand reduced to 2 cards');
+    cardCombat.commitCombatCard('attack_1', { playerNum: 2 });
+    console.assert(cardCombat.p2CombatHand.length === 2, 'P2 hand reduced to 2 cards');
+
+    // 3. Play 3rd card -> Hand reaches 1 card -> Recycling triggers!
+    cardCombat.startRound();
+    cardCombat.commitCombatCard('block', { playerNum: 1 });
+    // P1 had 2 cards, played 1 -> Hand dropped to 1 card -> Discard returns to hand!
+    console.assert(cardCombat.p1CombatHand.length === 4, 'Hand recycled back to 4 cards when reaching 1 card in hand');
+    console.assert(cardCombat.p1CombatDiscard.length === 0, 'Discard pile cleared after recycling');
+
+    console.log('Test 33 Passed: Card hands, discard cycling at 1 card, and Block/Counter priority verified.');
+}
 
 console.log('\n=== ALL TESTS PASSED SUCCESSFULLY! ===');

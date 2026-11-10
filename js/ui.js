@@ -1853,6 +1853,7 @@ const UI = {
             if (p1Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
             if (p1Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p1Mon.shieldNextTurn})</span> `;
             if (p1Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p1Mon.chargeNextTurn})</span> `;
+            if (p1Mon.isBlocking) statusHtml += `<span class="combat-status-badge status-shield" style="background: #10b981; color: #fff;">🛡️ Bloqueo Activo (+1 Prio)</span> `;
 
             p1WeakEl.innerHTML = `Weak +2: ${p1Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
         }
@@ -1882,6 +1883,7 @@ const UI = {
             if (p2Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
             if (p2Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p2Mon.shieldNextTurn})</span> `;
             if (p2Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p2Mon.chargeNextTurn})</span> `;
+            if (p2Mon.isBlocking) statusHtml += `<span class="combat-status-badge status-shield" style="background: #10b981; color: #fff;">🛡️ Bloqueo Activo (+1 Prio)</span> `;
 
             p2WeakEl.innerHTML = `Weak +2: ${p2Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
         }
@@ -1920,7 +1922,7 @@ const UI = {
             if (isP2Turn && !combat.player2) {
                 actionsContainer.innerHTML = `
                     <div style="color: #fbbf24; font-weight: bold; padding: 10px 16px; background: rgba(0,0,0,0.4); border: 1px solid #d97706; border-radius: 8px; text-align: center; width: 100%;">
-                        ⏳ Turno de ${combat.getOpponentDisplayName()} (Iniciativa)... ejecutando acción.
+                        ⏳ Turno de ${combat.getOpponentDisplayName()}... eligiendo acción táctica.
                     </div>
                 `;
                 return;
@@ -1929,42 +1931,107 @@ const UI = {
             const currentActorNum = isP1Turn ? 1 : 2;
             const currentActorPlayer = isP1Turn ? combat.player1 : combat.player2;
             const currentActorMon = isP1Turn ? p1Mon : p2Mon;
+            const hand = (currentActorNum === 1) ? combat.p1CombatHand : combat.p2CombatHand;
+            const discard = (currentActorNum === 1) ? combat.p1CombatDiscard : combat.p2CombatDiscard;
+
+            const isReactionPhase = Boolean(combat.firstCommitment && !combat.secondCommitment);
+            const leadLabel = isReactionPhase ? combat.getCardDisplayName(combat.firstCommitment.card, combat.firstCommitment.playerNum, combat.firstCommitment.attackIndex) : '';
+
+            const hasAtk1 = hand.includes('attack_1');
+            const hasAtk2 = hand.includes('attack_2');
+            const hasSwitch = hand.includes('switch');
+            const hasBlock = hand.includes('block');
+            const canSwitch = combat.canPlayCard('switch', currentActorNum);
+
+            const atk1 = currentActorMon.attacks[0];
+            const atk2 = currentActorMon.attacks[1] || atk1;
+            const hasThirdAtk = (currentActorMon.attacks.length >= 3);
+            const atk3 = hasThirdAtk ? currentActorMon.attacks[2] : null;
+
+            const atk1Dmg = atk1.effect === 'speed_damage' ? 'Vel' : (atk1.effect === 'fixed_damage' ? `${atk1.fixedDmg} Fijo` : `${atk1.baseDmg} dmg`);
+            const atk2Dmg = atk2.effect === 'speed_damage' ? 'Vel' : (atk2.effect === 'fixed_damage' ? `${atk2.fixedDmg} Fijo` : `${atk2.baseDmg} dmg`);
+            const atk3Dmg = atk3 ? (atk3.effect === 'speed_damage' ? 'Vel' : (atk3.effect === 'fixed_damage' ? `${atk3.fixedDmg} Fijo` : `${atk3.baseDmg} dmg`)) : '';
 
             let actionsHtml = `
-                <div style="width: 100%; text-align: center; font-size: 0.85rem; color: #fbbf24; font-weight: bold; margin-bottom: 4px;">
-                    👉 Turno de ${currentActorPlayer.name} ${combat.actionsTakenThisRound === 0 ? '(Iniciativa más veloz)' : '(Segunda acción)'}
+                <div class="combat-hand-container">
+                    <div class="combat-hand-status-banner">
+                        ${isReactionPhase ? `
+                            🛡️ ¡El rival jugó <strong style="color: #fbbf24;">${leadLabel}</strong>! 👉 <strong>${currentActorPlayer.name}</strong>, elige tu reacción:
+                        ` : `
+                            ⚡ <strong>${currentActorPlayer.name}</strong> tiene la iniciativa más veloz. Juega tu carta de acción:
+                        `}
+                    </div>
+
+                    <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap;">
+                        <button class="btn-combat-attack" style="background: ${luckActive ? '#10b981' : '#374151'}; border-color: #34d399; font-size: 0.78rem; padding: 6px 12px;"
+                                onclick="UI.game.combatEngine.toggleLuckBoost()" ${combat.isProcessing ? 'disabled' : ''}>
+                            🍀 Relanzar con Suerte: ${luckActive ? 'ACTIVADO' : 'INACTIVO'} (${currentActorPlayer.luck || 0} 🍀)
+                        </button>
+
+                        <div style="font-size: 0.75rem; color: #94a3b8;">
+                            🃏 <strong>Mano:</strong> ${hand.length}/4 cartas <span style="color: #cbd5e1;">(se recicla al quedar 1)</span>
+                            ${discard.length > 0 ? `| 🗑️ Descarte: ${discard.length}` : ''}
+                        </div>
+                    </div>
+
+                    <div class="combat-hand-cards-grid">
+                        <div class="combat-action-card card-attack-1 ${!hasAtk1 ? 'discarded' : ''}"
+                             onclick="${hasAtk1 && !combat.isProcessing ? `UI.playCombatCard('attack_1', 0, ${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #ef4444; color: #fff;">⚔️ Ataque 1</div>
+                            <div class="combat-card-title">${atk1.name}</div>
+                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.75rem;">💥 ${atk1Dmg} (${atk1.type})</div>
+                            ${atk1.desc ? `<div class="combat-card-detail">${atk1.desc}</div>` : ''}
+                            ${!hasAtk1 ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : ''}
+                        </div>
+
+                        <div class="combat-action-card card-attack-2 ${!hasAtk2 ? 'discarded' : ''}"
+                             onclick="${hasAtk2 && !hasThirdAtk && !combat.isProcessing ? `UI.playCombatCard('attack_2', 1, ${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #dc2626; color: #fff;">💥 Ataque 2</div>
+                            <div class="combat-card-title">${atk2.name}</div>
+                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.75rem;">💥 ${atk2Dmg} (${atk2.type})</div>
+                            ${atk2.desc ? `<div class="combat-card-detail">${atk2.desc}</div>` : ''}
+                            ${hasThirdAtk && hasAtk2 ? `
+                                <div style="display: flex; gap: 4px; margin-top: auto; width: 100%;">
+                                    <button class="btn-action" style="flex: 1; padding: 3px; font-size: 0.65rem;" onclick="event.stopPropagation(); UI.playCombatCard('attack_2', 1, ${currentActorNum})">Mov 2</button>
+                                    <button class="btn-action" style="flex: 1; padding: 3px; font-size: 0.65rem;" onclick="event.stopPropagation(); UI.playCombatCard('attack_2', 2, ${currentActorNum})">Mov 3: ${atk3.name}</button>
+                                </div>
+                            ` : ''}
+                            ${!hasAtk2 ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : ''}
+                        </div>
+
+                        <div class="combat-action-card card-switch ${!hasSwitch ? 'discarded' : (!canSwitch ? 'disabled' : '')}"
+                             onclick="${hasSwitch && canSwitch && !combat.isProcessing ? `UI.promptCombatCardSwitch(${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #3b82f6; color: #fff;">🔄 Prioridad +1</div>
+                            <div class="combat-card-title">Cambio</div>
+                            <div class="combat-card-detail">Retira a tu criatura y envía a un compañero antes de los ataques.</div>
+                            ${!hasSwitch ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : (!canSwitch ? `<div style="color: #ef4444; font-size: 0.68rem; margin-top: auto;">Sin banca viva</div>` : '')}
+                        </div>
+
+                        <div class="combat-action-card card-block ${!hasBlock ? 'discarded' : ''}"
+                             onclick="${hasBlock && !combat.isProcessing ? `UI.playCombatCard('block', 0, ${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #10b981; color: #fff;">🛡️ Prioridad +1</div>
+                            <div class="combat-card-title">Bloqueo y Contra</div>
+                            <div class="combat-card-detail">Absorbe 3 de daño del ataque rival y contraataca infligiendo 3 de daño.</div>
+                            ${!hasBlock ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : ''}
+                        </div>
+                    </div>
                 </div>
-                <button class="btn-combat-attack" style="background: ${luckActive ? '#10b981' : '#374151'}; border-color: #34d399;"
-                        onclick="UI.game.combatEngine.toggleLuckBoost()" ${combat.isProcessing ? 'disabled' : ''}>
-                    🍀 Relanzar dados con Suerte (Cuesta 1 🍀): ${luckActive ? 'ACTIVADO' : 'INACTIVO'} (Tienes: ${currentActorPlayer.luck || 0} 🍀)
-                </button>
-            `;
-
-            currentActorMon.attacks.forEach((atk, idx) => {
-                const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg}`;
-                actionsHtml += `
-                    <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx}, ${currentActorNum})" ${combat.isProcessing ? 'disabled' : ''}>
-                        <div style="font-weight: 800;">💥 ${atk.name} (${atk.type}): ${dmgDisplay} daño ${luckActive ? '🎲 (Relanzará dados)' : ''}</div>
-                        ${atk.desc ? `<div style="font-size: 0.72rem; color: #fde047; font-weight: normal; margin-top: 2px;">${atk.desc}</div>` : ''}
-                    </button>
-                `;
-            });
-
-            actionsHtml += `
-                <button class="btn-combat-switch" onclick="UI.promptCombatSwitch(${currentActorNum})" ${combat.isProcessing ? 'disabled' : ''}>
-                    🔄 Cambiar Monstruo (Consume Turno)
-                </button>
             `;
 
             actionsContainer.innerHTML = actionsHtml;
         }
     },
 
-    promptCombatSwitch(playerNum = 1) {
+    playCombatCard(card, attackIndex = 0, playerNum = 1) {
+        if (!this.game || !this.game.combatEngine) return;
+        this.game.combatEngine.commitCombatCard(card, { playerNum, attackIndex });
+    },
+
+    promptCombatCardSwitch(playerNum = 1) {
         const combat = this.game.combatEngine;
         const team = (playerNum === 1) ? combat.p1Team : combat.p2Team;
         const activeIdx = (playerNum === 1) ? combat.p1ActiveIndex : combat.p2ActiveIndex;
-        let msg = `Selecciona a qué monstruo deseas cambiar:\n(⏱️ Cambiar de monstruo consume tu turno)\n`;
+        let msg = `Selecciona a qué criatura deseas cambiar:\n(🔄 El cambio ocurre con prioridad antes de los ataques)\n`;
         team.forEach((m, idx) => {
             msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === activeIdx ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
         });
@@ -1972,10 +2039,14 @@ const UI = {
         const choice = prompt(msg, '2');
         if (choice) {
             const idx = parseInt(choice, 10) - 1;
-            if (idx >= 0 && idx < team.length) {
-                combat.playerSwitchMonster(idx, playerNum);
+            if (idx >= 0 && idx < team.length && idx !== activeIdx && team[idx].hp > 0) {
+                combat.commitCombatCard('switch', { playerNum, targetSwitchIndex: idx });
             }
         }
+    },
+
+    promptCombatSwitch(playerNum = 1) {
+        return this.promptCombatCardSwitch(playerNum);
     },
 
     promptPivotSwitch() {

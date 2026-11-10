@@ -1938,6 +1938,123 @@ main.main-workspace {
     cursor: pointer;
 }
 
+/* Combat Tactical Action Cards */
+.combat-hand-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.combat-hand-status-banner {
+    width: 100%;
+    padding: 8px 14px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1.5px solid #3b82f6;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.combat-hand-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+@media (max-width: 680px) {
+    .combat-hand-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.combat-action-card {
+    background: linear-gradient(180deg, #1e293b, #0f172a);
+    border: 2px solid #475569;
+    border-radius: 10px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    position: relative;
+    min-height: 125px;
+}
+
+.combat-action-card:hover:not(.discarded):not(.disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.combat-action-card.card-attack-1, .combat-action-card.card-attack-2 {
+    border-color: #ef4444;
+}
+.combat-action-card.card-attack-1:hover:not(.discarded):not(.disabled),
+.combat-action-card.card-attack-2:hover:not(.discarded):not(.disabled) {
+    border-color: #f87171;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.combat-action-card.card-switch {
+    border-color: #3b82f6;
+}
+.combat-action-card.card-switch:hover:not(.discarded):not(.disabled) {
+    border-color: #60a5fa;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
+
+.combat-action-card.card-block {
+    border-color: #10b981;
+}
+.combat-action-card.card-block:hover:not(.discarded):not(.disabled) {
+    border-color: #34d399;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.combat-action-card.discarded {
+    opacity: 0.45;
+    background: #111827;
+    border-color: #374151;
+    cursor: not-allowed;
+    filter: grayscale(80%);
+}
+
+.combat-action-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.combat-card-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.combat-card-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #f8fafc;
+    margin-bottom: 2px;
+}
+
+.combat-card-detail {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.25;
+    margin-top: 4px;
+}
+
 .combat-log-stream {
     background: #0d1117;
     border: 1px solid #28303d;
@@ -5368,6 +5485,14 @@ class CombatEngine {
         this.activeTurnActor = 1;
         this.actionsTakenThisRound = 0;
         this.bets = [];
+        this.initCombatHands();
+        this.p1CombatHand = ['attack_1', 'attack_2', 'switch', 'block'];
+        this.p1CombatDiscard = [];
+        this.p2CombatHand = ['attack_1', 'attack_2', 'switch', 'block'];
+        this.p2CombatDiscard = [];
+        this.firstCommitment = null;
+        this.secondCommitment = null;
+        this.waitingForReaction = false;
     }
 
     startBattle({ type, player1, player2 = null, gym = null, npc = null, onEnd = null }) {
@@ -5387,6 +5512,7 @@ class CombatEngine {
         this.activeTurnActor = 1;
         this.actionsTakenThisRound = 0;
         this.bets = [];
+        this.initCombatHands();
 
         // Player 1 team (active top 3 monsters from board)
         this.p1Team = player1.monsters.slice(0, 3).map(m => this.cloneMonster(m));
@@ -5564,7 +5690,8 @@ class CombatEngine {
             berryUsed: false,
             status: null, // 'paralysis', 'poison', 'drowsy'
             shieldNextTurn: 0,
-            chargeNextTurn: 0
+            chargeNextTurn: 0,
+            isBlocking: false
         };
     }
 
@@ -5599,6 +5726,64 @@ class CombatEngine {
         return Math.max(0, spd);
     }
 
+    initCombatHands() {
+        this.p1CombatHand = ['attack_1', 'attack_2', 'switch', 'block'];
+        this.p1CombatDiscard = [];
+        this.p2CombatHand = ['attack_1', 'attack_2', 'switch', 'block'];
+        this.p2CombatDiscard = [];
+        this.firstCommitment = null;
+        this.secondCommitment = null;
+        this.waitingForReaction = false;
+    }
+
+    recycleCombatHandIfNeeded(playerNum) {
+        const hand = (playerNum === 1) ? this.p1CombatHand : this.p2CombatHand;
+        const discard = (playerNum === 1) ? this.p1CombatDiscard : this.p2CombatDiscard;
+        if (hand && hand.length === 1 && discard && discard.length > 0) {
+            if (playerNum === 1) {
+                this.p1CombatHand = this.p1CombatHand.concat(this.p1CombatDiscard);
+                this.p1CombatDiscard = [];
+            } else {
+                this.p2CombatHand = this.p2CombatHand.concat(this.p2CombatDiscard);
+                this.p2CombatDiscard = [];
+            }
+            const pName = (playerNum === 1) ? this.player1.name : this.getOpponentDisplayName();
+            this.log(`🔄 ¡A **${pName}** solo le queda 1 carta en mano! Recupera todas las cartas de su pila de descarte.`);
+        }
+    }
+
+    getCardDisplayName(card, playerNum, attackIndex = 0) {
+        const mon = (playerNum === 1) ? this.getP1Active() : this.getP2Active();
+        if (card === 'attack_1') {
+            const atk = (mon && mon.attacks && mon.attacks[0]) ? mon.attacks[0].name : 'Ataque 1';
+            return `⚔️ Ataque 1 (${atk})`;
+        }
+        if (card === 'attack_2') {
+            const chosenIdx = attackIndex || 1;
+            const atk = (mon && mon.attacks && mon.attacks[chosenIdx]) ? mon.attacks[chosenIdx].name : ((mon && mon.attacks && mon.attacks[1]) ? mon.attacks[1].name : 'Ataque 2');
+            return `💥 Ataque 2 (${atk})`;
+        }
+        if (card === 'switch') {
+            return `🔄 Cambio de Monstruo`;
+        }
+        if (card === 'block') {
+            return `🛡️ Bloqueo y Contraataque`;
+        }
+        return card;
+    }
+
+    canPlayCard(card, playerNum = 1) {
+        const hand = (playerNum === 1) ? this.p1CombatHand : this.p2CombatHand;
+        if (!hand || !hand.includes(card)) return false;
+        if (card === 'switch') {
+            const team = (playerNum === 1) ? this.p1Team : this.p2Team;
+            const currentIdx = (playerNum === 1) ? this.p1ActiveIndex : this.p2ActiveIndex;
+            const hasAliveOther = team.some((m, idx) => idx !== currentIdx && m.hp > 0);
+            if (!hasAliveOther) return false;
+        }
+        return true;
+    }
+
     startRound() {
         if (!this.inCombat) return;
 
@@ -5609,8 +5794,21 @@ class CombatEngine {
             return;
         }
 
+        if (!this.p1CombatHand || this.p1CombatHand.length === 0) {
+            this.p1CombatHand = ['attack_1', 'attack_2', 'switch', 'block'];
+            this.p1CombatDiscard = [];
+        }
+        if (!this.p2CombatHand || this.p2CombatHand.length === 0) {
+            this.p2CombatHand = ['attack_1', 'attack_2', 'switch', 'block'];
+            this.p2CombatDiscard = [];
+        }
+
         this.isProcessing = false;
         this.actionsTakenThisRound = 0;
+        this.firstCommitment = null;
+        this.secondCommitment = null;
+        this.waitingForReaction = false;
+        this.clearRoundBlocking();
 
         const p1Speed = this.getEffectiveSpeed(p1Mon, this.player1);
         const p2Speed = this.getEffectiveSpeed(p2Mon, this.player2);
@@ -5632,12 +5830,293 @@ class CombatEngine {
         }
 
         if (this.activeTurnActor === 2 && !this.player2) {
-            this.isProcessing = true;
+            const isTestSync = (!window.document || !window.document.getElementById('modal-combat'));
+            if (isTestSync) {
+                this.executeOpponentAction();
+            } else {
+                this.isProcessing = true;
+                setTimeout(() => {
+                    if (!this.inCombat) return;
+                    this.executeOpponentAction();
+                }, 600);
+            }
+        }
+    }
+
+    executeSwitch(playerNum, newIndex) {
+        const team = (playerNum === 1) ? this.p1Team : this.p2Team;
+        const currentIdx = (playerNum === 1) ? this.p1ActiveIndex : this.p2ActiveIndex;
+        const player = (playerNum === 1) ? this.player1 : this.player2;
+        const playerName = player ? player.name : this.getOpponentDisplayName();
+
+        if (newIndex === null || newIndex === undefined || newIndex === currentIdx || !team[newIndex] || team[newIndex].hp <= 0) {
+            newIndex = team.findIndex((m, idx) => idx !== currentIdx && m.hp > 0);
+        }
+        if (newIndex < 0 || newIndex === currentIdx) return;
+
+        const oldMon = team[currentIdx];
+        if (playerNum === 1) {
+            this.p1ActiveIndex = newIndex;
+        } else {
+            this.p2ActiveIndex = newIndex;
+        }
+        const newMon = team[newIndex];
+        this.log(`🔄 **${playerName}** retira a ${oldMon.name} y envía a ${newMon.name}.`);
+        SoundFX.step();
+    }
+
+    commitCombatCard(card, { playerNum = null, attackIndex = 0, targetSwitchIndex = null } = {}) {
+        if (!this.inCombat) return;
+        const currentActor = playerNum || this.activeTurnActor;
+        if (currentActor !== this.activeTurnActor) {
+            throw new Error(`Turn mismatch in combat: expected actor ${this.activeTurnActor}, received ${currentActor}`);
+        }
+
+        const hand = (currentActor === 1) ? this.p1CombatHand : this.p2CombatHand;
+        const cardIndex = hand.indexOf(card);
+        if (cardIndex === -1) {
+            throw new Error(`Player ${currentActor} tried to play card '${card}' which is not in combat hand: [${hand.join(', ')}]`);
+        }
+
+        hand.splice(cardIndex, 1);
+        const discard = (currentActor === 1) ? this.p1CombatDiscard : this.p2CombatDiscard;
+        discard.push(card);
+
+        this.recycleCombatHandIfNeeded(currentActor);
+
+        const commitData = {
+            playerNum: currentActor,
+            card,
+            attackIndex,
+            targetSwitchIndex
+        };
+
+        const actorName = (currentActor === 1) ? this.player1.name : this.getOpponentDisplayName();
+        const cardLabel = this.getCardDisplayName(card, currentActor, attackIndex);
+
+        if (!this.firstCommitment) {
+            this.firstCommitment = commitData;
+            this.actionsTakenThisRound = 1;
+            this.waitingForReaction = true;
+            this.log(`⚡ **${actorName}** declara su acción: **${cardLabel}**.`);
+
+            if (card === 'switch') {
+                this.executeSwitch(currentActor, targetSwitchIndex);
+            }
+
+            const nextActor = (currentActor === 1) ? 2 : 1;
+            this.activeTurnActor = nextActor;
+
+            if (window.UI) UI.renderCombatArena();
+
+            if (nextActor === 2 && !this.player2) {
+                const isTestSync = (!window.document || !window.document.getElementById('modal-combat'));
+                if (isTestSync) {
+                    this.executeOpponentAction();
+                } else {
+                    this.isProcessing = true;
+                    setTimeout(() => {
+                        if (!this.inCombat) return;
+                        this.executeOpponentAction();
+                    }, 500);
+                }
+            } else {
+                this.isProcessing = false;
+                const nextPlayer = (nextActor === 1) ? this.player1 : this.player2;
+                this.log(`👉 ¡Es el turno de reacción de **${nextPlayer.name}**! Puedes atacar, cambiar o bloquear.`);
+                if (window.UI) UI.renderCombatArena();
+            }
+        } else {
+            this.secondCommitment = commitData;
+            this.actionsTakenThisRound = 2;
+            this.waitingForReaction = false;
+            this.log(`🛡️ **${actorName}** reacciona jugando: **${cardLabel}**.`);
+
+            if (card === 'switch') {
+                this.executeSwitch(currentActor, targetSwitchIndex);
+            }
+
+            if (window.UI) UI.renderCombatArena();
+
+            this.resolveRoundCombat();
+        }
+    }
+
+    resolveRoundCombat() {
+        if (!this.inCombat || !this.firstCommitment || !this.secondCommitment) return;
+
+        this.isProcessing = true;
+
+        const c1 = (this.firstCommitment.playerNum === 1) ? this.firstCommitment : this.secondCommitment;
+        const c2 = (this.firstCommitment.playerNum === 2) ? this.firstCommitment : this.secondCommitment;
+
+        const p1Mon = this.getP1Active();
+        const p2Mon = this.getP2Active();
+
+        if (c1.card === 'block') {
+            p1Mon.isBlocking = true;
+            this.log(`🛡️ ¡${this.player1.name} (${p1Mon.name}) activa postura de Bloqueo defensivo (+1 Prioridad)!`);
+        }
+        if (c2.card === 'block') {
+            p2Mon.isBlocking = true;
+            this.log(`🛡️ ¡${this.getOpponentDisplayName()} (${p2Mon.name}) activa postura de Bloqueo defensivo (+1 Prioridad)!`);
+        }
+
+        const p1Attacked = (c1.card === 'attack_1' || c1.card === 'attack_2');
+        const p2Attacked = (c2.card === 'attack_1' || c2.card === 'attack_2');
+
+        const p1Speed = this.getEffectiveSpeed(p1Mon, this.player1);
+        const p2Speed = this.getEffectiveSpeed(p2Mon, this.player2);
+        const p1GoesFirst = (p1Speed > p2Speed) || (p1Speed === p2Speed && this.roundFirst === 1);
+
+        if (p1Attacked && p2Attacked) {
+            if (p1GoesFirst) {
+                const atk1 = p1Mon.attacks[c1.attackIndex] || p1Mon.attacks[0];
+                this.executeAttack({
+                    attacker: p1Mon,
+                    defender: p2Mon,
+                    attack: atk1,
+                    attackerPlayer: this.player1,
+                    defenderPlayer: this.player2,
+                    first: true
+                });
+                SoundFX.diceRoll();
+
+                if (p2Mon.hp <= 0) {
+                    this.finalizeRoundAfterFaint(p2Mon, this.player2);
+                    return;
+                }
+
+                const atk2 = p2Mon.attacks[c2.attackIndex] || p2Mon.attacks[0];
+                this.executeAttack({
+                    attacker: p2Mon,
+                    defender: p1Mon,
+                    attack: atk2,
+                    attackerPlayer: this.player2,
+                    defenderPlayer: this.player1,
+                    first: false
+                });
+                SoundFX.diceRoll();
+
+                if (p1Mon.hp <= 0) {
+                    this.finalizeRoundAfterFaint(p1Mon, this.player1);
+                    return;
+                }
+            } else {
+                const atk2 = p2Mon.attacks[c2.attackIndex] || p2Mon.attacks[0];
+                this.executeAttack({
+                    attacker: p2Mon,
+                    defender: p1Mon,
+                    attack: atk2,
+                    attackerPlayer: this.player2,
+                    defenderPlayer: this.player1,
+                    first: true
+                });
+                SoundFX.diceRoll();
+
+                if (p1Mon.hp <= 0) {
+                    this.finalizeRoundAfterFaint(p1Mon, this.player1);
+                    return;
+                }
+
+                const atk1 = p1Mon.attacks[c1.attackIndex] || p1Mon.attacks[0];
+                this.executeAttack({
+                    attacker: p1Mon,
+                    defender: p2Mon,
+                    attack: atk1,
+                    attackerPlayer: this.player1,
+                    defenderPlayer: this.player2,
+                    first: false
+                });
+                SoundFX.diceRoll();
+
+                if (p2Mon.hp <= 0) {
+                    this.finalizeRoundAfterFaint(p2Mon, this.player2);
+                    return;
+                }
+            }
+        } else if (p1Attacked && !p2Attacked) {
+            const atk1 = p1Mon.attacks[c1.attackIndex] || p1Mon.attacks[0];
+            this.executeAttack({
+                attacker: p1Mon,
+                defender: p2Mon,
+                attack: atk1,
+                attackerPlayer: this.player1,
+                defenderPlayer: this.player2,
+                first: true
+            });
+            SoundFX.diceRoll();
+
+            if (p2Mon.hp <= 0) {
+                this.finalizeRoundAfterFaint(p2Mon, this.player2);
+                return;
+            }
+            if (p1Mon.hp <= 0) {
+                this.finalizeRoundAfterFaint(p1Mon, this.player1);
+                return;
+            }
+        } else if (!p1Attacked && p2Attacked) {
+            const atk2 = p2Mon.attacks[c2.attackIndex] || p2Mon.attacks[0];
+            this.executeAttack({
+                attacker: p2Mon,
+                defender: p1Mon,
+                attack: atk2,
+                attackerPlayer: this.player2,
+                defenderPlayer: this.player1,
+                first: true
+            });
+            SoundFX.diceRoll();
+
+            if (p1Mon.hp <= 0) {
+                this.finalizeRoundAfterFaint(p1Mon, this.player1);
+                return;
+            }
+            if (p2Mon.hp <= 0) {
+                this.finalizeRoundAfterFaint(p2Mon, this.player2);
+                return;
+            }
+        } else {
+            if (c1.card === 'block' && c2.card === 'block') {
+                this.log('🛡️ ¡Ambos combatientes se protegieron con Bloqueo! No hubo intercambio de daño en este asalto.');
+            } else if (c1.card === 'switch' && c2.card === 'switch') {
+                this.log('🔄 ¡Ambos entrenadores cambiaron de criatura tácticamente!');
+            } else {
+                this.log('🛡️ La maniobra de Bloqueo no tuvo efecto ya que el oponente se retiró del combate.');
+            }
+        }
+
+        this.finishRoundCleanly();
+    }
+
+    finalizeRoundAfterFaint(faintedMon, faintedPlayer) {
+        this.clearRoundBlocking();
+        this.firstCommitment = null;
+        this.secondCommitment = null;
+        this.handleFaint(faintedMon, faintedPlayer);
+        if (!this.inCombat) return;
+        this.endRound();
+    }
+
+    finishRoundCleanly() {
+        this.clearRoundBlocking();
+        this.firstCommitment = null;
+        this.secondCommitment = null;
+        const isTestSync = (!window.document || !window.document.getElementById('modal-combat'));
+        if (isTestSync) {
+            this.endRound();
+        } else {
             setTimeout(() => {
                 if (!this.inCombat) return;
-                this.executeOpponentAction();
+                this.endRound();
             }, 600);
         }
+    }
+
+    clearRoundBlocking() {
+        const p1 = this.getP1Active();
+        const p2 = this.getP2Active();
+        if (p1) p1.isBlocking = false;
+        if (p2) p2.isBlocking = false;
     }
 
     executeOpponentAction() {
@@ -5646,40 +6125,72 @@ class CombatEngine {
         const p1Mon = this.getP1Active();
         if (!oppMon || oppMon.hp <= 0 || !p1Mon || p1Mon.hp <= 0) return;
 
-        const oppAttack = this.chooseOpponentAttack(oppMon, p1Mon);
-        this.executeAttack({
-            attacker: oppMon,
-            defender: p1Mon,
-            attack: oppAttack,
-            attackerPlayer: this.player2,
-            defenderPlayer: this.player1,
-            first: (this.actionsTakenThisRound === 0)
+        const isLeading = !this.firstCommitment;
+        const choice = this.chooseNpcCard(isLeading, this.firstCommitment);
+        this.commitCombatCard(choice.card, {
+            playerNum: 2,
+            attackIndex: choice.attackIndex,
+            targetSwitchIndex: choice.targetSwitchIndex
         });
+    }
 
-        SoundFX.diceRoll();
-        this.actionsTakenThisRound++;
+    chooseNpcCard(isLeading, leadCommitment = null) {
+        const hand = this.p2CombatHand;
+        const oppMon = this.getP2Active();
+        const p1Mon = this.getP1Active();
 
-        if (window.UI) UI.renderCombatArena();
+        const canSwitch = hand.includes('switch') && this.p2Team.some((m, idx) => idx !== this.p2ActiveIndex && m.hp > 0);
+        const canBlock = hand.includes('block');
+        const hasAtk1 = hand.includes('attack_1');
+        const hasAtk2 = hand.includes('attack_2');
 
-        if (p1Mon.hp <= 0) {
-            setTimeout(() => {
-                this.handleFaint(p1Mon, this.player1);
-                if (!this.inCombat) return;
-                this.endRound();
-            }, 600);
-            return;
-        }
+        const bestAttack = this.chooseOpponentAttack(oppMon, p1Mon);
+        const bestAttackIdx = (oppMon.attacks && oppMon.attacks[1] && oppMon.attacks[1].name === bestAttack?.name) ? 1 : 0;
+        const preferredAtkCard = (bestAttackIdx === 1 && hasAtk2) ? 'attack_2' : (hasAtk1 ? 'attack_1' : (hasAtk2 ? 'attack_2' : null));
 
-        if (this.actionsTakenThisRound >= 2) {
-            setTimeout(() => {
-                this.endRound();
-            }, 700);
+        if (!isLeading && leadCommitment) {
+            const playerAttacking = (leadCommitment.card === 'attack_1' || leadCommitment.card === 'attack_2');
+            if (playerAttacking) {
+                if (canBlock && (oppMon.hp <= 4 || Math.random() < 0.45)) {
+                    return { card: 'block', attackIndex: 0, targetSwitchIndex: null };
+                }
+                if (canSwitch && oppMon.hp <= 3) {
+                    const healthyIdx = this.p2Team.findIndex((m, idx) => idx !== this.p2ActiveIndex && m.hp > 0);
+                    if (healthyIdx >= 0) {
+                        return { card: 'switch', attackIndex: 0, targetSwitchIndex: healthyIdx };
+                    }
+                }
+            } else if (leadCommitment.card === 'block') {
+                if (canSwitch && oppMon.hp <= 6) {
+                    const altIdx = this.p2Team.findIndex((m, idx) => idx !== this.p2ActiveIndex && m.hp > 0);
+                    if (altIdx >= 0) {
+                        return { card: 'switch', attackIndex: 0, targetSwitchIndex: altIdx };
+                    }
+                }
+            }
         } else {
-            this.activeTurnActor = 1;
-            this.isProcessing = false;
-            this.log(`👉 ¡Es el turno de **${this.player1.name}**! Puedes atacar o cambiar de monstruo.`);
-            if (window.UI) UI.renderCombatArena();
+            if (oppMon.hp <= 3 && canSwitch && Math.random() < 0.4) {
+                const switchTarget = this.p2Team.findIndex((m, idx) => idx !== this.p2ActiveIndex && m.hp > 0);
+                if (switchTarget >= 0) {
+                    return { card: 'switch', attackIndex: 0, targetSwitchIndex: switchTarget };
+                }
+            }
         }
+
+        if (preferredAtkCard) {
+            return { card: preferredAtkCard, attackIndex: bestAttackIdx, targetSwitchIndex: null };
+        }
+        if (canBlock) {
+            return { card: 'block', attackIndex: 0, targetSwitchIndex: null };
+        }
+        if (canSwitch) {
+            const switchTarget = this.p2Team.findIndex((m, idx) => idx !== this.p2ActiveIndex && m.hp > 0);
+            if (switchTarget >= 0) {
+                return { card: 'switch', attackIndex: 0, targetSwitchIndex: switchTarget };
+            }
+        }
+        const fallbackCard = hand[0];
+        return { card: fallbackCard, attackIndex: 0, targetSwitchIndex: null };
     }
 
     toggleLuckBoost() {
@@ -5701,112 +6212,20 @@ class CombatEngine {
     playerAttack(attackIndex = 0, playerNum = null) {
         if (this.isProcessing || !this.inCombat) return;
         const currentActor = playerNum || this.activeTurnActor;
-        if (currentActor !== this.activeTurnActor) return;
-
-        this.isProcessing = true;
-        const attackerIsP1 = (currentActor === 1);
-        const attackerMon = attackerIsP1 ? this.getP1Active() : this.getP2Active();
-        const defenderMon = attackerIsP1 ? this.getP2Active() : this.getP1Active();
-        const attackerPlayer = attackerIsP1 ? this.player1 : this.player2;
-        const defenderPlayer = attackerIsP1 ? this.player2 : this.player1;
-
-        const atk = attackerMon.attacks[attackIndex] || attackerMon.attacks[0];
-
-        this.executeAttack({
-            attacker: attackerMon,
-            defender: defenderMon,
-            attack: atk,
-            attackerPlayer,
-            defenderPlayer,
-            first: (this.actionsTakenThisRound === 0)
-        });
-
-        SoundFX.diceRoll();
-        this.actionsTakenThisRound++;
-
-        if (window.UI) UI.renderCombatArena();
-
-        if (defenderMon.hp <= 0) {
-            setTimeout(() => {
-                this.handleFaint(defenderMon, defenderPlayer);
-                if (!this.inCombat) return;
-                this.endRound();
-            }, 600);
-            return;
-        }
-
-        if (this.actionsTakenThisRound >= 2) {
-            setTimeout(() => {
-                this.endRound();
-            }, 700);
-        } else {
-            const nextActor = attackerIsP1 ? 2 : 1;
-            this.activeTurnActor = nextActor;
-            setTimeout(() => {
-                if (!this.inCombat) return;
-                if (nextActor === 2 && !this.player2) {
-                    this.executeOpponentAction();
-                } else {
-                    this.isProcessing = false;
-                    const nextPlayer = nextActor === 1 ? this.player1 : this.player2;
-                    this.log(`👉 ¡Es el turno de **${nextPlayer.name}**! Puedes atacar o cambiar de monstruo.`);
-                    if (window.UI) UI.renderCombatArena();
-                }
-            }, 700);
-        }
+        const card = (attackIndex === 0) ? 'attack_1' : 'attack_2';
+        this.commitCombatCard(card, { playerNum: currentActor, attackIndex });
     }
 
     playerSwitchMonster(newIndex, playerNum = null) {
         if (this.isProcessing || !this.inCombat) return;
         const currentActor = playerNum || this.activeTurnActor;
-        if (currentActor !== this.activeTurnActor) return;
+        this.commitCombatCard('switch', { playerNum: currentActor, targetSwitchIndex: newIndex });
+    }
 
-        const team = (currentActor === 1) ? this.p1Team : this.p2Team;
-        const currentIdx = (currentActor === 1) ? this.p1ActiveIndex : this.p2ActiveIndex;
-        const player = (currentActor === 1) ? this.player1 : this.player2;
-
-        if (newIndex === currentIdx) return;
-        if (team[newIndex].hp <= 0) {
-            alert('¡Ese monstruo está debilitado y no puede entrar a luchar!');
-            return;
-        }
-
-        this.isProcessing = true;
-        const oldMon = team[currentIdx];
-        if (currentActor === 1) {
-            this.p1ActiveIndex = newIndex;
-        } else {
-            this.p2ActiveIndex = newIndex;
-        }
-        const newMon = team[newIndex];
-
-        this.log(`🔄 ${player.name} retira a ${oldMon.name} y envía a ${newMon.name}.`);
-        this.log(`⏱️ Cambiar de monstruo consume el turno de ${player.name}.`);
-
-        SoundFX.step();
-        this.actionsTakenThisRound++;
-
-        if (window.UI) UI.renderCombatArena();
-
-        if (this.actionsTakenThisRound >= 2) {
-            setTimeout(() => {
-                this.endRound();
-            }, 600);
-        } else {
-            const nextActor = (currentActor === 1) ? 2 : 1;
-            this.activeTurnActor = nextActor;
-            setTimeout(() => {
-                if (!this.inCombat) return;
-                if (nextActor === 2 && !this.player2) {
-                    this.executeOpponentAction();
-                } else {
-                    this.isProcessing = false;
-                    const nextPlayer = nextActor === 1 ? this.player1 : this.player2;
-                    this.log(`👉 ¡Es el turno de **${nextPlayer.name}**! Puedes atacar o cambiar de monstruo.`);
-                    if (window.UI) UI.renderCombatArena();
-                }
-            }, 700);
-        }
+    playerBlock(playerNum = null) {
+        if (this.isProcessing || !this.inCombat) return;
+        const currentActor = playerNum || this.activeTurnActor;
+        this.commitCombatCard('block', { playerNum: currentActor });
     }
 
     endRound() {
@@ -5959,7 +6378,20 @@ class CombatEngine {
                 this.log(`🦺 Chaleco Defensivo reduce el daño fijo en 1.`);
             }
 
+            if (defender.isBlocking) {
+                const blockReduction = 3;
+                fixedDmg = Math.max(1, fixedDmg - blockReduction);
+                this.log(`🛡️ ¡Bloqueo defensivo! ${defender.name} absorbe ${blockReduction} puntos de daño fijo.`);
+            }
+
             this.applyDamageToDefender(attacker, defender, fixedDmg);
+
+            if (defender.isBlocking && defender.hp > 0 && attacker.hp > 0) {
+                const counterDmg = 3;
+                this.log(`⚔️ ¡Contraataque! ${defender.name} devuelve ${counterDmg} de daño a ${attacker.name}!`);
+                this.applyDamageToDefender(defender, attacker, counterDmg);
+            }
+
             this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer, fixedDmg);
             return;
         }
@@ -6104,9 +6536,22 @@ class CombatEngine {
             this.log(`🦺 Chaleco Defensivo reduce el daño en 1.`);
         }
 
+        if (defender.isBlocking) {
+            const blockReduction = 3;
+            damage = Math.max(1, damage - blockReduction);
+            this.log(`🛡️ ¡Bloqueo defensivo! ${defender.name} absorbe ${blockReduction} puntos de daño.`);
+        }
+
         this.log(`Ataque de **${attack.name}**: ${damage} de daño total.${weaknessBonus > 0 ? ' (¡+2 por debilidad!)' : ''}`);
 
         this.applyDamageToDefender(attacker, defender, damage);
+
+        if (defender.isBlocking && defender.hp > 0 && attacker.hp > 0) {
+            const counterDmg = 3;
+            this.log(`⚔️ ¡Contraataque! ${defender.name} devuelve ${counterDmg} de daño a ${attacker.name}!`);
+            this.applyDamageToDefender(defender, attacker, counterDmg);
+        }
+
         this.applyAttackOnHitEffects(attacker, defender, attack, attackerPlayer, defenderPlayer, damage);
     }
 
@@ -6179,6 +6624,13 @@ class CombatEngine {
         }
 
         this.log(`💥 Total de la ráfaga múltiple: ${totalMultiDamage} de daño.`);
+
+        if (defender.isBlocking && defender.hp > 0 && attacker.hp > 0) {
+            const counterDmg = 3;
+            this.log(`⚔️ ¡Contraataque! ${defender.name} devuelve ${counterDmg} de daño a ${attacker.name}!`);
+            this.applyDamageToDefender(defender, attacker, counterDmg);
+        }
+
         return totalMultiDamage;
     }
 
@@ -10324,6 +10776,7 @@ const UI = {
             if (p1Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
             if (p1Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p1Mon.shieldNextTurn})</span> `;
             if (p1Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p1Mon.chargeNextTurn})</span> `;
+            if (p1Mon.isBlocking) statusHtml += `<span class="combat-status-badge status-shield" style="background: #10b981; color: #fff;">🛡️ Bloqueo Activo (+1 Prio)</span> `;
 
             p1WeakEl.innerHTML = `Weak +2: ${p1Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
         }
@@ -10353,6 +10806,7 @@ const UI = {
             if (p2Mon.status === 'drowsy') statusHtml += '<span class="combat-status-badge status-drowsy">💤 Somnoliento (+1 Dmg)</span> ';
             if (p2Mon.shieldNextTurn > 0) statusHtml += `<span class="combat-status-badge status-shield">🛡️ Escudo (-${p2Mon.shieldNextTurn})</span> `;
             if (p2Mon.chargeNextTurn > 0) statusHtml += `<span class="combat-status-badge status-charge">⚡ Carga (+${p2Mon.chargeNextTurn})</span> `;
+            if (p2Mon.isBlocking) statusHtml += `<span class="combat-status-badge status-shield" style="background: #10b981; color: #fff;">🛡️ Bloqueo Activo (+1 Prio)</span> `;
 
             p2WeakEl.innerHTML = `Weak +2: ${p2Mon.weakness} ${statusHtml ? `<div style="margin-top: 4px;">${statusHtml}</div>` : ''}`;
         }
@@ -10391,7 +10845,7 @@ const UI = {
             if (isP2Turn && !combat.player2) {
                 actionsContainer.innerHTML = `
                     <div style="color: #fbbf24; font-weight: bold; padding: 10px 16px; background: rgba(0,0,0,0.4); border: 1px solid #d97706; border-radius: 8px; text-align: center; width: 100%;">
-                        ⏳ Turno de ${combat.getOpponentDisplayName()} (Iniciativa)... ejecutando acción.
+                        ⏳ Turno de ${combat.getOpponentDisplayName()}... eligiendo acción táctica.
                     </div>
                 `;
                 return;
@@ -10400,42 +10854,107 @@ const UI = {
             const currentActorNum = isP1Turn ? 1 : 2;
             const currentActorPlayer = isP1Turn ? combat.player1 : combat.player2;
             const currentActorMon = isP1Turn ? p1Mon : p2Mon;
+            const hand = (currentActorNum === 1) ? combat.p1CombatHand : combat.p2CombatHand;
+            const discard = (currentActorNum === 1) ? combat.p1CombatDiscard : combat.p2CombatDiscard;
+
+            const isReactionPhase = Boolean(combat.firstCommitment && !combat.secondCommitment);
+            const leadLabel = isReactionPhase ? combat.getCardDisplayName(combat.firstCommitment.card, combat.firstCommitment.playerNum, combat.firstCommitment.attackIndex) : '';
+
+            const hasAtk1 = hand.includes('attack_1');
+            const hasAtk2 = hand.includes('attack_2');
+            const hasSwitch = hand.includes('switch');
+            const hasBlock = hand.includes('block');
+            const canSwitch = combat.canPlayCard('switch', currentActorNum);
+
+            const atk1 = currentActorMon.attacks[0];
+            const atk2 = currentActorMon.attacks[1] || atk1;
+            const hasThirdAtk = (currentActorMon.attacks.length >= 3);
+            const atk3 = hasThirdAtk ? currentActorMon.attacks[2] : null;
+
+            const atk1Dmg = atk1.effect === 'speed_damage' ? 'Vel' : (atk1.effect === 'fixed_damage' ? `${atk1.fixedDmg} Fijo` : `${atk1.baseDmg} dmg`);
+            const atk2Dmg = atk2.effect === 'speed_damage' ? 'Vel' : (atk2.effect === 'fixed_damage' ? `${atk2.fixedDmg} Fijo` : `${atk2.baseDmg} dmg`);
+            const atk3Dmg = atk3 ? (atk3.effect === 'speed_damage' ? 'Vel' : (atk3.effect === 'fixed_damage' ? `${atk3.fixedDmg} Fijo` : `${atk3.baseDmg} dmg`)) : '';
 
             let actionsHtml = `
-                <div style="width: 100%; text-align: center; font-size: 0.85rem; color: #fbbf24; font-weight: bold; margin-bottom: 4px;">
-                    👉 Turno de ${currentActorPlayer.name} ${combat.actionsTakenThisRound === 0 ? '(Iniciativa más veloz)' : '(Segunda acción)'}
+                <div class="combat-hand-container">
+                    <div class="combat-hand-status-banner">
+                        ${isReactionPhase ? `
+                            🛡️ ¡El rival jugó <strong style="color: #fbbf24;">${leadLabel}</strong>! 👉 <strong>${currentActorPlayer.name}</strong>, elige tu reacción:
+                        ` : `
+                            ⚡ <strong>${currentActorPlayer.name}</strong> tiene la iniciativa más veloz. Juega tu carta de acción:
+                        `}
+                    </div>
+
+                    <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap;">
+                        <button class="btn-combat-attack" style="background: ${luckActive ? '#10b981' : '#374151'}; border-color: #34d399; font-size: 0.78rem; padding: 6px 12px;"
+                                onclick="UI.game.combatEngine.toggleLuckBoost()" ${combat.isProcessing ? 'disabled' : ''}>
+                            🍀 Relanzar con Suerte: ${luckActive ? 'ACTIVADO' : 'INACTIVO'} (${currentActorPlayer.luck || 0} 🍀)
+                        </button>
+
+                        <div style="font-size: 0.75rem; color: #94a3b8;">
+                            🃏 <strong>Mano:</strong> ${hand.length}/4 cartas <span style="color: #cbd5e1;">(se recicla al quedar 1)</span>
+                            ${discard.length > 0 ? `| 🗑️ Descarte: ${discard.length}` : ''}
+                        </div>
+                    </div>
+
+                    <div class="combat-hand-cards-grid">
+                        <div class="combat-action-card card-attack-1 ${!hasAtk1 ? 'discarded' : ''}"
+                             onclick="${hasAtk1 && !combat.isProcessing ? `UI.playCombatCard('attack_1', 0, ${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #ef4444; color: #fff;">⚔️ Ataque 1</div>
+                            <div class="combat-card-title">${atk1.name}</div>
+                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.75rem;">💥 ${atk1Dmg} (${atk1.type})</div>
+                            ${atk1.desc ? `<div class="combat-card-detail">${atk1.desc}</div>` : ''}
+                            ${!hasAtk1 ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : ''}
+                        </div>
+
+                        <div class="combat-action-card card-attack-2 ${!hasAtk2 ? 'discarded' : ''}"
+                             onclick="${hasAtk2 && !hasThirdAtk && !combat.isProcessing ? `UI.playCombatCard('attack_2', 1, ${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #dc2626; color: #fff;">💥 Ataque 2</div>
+                            <div class="combat-card-title">${atk2.name}</div>
+                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.75rem;">💥 ${atk2Dmg} (${atk2.type})</div>
+                            ${atk2.desc ? `<div class="combat-card-detail">${atk2.desc}</div>` : ''}
+                            ${hasThirdAtk && hasAtk2 ? `
+                                <div style="display: flex; gap: 4px; margin-top: auto; width: 100%;">
+                                    <button class="btn-action" style="flex: 1; padding: 3px; font-size: 0.65rem;" onclick="event.stopPropagation(); UI.playCombatCard('attack_2', 1, ${currentActorNum})">Mov 2</button>
+                                    <button class="btn-action" style="flex: 1; padding: 3px; font-size: 0.65rem;" onclick="event.stopPropagation(); UI.playCombatCard('attack_2', 2, ${currentActorNum})">Mov 3: ${atk3.name}</button>
+                                </div>
+                            ` : ''}
+                            ${!hasAtk2 ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : ''}
+                        </div>
+
+                        <div class="combat-action-card card-switch ${!hasSwitch ? 'discarded' : (!canSwitch ? 'disabled' : '')}"
+                             onclick="${hasSwitch && canSwitch && !combat.isProcessing ? `UI.promptCombatCardSwitch(${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #3b82f6; color: #fff;">🔄 Prioridad +1</div>
+                            <div class="combat-card-title">Cambio</div>
+                            <div class="combat-card-detail">Retira a tu criatura y envía a un compañero antes de los ataques.</div>
+                            ${!hasSwitch ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : (!canSwitch ? `<div style="color: #ef4444; font-size: 0.68rem; margin-top: auto;">Sin banca viva</div>` : '')}
+                        </div>
+
+                        <div class="combat-action-card card-block ${!hasBlock ? 'discarded' : ''}"
+                             onclick="${hasBlock && !combat.isProcessing ? `UI.playCombatCard('block', 0, ${currentActorNum})` : ''}">
+                            <div class="combat-card-badge" style="background: #10b981; color: #fff;">🛡️ Prioridad +1</div>
+                            <div class="combat-card-title">Bloqueo y Contra</div>
+                            <div class="combat-card-detail">Absorbe 3 de daño del ataque rival y contraataca infligiendo 3 de daño.</div>
+                            ${!hasBlock ? `<div style="color: #94a3b8; font-size: 0.7rem; margin-top: auto; font-weight: bold;">🗑️ Descartada</div>` : ''}
+                        </div>
+                    </div>
                 </div>
-                <button class="btn-combat-attack" style="background: ${luckActive ? '#10b981' : '#374151'}; border-color: #34d399;"
-                        onclick="UI.game.combatEngine.toggleLuckBoost()" ${combat.isProcessing ? 'disabled' : ''}>
-                    🍀 Relanzar dados con Suerte (Cuesta 1 🍀): ${luckActive ? 'ACTIVADO' : 'INACTIVO'} (Tienes: ${currentActorPlayer.luck || 0} 🍀)
-                </button>
-            `;
-
-            currentActorMon.attacks.forEach((atk, idx) => {
-                const dmgDisplay = atk.effect === 'speed_damage' ? 'Vel' : atk.effect === 'fixed_damage' ? `${atk.fixedDmg} Fijo` : `${atk.baseDmg}`;
-                actionsHtml += `
-                    <button class="btn-combat-attack" onclick="UI.game.combatEngine.playerAttack(${idx}, ${currentActorNum})" ${combat.isProcessing ? 'disabled' : ''}>
-                        <div style="font-weight: 800;">💥 ${atk.name} (${atk.type}): ${dmgDisplay} daño ${luckActive ? '🎲 (Relanzará dados)' : ''}</div>
-                        ${atk.desc ? `<div style="font-size: 0.72rem; color: #fde047; font-weight: normal; margin-top: 2px;">${atk.desc}</div>` : ''}
-                    </button>
-                `;
-            });
-
-            actionsHtml += `
-                <button class="btn-combat-switch" onclick="UI.promptCombatSwitch(${currentActorNum})" ${combat.isProcessing ? 'disabled' : ''}>
-                    🔄 Cambiar Monstruo (Consume Turno)
-                </button>
             `;
 
             actionsContainer.innerHTML = actionsHtml;
         }
     },
 
-    promptCombatSwitch(playerNum = 1) {
+    playCombatCard(card, attackIndex = 0, playerNum = 1) {
+        if (!this.game || !this.game.combatEngine) return;
+        this.game.combatEngine.commitCombatCard(card, { playerNum, attackIndex });
+    },
+
+    promptCombatCardSwitch(playerNum = 1) {
         const combat = this.game.combatEngine;
         const team = (playerNum === 1) ? combat.p1Team : combat.p2Team;
         const activeIdx = (playerNum === 1) ? combat.p1ActiveIndex : combat.p2ActiveIndex;
-        let msg = `Selecciona a qué monstruo deseas cambiar:\n(⏱️ Cambiar de monstruo consume tu turno)\n`;
+        let msg = `Selecciona a qué criatura deseas cambiar:\n(🔄 El cambio ocurre con prioridad antes de los ataques)\n`;
         team.forEach((m, idx) => {
             msg += `${idx + 1}. ${m.name} - ${m.hp}/${m.maxHp} HP ${idx === activeIdx ? '(Activo)' : ''} ${m.hp <= 0 ? '(Debilitado)' : ''}\n`;
         });
@@ -10443,10 +10962,14 @@ const UI = {
         const choice = prompt(msg, '2');
         if (choice) {
             const idx = parseInt(choice, 10) - 1;
-            if (idx >= 0 && idx < team.length) {
-                combat.playerSwitchMonster(idx, playerNum);
+            if (idx >= 0 && idx < team.length && idx !== activeIdx && team[idx].hp > 0) {
+                combat.commitCombatCard('switch', { playerNum, targetSwitchIndex: idx });
             }
         }
+    },
+
+    promptCombatSwitch(playerNum = 1) {
+        return this.promptCombatCardSwitch(playerNum);
     },
 
     promptPivotSwitch() {
