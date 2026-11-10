@@ -12,6 +12,42 @@ const UI = {
     init(game) {
         this.game = game;
         this.bindEvents();
+        setTimeout(() => this.centerMapOnPlayer(false), 200);
+    },
+
+    centerMapOnPlayer(smooth = true) {
+        const viewport = document.getElementById('card-board-viewport');
+        if (!viewport || !this.game) return;
+        const activePlayer = this.game.getActivePlayer();
+        if (!activePlayer) return;
+        const playerNode = this.game.cardMap?.getNode(activePlayer.currentNodeId || `${activePlayer.x},${activePlayer.y}`);
+        if (playerNode && typeof playerNode.mapX === 'number' && typeof playerNode.mapY === 'number') {
+            const targetX = Math.max(0, playerNode.mapX - (viewport.clientWidth / 2));
+            const targetY = Math.max(0, playerNode.mapY - (viewport.clientHeight / 2));
+            viewport.scrollTo({
+                left: targetX,
+                top: targetY,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
+        }
+    },
+
+    switchMobileView(view) {
+        document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+        if (view === 'map') {
+            document.getElementById('mob-nav-map')?.classList.add('active');
+            const el = document.getElementById('map-view-card');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => this.centerMapOnPlayer(true), 350);
+        } else if (view === 'team') {
+            document.getElementById('mob-nav-team')?.classList.add('active');
+            const el = document.getElementById('player-dashboard-card');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (view === 'log') {
+            document.getElementById('mob-nav-log')?.classList.add('active');
+            const el = document.getElementById('game-log-panel');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     },
 
     bindEvents() {
@@ -22,7 +58,11 @@ const UI = {
         document.getElementById('btn-sound-toggle')?.addEventListener('click', () => {
             const enabled = SoundFX.toggle();
             const btn = document.getElementById('btn-sound-toggle');
-            if (btn) btn.textContent = enabled ? '🔊 Sonido' : '🔇 Silencio';
+            const icon = btn?.querySelector('.btn-icon');
+            const text = btn?.querySelector('.btn-text');
+            if (icon) icon.textContent = enabled ? '🔊' : '🔇';
+            if (text) text.textContent = enabled ? ' Sonido' : ' Silencio';
+            if (!icon && btn) btn.textContent = enabled ? '🔊 Sonido' : '🔇 Silencio';
         });
 
         document.getElementById('btn-header-codex')?.addEventListener('click', () => {
@@ -99,6 +139,7 @@ const UI = {
 
         document.getElementById('btn-act-endturn')?.addEventListener('click', () => {
             this.game.endTurn();
+            setTimeout(() => this.centerMapOnPlayer(true), 250);
         });
     },
 
@@ -414,6 +455,7 @@ const UI = {
 
             if (targetNode.cards.length > 0 && (reachableDiscovered.has(targetNode.id) || isDirectConnected)) {
                 this.game.movePlayerToNode(targetNode.id);
+                setTimeout(() => this.centerMapOnPlayer(true), 250);
                 return;
             }
 
@@ -426,6 +468,7 @@ const UI = {
                     if (reachInfo && reachInfo.path.length >= 2) {
                         const intermediateNodeId = reachInfo.path[1];
                         this.game.movePlayerToNode(intermediateNodeId);
+                        setTimeout(() => this.centerMapOnPlayer(true), 250);
                         setTimeout(() => {
                             this.showPlaceCardModal(targetNode.id);
                         }, 250);
@@ -552,11 +595,13 @@ const UI = {
     confirmPlaceLocationHand(cardIndex, targetNodeId) {
         document.getElementById('modal-place-card')?.classList.remove('open');
         this.game.placeLocationCardAndMove(cardIndex, targetNodeId);
+        setTimeout(() => this.centerMapOnPlayer(true), 250);
     },
 
     confirmPlaceCity(targetNodeId) {
         document.getElementById('modal-place-card')?.classList.remove('open');
         this.game.placeCityCardAndMove(targetNodeId);
+        setTimeout(() => this.centerMapOnPlayer(true), 250);
     },
 
     showLocationActionModal() {

@@ -14,7 +14,10 @@ const htmlTemplate = `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#141820">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Monster Journeys - Prototipo de Juego de Mesa (1 a 4 Jugadores)</title>
     <style>
 ${css}
@@ -41,12 +44,36 @@ ${css}
         </div>
 
         <div class="header-right">
-            <button id="btn-header-codex" class="btn-header btn-header-codex">📚 Códice</button>
-            <button id="btn-sound-toggle" class="btn-header">🔊 Sonido</button>
-            <button id="btn-rules" class="btn-header">📖 Reglas (32)</button>
-            <button id="btn-header-reset" class="btn-header btn-header-reset">🔄 Reiniciar</button>
+            <button id="btn-header-codex" class="btn-header btn-header-codex" title="Códice de Monstruos y Cartas">
+                <span class="btn-icon">📚</span><span class="btn-text"> Códice</span>
+            </button>
+            <button id="btn-sound-toggle" class="btn-header" title="Alternar Sonido">
+                <span class="btn-icon">🔊</span><span class="btn-text"> Sonido</span>
+            </button>
+            <button id="btn-rules" class="btn-header" title="Reglas del Juego">
+                <span class="btn-icon">📖</span><span class="btn-text"> Reglas</span>
+            </button>
+            <button id="btn-header-reset" class="btn-header btn-header-reset" title="Reiniciar Partida">
+                <span class="btn-icon">🔄</span><span class="btn-text"> Reiniciar</span>
+            </button>
         </div>
     </header>
+
+    <!-- MOBILE QUICK VIEW NAVIGATION BAR -->
+    <nav class="mobile-nav-bar" id="mobile-nav-bar">
+        <button class="mobile-nav-btn active" id="mob-nav-map" onclick="UI.switchMobileView('map')">
+            <span class="mob-nav-icon">🗺️</span>
+            <span class="mob-nav-label">Tablero</span>
+        </button>
+        <button class="mobile-nav-btn" id="mob-nav-team" onclick="UI.switchMobileView('team')">
+            <span class="mob-nav-icon">👾</span>
+            <span class="mob-nav-label">Mi Equipo</span>
+        </button>
+        <button class="mobile-nav-btn" id="mob-nav-log" onclick="UI.switchMobileView('log')">
+            <span class="mob-nav-icon">📜</span>
+            <span class="mob-nav-label">Registro</span>
+        </button>
+    </nav>
 
     <!-- DEBUG TOOLBAR -->
     <div class="debug-toolbar">
@@ -62,10 +89,10 @@ ${css}
     <!-- MAIN WORKSPACE -->
     <main class="main-workspace">
         <!-- CARD MAP BOARD (Interconnected Card Node System) -->
-        <div class="map-view-card">
+        <div class="map-view-card" id="map-view-card">
             <div class="map-header-bar">
                 <div class="map-legend">
-                    <span style="font-weight: bold; color: #fbbf24;">Tablero de Nodos de Cartas Interconectadas:</span>
+                    <span style="font-weight: bold; color: #fbbf24;">Tablero de Nodos:</span>
                     <div class="legend-item"><span class="legend-color" style="background: #475569;"></span> 🏛️ Ciudad</div>
                     <div class="legend-item"><span class="legend-color" style="background: #2e7d32;"></span> 🌲 Bosque</div>
                     <div class="legend-item"><span class="legend-color" style="background: #6d4c41;"></span> ⛰️ Montaña</div>
@@ -73,8 +100,10 @@ ${css}
                     <div class="legend-item"><span class="legend-color" style="background: #0284c7;"></span> 💧 Agua Dulce</div>
                     <div class="legend-item"><span class="legend-color" style="background: #1e3a8a;"></span> 🌊 Agua Salada</div>
                 </div>
-                <div style="font-size: 0.78rem; color: #94a3b8;">
-                    💡 Haz clic en una carta adyacente para moverte o en un casillero vacío <strong>(+)</strong> para colocar una carta y descubrir zona.
+                <div class="map-header-right">
+                    <button id="btn-center-map" class="btn-action-small btn-center-map" onclick="UI.centerMapOnPlayer(true)" title="Centrar el mapa en tu posición">
+                        🎯 Centrar
+                    </button>
                 </div>
             </div>
 
@@ -109,7 +138,7 @@ ${css}
         </div>
 
         <!-- PLAYER DASHBOARD -->
-        <div class="player-dashboard-card">
+        <div class="player-dashboard-card" id="player-dashboard-card">
             <!-- Player Tabs Switcher -->
             <div id="player-tabs-bar" class="player-tabs-bar"></div>
 
@@ -195,7 +224,7 @@ ${css}
         </div>
 
         <!-- GAME EVENT LOG -->
-        <div class="game-log-panel">
+        <div class="game-log-panel" id="game-log-panel">
             <div style="font-weight: bold; color: #fbbf24; margin-bottom: 4px;">📜 Registro de Eventos de la Partida:</div>
             <div id="game-event-log"></div>
         </div>
